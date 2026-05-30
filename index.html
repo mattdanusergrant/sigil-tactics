@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#15171c">
+<title>Sigil Tactics — Prototype</title>
+<meta name="description" content="Sigil Tactics — a tactical card-battler on a 5×4 grid. Deploy a squad, flank for bonus damage, and cut down the enemy Champion. Mobile-web prototype.">
+<meta property="og:title" content="Sigil Tactics">
+<meta property="og:description" content="A tactical card-battler on a 5×4 grid — flank, position, and cut down the enemy Champion.">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --bg:#15171c; --panel:#1e2128; --line:#2c303a; --ink:#e8eaf0; --dim:#8a91a3;
+    --pa:#2d6cdf; --pb:#d8453b; --gold:#e7b53b; --hi:#f4f6fb;
+    --move:#2d6cdf; --atk:#d8453b; --heal:#3fb36a; --deploy:#e7b53b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  #app{max-width:480px; margin:0 auto; padding:8px 8px 14px; display:flex; flex-direction:column; gap:8px; min-height:100vh;}
+  h1{font-size:16px; margin:2px 0 0; letter-spacing:.5px; text-align:center; color:var(--gold);}
+  .sub{font-size:11px; color:var(--dim); text-align:center; margin:-2px 0 2px;}
+
+  .champbar{display:flex; gap:8px;}
+  .champ{flex:1; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 8px;}
+  .champ .who{font-size:11px; color:var(--dim);}
+  .champ.A .who{color:var(--pa);} .champ.B .who{color:var(--pb);}
+  .champ .hpwrap{height:10px; background:#0c0d11; border-radius:6px; overflow:hidden; margin-top:4px;}
+  .champ .hpbar{height:100%; width:100%; transition:width .25s;}
+  .champ.A .hpbar{background:var(--pa);} .champ.B .hpbar{background:var(--pb);}
+  .champ .nums{font-size:11px; color:var(--dim); margin-top:3px; display:flex; justify-content:space-between;}
+
+  #board{display:grid; grid-template-columns:repeat(5,1fr); gap:4px; background:var(--panel);
+    padding:6px; border-radius:12px; border:1px solid var(--line);}
+  .tile{position:relative; aspect-ratio:1/1; background:#23262f; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; user-select:none; transition:background .1s;}
+  .tile.terrain{background:#2c4a35; box-shadow:inset 0 0 0 1px #3a7d44;}
+  .tile.terrain::after{content:"▲"; position:absolute; bottom:2px; right:4px; font-size:9px; color:#6fcf8a; opacity:.8;}
+  .tile.hl-deploy{outline:2px dashed var(--deploy); outline-offset:-2px; cursor:pointer;}
+  .tile.hl-move{outline:2px solid var(--move); outline-offset:-2px; cursor:pointer;}
+  .tile.hl-move::before{content:""; position:absolute; width:30%; height:30%; border-radius:50%; background:var(--move); opacity:.45;}
+  .tile.hl-atk{outline:2px solid var(--atk); outline-offset:-2px; cursor:pointer;}
+  .tile.hl-heal{outline:2px solid var(--heal); outline-offset:-2px; cursor:pointer;}
+  .tile.sel{outline:3px solid var(--hi); outline-offset:-2px;}
+
+  .unit{width:84%; height:84%; border-radius:8px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; position:relative; color:#fff; font-weight:700;}
+  .unit.A{background:linear-gradient(160deg,#3a7bef,#214fb0);}
+  .unit.B{background:linear-gradient(160deg,#e8584d,#a82f26);}
+  .unit .sym{font-size:min(5.2vw,22px); line-height:1;}
+  .unit .hp{position:absolute; bottom:-2px; right:-2px; background:#0c0d11; color:#fff;
+    font-size:10px; line-height:1; padding:1px 4px; border-radius:7px; border:1px solid #000;}
+  .unit .face{position:absolute; top:-4px; left:50%; transform:translateX(-50%); font-size:11px; color:#fff; text-shadow:0 0 3px #000;}
+  .unit.acted{filter:grayscale(.55) brightness(.8);}
+
+  #status{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 10px;
+    font-size:12.5px; min-height:34px; display:flex; align-items:center;}
+  #status b{color:var(--gold);}
+
+  .barrow{display:flex; gap:8px; align-items:center;}
+  .aether{font-size:13px; font-weight:700;}
+  .aether .a{color:#56c5ff;}
+  .btn{flex:1; background:var(--gold); color:#1a1407; border:none; border-radius:10px; padding:11px;
+    font-size:14px; font-weight:800; letter-spacing:.3px;}
+  .btn:active{filter:brightness(.9);}
+  .btn.ghost{background:transparent; color:var(--dim); border:1px solid var(--line); flex:0 0 auto; padding:11px 14px;}
+
+  #hand{display:flex; gap:6px; overflow-x:auto; padding:2px; min-height:74px;}
+  .card{flex:0 0 56px; height:68px; background:#262a33; border:1px solid var(--line); border-radius:9px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; position:relative; padding:4px;}
+  .card .cs{font-size:20px;} .card .cn{font-size:9px; color:var(--dim); text-align:center;}
+  .card .cc{position:absolute; top:2px; left:4px; font-size:11px; font-weight:800; color:#56c5ff;}
+  .card.sel{border-color:var(--hi); box-shadow:0 0 0 2px var(--hi);}
+  .card.cant{opacity:.4;}
+  .card.terrain{background:#2c4a35;}
+
+  .legend{font-size:10px; color:var(--dim); text-align:center; line-height:1.5;}
+  #over{position:fixed; inset:0; background:rgba(8,9,12,.85); display:none; align-items:center; justify-content:center; z-index:9;}
+  #over .box{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; text-align:center; max-width:300px;}
+  #over h2{margin:0 0 6px;} #over p{color:var(--dim); font-size:13px; margin:0 0 16px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>SIGIL TACTICS</h1>
+  <div class="sub">v0.1b prototype · 5×4 grid · you (blue) vs AI (red)</div>
+
+  <div class="champbar">
+    <div class="champ B"><div class="who">ENEMY CHAMPION</div>
+      <div class="hpwrap"><div class="hpbar" id="hpB"></div></div>
+      <div class="nums"><span id="hpBt"></span><span id="aeB"></span></div></div>
+    <div class="champ A"><div class="who">YOUR CHAMPION</div>
+      <div class="hpwrap"><div class="hpbar" id="hpA"></div></div>
+      <div class="nums"><span id="hpAt"></span><span id="aeA"></span></div></div>
+  </div>
+
+  <div id="board"></div>
+  <div id="status"></div>
+
+  <div class="barrow">
+    <span class="aether">Aether <span class="a" id="aether"></span></span>
+    <button class="btn" id="endBtn">END TURN</button>
+    <button class="btn ghost" id="newBtn">New</button>
+  </div>
+
+  <div id="hand"></div>
+  <div class="legend">★Champion · V Vanguard · S Skirmisher · A Archer · W Warden &nbsp;|&nbsp; arrow = facing &nbsp;|&nbsp; hit from SIDE ×1.5 / REAR ×2 · ▲ high ground +1 ATK</div>
+</div>
+
+<div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" onclick="location.reload()">Play again</button></div></div>
+
+<script>
+"use strict";
+const R=4,C=5;
+const CLASSES={
+  champion:{name:"Champion",sym:"★",hp:12,atk:4,move:2,range:1},
+  vanguard:{name:"Vanguard",sym:"V",hp:6,atk:3,move:2,range:1,cost:3},
+  skirmisher:{name:"Skirmisher",sym:"S",hp:4,atk:2,move:3,range:1,cost:2,flank:true},
+  archer:{name:"Archer",sym:"A",hp:3,atk:3,move:2,range:2,cost:3},
+  warden:{name:"Warden",sym:"W",hp:4,atk:2,move:2,range:1,cost:2,heal:true},
+  terrain:{name:"High Ground",sym:"▲",cost:1}
+};
+const DECK=["vanguard","vanguard","vanguard","skirmisher","skirmisher","skirmisher",
+  "archer","archer","archer","warden","warden","terrain"];
+const VEC={N:[-1,0],S:[1,0],E:[0,1],W:[0,-1]};
+const OPP={N:"S",S:"N",E:"W",W:"E"};
+
+let board, players, turn, sel, busy, uid, champ;
+
+function deployRows(o){ return o==="A"?[2,3]:[0,1]; }
+function inB(r,c){ return r>=0&&r<R&&c>=0&&c<C; }
+function manh(a,b){ return Math.abs(a.r-b.r)+Math.abs(a.c-b.c); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function newUnit(owner,cls,r,c,facing){
+  const d=CLASSES[cls];
+  return {id:++uid,owner,cls,r,c,facing,hp:d.hp,maxHp:d.hp,atk:d.atk,move:d.move,range:d.range,
+    flank:!!d.flank,heal:!!d.heal,sym:d.sym,name:d.name,hasMoved:false,hasActed:false};
+}
+function place(u){ board[u.r][u.c].unit=u; }
+
+function newGame(){
+  board=[]; for(let r=0;r<R;r++){board.push([]); for(let c=0;c<C;c++) board[r].push({unit:null,terrain:null});}
+  uid=0; sel=null; busy=false; turn="A";
+  champ={};
+  const cA=newUnit("A","champion",3,2,"N"); place(cA); champ.A=cA;
+  const cB=newUnit("B","champion",0,2,"S"); place(cB); champ.B=cB;
+  players={
+    A:{aether:0,maxAether:0,deck:shuffle(DECK.slice()),hand:[],human:true},
+    B:{aether:0,maxAether:0,deck:shuffle(DECK.slice()),hand:[],human:false}
+  };
+  for(let i=0;i<3;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
+  document.getElementById("over").style.display="none";
+  startTurn("A");
+  say("Your turn. Tap a card to deploy, or tap a unit to move &amp; act.");
+  render();
+}
+
+function startTurn(o){
+  const p=players[o];
+  p.maxAether=Math.min(10,p.maxAether+1); p.aether=p.maxAether;
+  if(p.deck.length && p.hand.length<8) p.hand.push(p.deck.pop());
+  eachUnit(u=>{ if(u.owner===o){u.hasMoved=false;u.hasActed=false;} });
+  turn=o;
+}
+
+function eachUnit(fn){ for(let r=0;r<R;r++)for(let c=0;c<C;c++){const u=board[r][c].unit; if(u)fn(u);} }
+function unitsOf(o){ const a=[]; eachUnit(u=>{if(u.owner===o)a.push(u);}); return a; }
+
+function reachable(u){
+  const dist={}, q=[{r:u.r,c:u.c}], res=[]; dist[u.r+","+u.c]=0;
+  while(q.length){
+    const cur=q.shift(), d=dist[cur.r+","+cur.c];
+    for(const k in VEC){const[dr,dc]=VEC[k]; const nr=cur.r+dr,nc=cur.c+dc,key=nr+","+nc;
+      if(!inB(nr,nc)||key in dist||board[nr][nc].unit||d+1>u.move)continue;
+      dist[key]=d+1; q.push({r:nr,c:nc}); res.push({r:nr,c:nc});}
+  }
+  return res;
+}
+function enemiesInRange(u){ const a=[]; eachUnit(t=>{if(t.owner!==u.owner&&manh(u,t)<=u.range)a.push(t);}); return a; }
+function healablyAdjacent(u){ const a=[]; eachUnit(t=>{if(t.owner===u.owner&&t.id!==u.id&&manh(u,t)===1&&t.hp<t.maxHp)a.push(t);}); return a; }
+
+function dirFromTo(from,to){
+  const dr=to.r-from.r, dc=to.c-from.c;
+  if(Math.abs(dr)>=Math.abs(dc)) return dr<0?"N":(dr>0?"S":"N");
+  return dc<0?"W":"E";
+}
+function arcOf(attacker,defender){
+  const incoming=dirFromTo(defender,attacker); // side of defender that gets hit
+  if(incoming===defender.facing) return "front";
+  if(incoming===OPP[defender.facing]) return "rear";
+  return "side";
+}
+function moveUnit(u,r,c){
+  board[u.r][u.c].unit=null;
+  u.facing=dirFromTo({r:u.r,c:u.c},{r,c});
+  u.r=r; u.c=c; board[r][c].unit=u; u.hasMoved=true;
+}
+function attack(attacker,defender){
+  const arc=arcOf(attacker,defender);
+  let mult=arc==="front"?1:arc==="side"?1.5:2;
+  if(attacker.flank){ if(arc==="side")mult=2; if(arc==="rear")mult=2.5; }
+  const high=board[attacker.r][attacker.c].terrain==="high"?1:0;
+  const dmg=Math.round((attacker.atk+high)*mult);
+  attacker.facing=dirFromTo(attacker,defender);
+  defender.hp-=dmg; attacker.hasActed=true;
+  say(`${attacker.name} hit ${defender.name} <b>(${arc.toUpperCase()} ×${mult})</b> for ${dmg}.`);
+  if(defender.hp<=0){ board[defender.r][defender.c].unit=null; if(defender.cls==="champion") endGame(attacker.owner); }
+}
+function healAct(warden,ally){
+  ally.hp=Math.min(ally.maxHp,ally.hp+3); warden.hasActed=true;
+  say(`${warden.name} mended ${ally.name} (+3).`);
+}
+function summon(o,cls,r,c){
+  if(cls==="terrain"){ board[r][c].terrain="high"; }
+  else { place(newUnit(o,cls,r,c,o==="A"?"N":"S")); }
+}
+
+/* ---------- player interaction ---------- */
+function onTile(r,c){
+  if(busy||turn!=="A") return;
+  const cell=board[r][c], u=cell.unit;
+  if(sel&&sel.t==="card"){
+    if(cell._hl){ const card=players.A.hand[sel.i];
+      players.A.aether-=CLASSES[card].cost; players.A.hand.splice(sel.i,1);
+      summon("A",card,r,c); sel=null; checkAutoEnd(); render(); }
+    else { sel=null; render(); }
+    return;
+  }
+  if(sel&&sel.t==="unit"){
+    const su=board[sel.r][sel.c].unit;
+    if(su && cell._hl==="move"){ moveUnit(su,r,c); sel={t:"unit",r,c}; render(); return; }
+    if(su && cell._hl==="atk"){ attack(su,u); sel=(su.r!==undefined&&board[su.r][su.c].unit===su)?{t:"unit",r:su.r,c:su.c}:null; render(); return; }
+    if(su && cell._hl==="heal"){ healAct(su,u); sel={t:"unit",r:su.r,c:su.c}; render(); return; }
+  }
+  if(u&&u.owner==="A"){ sel={t:"unit",r,c}; render(); return; }
+  sel=null; render();
+}
+function onCard(i){
+  if(busy||turn!=="A") return;
+  const card=players.A.hand[i];
+  if(CLASSES[card].cost>players.A.aether) return;
+  sel=(sel&&sel.t==="card"&&sel.i===i)?null:{t:"card",i}; render();
+}
+function checkAutoEnd(){}
+
+/* ---------- AI ---------- */
+function aiTurn(){
+  startTurn("B"); sel=null; busy=true; say("Enemy turn…"); render();
+  // deploy phase
+  const B=players.B;
+  let guard=20;
+  while(guard-->0){
+    let idx=-1,best=-1;
+    B.hand.forEach((card,i)=>{ const d=CLASSES[card]; if(card!=="terrain"&&d.cost<=B.aether&&d.cost>best){best=d.cost;idx=i;} });
+    if(idx<0) break;
+    const tile=aiDeploy(); if(!tile) break;
+    B.aether-=best; summon("B",B.hand[idx],tile.r,tile.c); B.hand.splice(idx,1);
+  }
+  render();
+  const queue=unitsOf("B");
+  setTimeout(()=>aiStep(queue),550);
+}
+function aiDeploy(){
+  for(const r of [1,0]) for(const c of [2,1,3,0,4]) if(!board[r][c].unit) return {r,c};
+  return null;
+}
+function aiStep(queue){
+  if(turn!=="B"){ return; } // game ended
+  let u=null;
+  while(queue.length){ const cand=queue.shift(); if(board[cand.r]&&board[cand.r][cand.c]&&board[cand.r][cand.c].unit===cand){u=cand;break;} }
+  if(!u){ busy=false; startTurn("A"); say("Your turn."); render(); return; }
+  aiAct(u);
+  render();
+  if(turn!=="B"){ return; } // a champion died
+  setTimeout(()=>aiStep(queue),420);
+}
+function aiAct(u){
+  // warden: heal a hurt neighbour first
+  if(u.heal){ const h=healablyAdjacent(u); if(h.length){ h.sort((a,b)=>a.hp-b.hp); healAct(u,h[0]); } }
+  if(!u.hasActed){
+    let tgt=pickTarget(u,enemiesInRange(u));
+    if(!tgt && !u.hasMoved){ // move toward nearest enemy then re-check
+      const goal=nearestEnemy(u); if(goal){ const step=bestStep(u,goal); if(step) moveUnit(u,step.r,step.c); }
+      tgt=pickTarget(u,enemiesInRange(u));
+    }
+    if(tgt) attack(u,tgt);
+    else if(!u.hasMoved){ const goal=nearestEnemy(u); if(goal){ const step=bestStep(u,goal); if(step) moveUnit(u,step.r,step.c); } }
+  } else if(!u.hasMoved){ const goal=nearestEnemy(u); if(goal){ const step=bestStep(u,goal); if(step) moveUnit(u,step.r,step.c); } }
+}
+function pickTarget(u,list){
+  if(!list.length) return null;
+  const score=t=>{ const arc=arcOf(u,t); let m=arc==="front"?1:arc==="side"?1.5:2; if(u.flank){if(arc==="side")m=2;if(arc==="rear")m=2.5;}
+    const dmg=Math.round(u.atk*m); let s=dmg; if(dmg>=t.hp)s+=100; if(t.cls==="champion")s+=40; s+=(t.maxHp-t.hp); return s; };
+  return list.slice().sort((a,b)=>score(b)-score(a))[0];
+}
+function nearestEnemy(u){ let best=null,bd=99; eachUnit(t=>{if(t.owner!==u.owner){const d=manh(u,t); if(d<bd){bd=d;best=t;}}}); return best; }
+function bestStep(u,goal){ const tiles=reachable(u); if(!tiles.length) return null;
+  tiles.sort((a,b)=>(Math.abs(a.r-goal.r)+Math.abs(a.c-goal.c))-(Math.abs(b.r-goal.r)+Math.abs(b.c-goal.c)));
+  const cur=Math.abs(u.r-goal.r)+Math.abs(u.c-goal.c); const top=tiles[0];
+  return (Math.abs(top.r-goal.r)+Math.abs(top.c-goal.c))<cur?top:null;
+}
+
+/* ---------- render ---------- */
+function say(html){ document.getElementById("status").innerHTML=html; }
+function endGame(winner){
+  turn="done"; busy=true;
+  document.getElementById("overT").textContent = winner==="A"?"Victory":"Defeat";
+  document.getElementById("overP").textContent = winner==="A"
+    ? "The enemy Champion has fallen." : "Your Champion has fallen.";
+  document.getElementById("over").style.display="flex";
+}
+function clearHl(){ for(let r=0;r<R;r++)for(let c=0;c<C;c++) board[r][c]._hl=null; }
+function computeHl(){
+  clearHl();
+  if(turn!=="A"||busy) return;
+  if(sel&&sel.t==="card"){
+    const card=players.A.hand[sel.i]; const rows=deployRows("A");
+    const allow=rows; // deploy onto your own two rows (5x4 board has no neutral midline)
+    for(const r of allow)for(let c=0;c<C;c++){ const cell=board[r][c];
+      if(card==="terrain"){ if(!cell.terrain) cell._hl="deploy"; }
+      else if(!cell.unit) cell._hl="deploy"; }
+  } else if(sel&&sel.t==="unit"){
+    const u=board[sel.r][sel.c].unit;
+    if(u&&u.owner==="A"){
+      if(!u.hasMoved) for(const t of reachable(u)) board[t.r][t.c]._hl="move";
+      if(!u.hasActed){ for(const e of enemiesInRange(u)) board[e.r][e.c]._hl="atk";
+        if(u.heal) for(const a of healablyAdjacent(u)) board[a.r][a.c]._hl="heal"; }
+    }
+  }
+}
+function render(){
+  computeHl();
+  const bd=document.getElementById("board"); bd.innerHTML="";
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const cell=board[r][c]; const t=document.createElement("div");
+    t.className="tile"+(cell.terrain?" terrain":"");
+    if(cell._hl==="deploy")t.classList.add("hl-deploy");
+    if(cell._hl==="move")t.classList.add("hl-move");
+    if(cell._hl==="atk")t.classList.add("hl-atk");
+    if(cell._hl==="heal")t.classList.add("hl-heal");
+    if(sel&&sel.t==="unit"&&sel.r===r&&sel.c===c)t.classList.add("sel");
+    const u=cell.unit;
+    if(u){ const arrow={N:"↑",S:"↓",E:"→",W:"←"}[u.facing];
+      t.innerHTML=`<div class="unit ${u.owner}${(u.owner==="A"&&u.hasActed&&u.hasMoved)?" acted":""}">
+        <span class="face">${arrow}</span><span class="sym">${u.sym}</span><span class="hp">${u.hp}</span></div>`; }
+    t.onclick=()=>onTile(r,c);
+    bd.appendChild(t);
+  }
+  // champ bars
+  const cA=champ.A,cB=champ.B;
+  document.getElementById("hpA").style.width=(100*Math.max(0,cA.hp)/cA.maxHp)+"%";
+  document.getElementById("hpB").style.width=(100*Math.max(0,cB.hp)/cB.maxHp)+"%";
+  document.getElementById("hpAt").textContent="HP "+Math.max(0,cA.hp)+"/"+cA.maxHp;
+  document.getElementById("hpBt").textContent="HP "+Math.max(0,cB.hp)+"/"+cB.maxHp;
+  document.getElementById("aeA").textContent="⬡ "+players.A.maxAether;
+  document.getElementById("aeB").textContent="⬡ "+players.B.maxAether;
+  document.getElementById("aether").textContent=players.A.aether+" / "+players.A.maxAether;
+  // hand
+  const h=document.getElementById("hand"); h.innerHTML="";
+  players.A.hand.forEach((card,i)=>{ const d=CLASSES[card]; const el=document.createElement("div");
+    const cant=d.cost>players.A.aether||turn!=="A"||busy;
+    el.className="card"+(card==="terrain"?" terrain":"")+(cant?" cant":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
+    el.innerHTML=`<span class="cc">${d.cost}</span><span class="cs">${d.sym}</span><span class="cn">${d.name}</span>`;
+    el.onclick=()=>onCard(i); h.appendChild(el); });
+  if(turn==="A"&&!busy){
+    if(sel&&sel.t==="card") say(`Deploy <b>${CLASSES[players.A.hand[sel.i]].name}</b> — tap a highlighted tile.`);
+    else if(sel&&sel.t==="unit") say("Tap a <b>blue</b> tile to move, <b>red</b> to attack" + (board[sel.r][sel.c].unit&&board[sel.r][sel.c].unit.heal?", <b>green</b> to heal.":"."));
+  }
+}
+
+document.getElementById("endBtn").onclick=()=>{ if(turn==="A"&&!busy){ sel=null; aiTurn(); } };
+document.getElementById("newBtn").onclick=()=>newGame();
+newGame();
+</script>
+</body>
+</html>
