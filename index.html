@@ -104,16 +104,12 @@
 </head>
 <body>
 <div id="app">
-  <h1>SIGIL TACTICS</h1>
-  <div class="sub">v0.3 prototype · round-based · speed initiative</div>
-
-  <div class="heroes">
-    <div class="herorow" id="heroesB"></div>
-    <div class="herorow" id="heroesA"></div>
-  </div>
+  <div class="herorow" id="heroesB"></div>
+  <div id="board"></div>
+  <div class="herorow" id="heroesA"></div>
+  <div id="hand"></div>
 
   <div id="init"></div>
-  <div id="board"></div>
   <div id="status"></div>
 
   <div class="barrow">
@@ -122,8 +118,9 @@
     <button class="btn ghost" id="newBtn">New</button>
   </div>
 
-  <div id="hand"></div>
   <div class="legend">V Vanguard · A Archer · W Warden · S Skirmisher · s Scout · + Potion · ϟ Bolt · ▲ High Ground &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ▲ +1 ATK</div>
+  <h1>SIGIL TACTICS</h1>
+  <div class="sub">v0.4 prototype · round-based · speed initiative</div>
 </div>
 
 <div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" onclick="location.reload()">Play again</button></div></div>
