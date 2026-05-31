@@ -15,31 +15,31 @@ Current build: **v0.11** (`index.html`).
 
 ## Sides
 
-Each side fields **3 heroes** drafted from a **9-hero active roster**. Three additional classes (Druid, Scout, Crusader) remain defined in code under a `hidden:true` flag and are excluded from the draft for now. HP must come from the polyhedral dice set `{4, 6, 8, 10, 12, 20}`.
+Each side fields **3 heroes** drafted from a **9-hero active roster**. Three additional classes (Sentinel, Necromancer, Crusader) remain defined in code under a `hidden:true` flag and are excluded from the draft for now. HP must come from the polyhedral dice set `{4, 6, 8, 10, 12, 20}`.
 
 ### Active roster (9)
 
 | Glyph | Hero | HP | ATK | Move | Range | Speed | Tags | Notes |
 |---|---|---|---|---|---|---|---|---|
-| 🏰 | Sentinel    | 12 | 1 | 1 | 1 | 1  | —     | Heavy tank, always acts last |
-| 🛡️ | Paladin     | 10 | 1 | 1 | 1 | 2  | heal  | Tank with adjacent-ally heal |
-| ⚔️ | Knight      | 10 | 1 | 1 | 1 | 3  | —     | Tanky melee |
-| 💀 | Necromancer | 6  | 1 | 1 | 2 | 4  | —     | Caster |
-| 🩸 | Warlock     | 6  | 1 | 1 | 3 | 5  | —     | Longest range in the roster |
-| 🔮 | Mage        | 6  | 1 | 1 | 2 | 7  | heal  | Ranged caster, adjacent-ally heal |
-| 🪓 | Berserker   | 8  | 2 | 1 | 1 | 9  | —     | High-damage melee |
-| 🏹 | Ranger      | 8  | 1 | 1 | 2 | 10 | —     | Fast ranged |
-| 🗡️ | Assassin    | 6  | 2 | 2 | 1 | 12 | flank | Fastest, ×2 side / ×2.5 rear |
+| 🛡️ | Paladin   | 10 | 1 | 1 | 1 | 2  | heal  | Tank with adjacent-ally heal |
+| ⚔️ | Knight    | 10 | 1 | 1 | 1 | 3  | —     | Tanky melee |
+| 🩸 | Warlock   | 6  | 1 | 1 | 3 | 5  | —     | Longest range in the roster |
+| 🌿 | Druid     | 8  | 1 | 1 | 2 | 6  | heal  | Ranged healer |
+| 🔮 | Mage      | 6  | 1 | 1 | 2 | 7  | heal  | Ranged caster, adjacent-ally heal |
+| 🪓 | Berserker | 8  | 2 | 1 | 1 | 9  | —     | High-damage melee |
+| 🏹 | Ranger    | 8  | 1 | 1 | 2 | 10 | —     | Fast ranged |
+| 👁️ | Scout     | 4  | 1 | 2 | 2 | 11 | —     | Mobile recon, fragile |
+| 🗡️ | Assassin  | 6  | 2 | 2 | 1 | 12 | flank | Fastest, ×2 side / ×2.5 rear |
 
-Active-roster speeds are unique: `{1, 2, 3, 4, 5, 7, 9, 10, 12}`. Combined with the snake draft (no class duplicates within a match), initiative ties between heroes never occur.
+Active-roster speeds are unique: `{2, 3, 5, 6, 7, 9, 10, 11, 12}`. Combined with the snake draft (no class duplicates within a match), initiative ties between heroes never occur.
 
 ### Hidden roster (3, not in draft)
 
 | Glyph | Hero | HP | ATK | Move | Range | Speed | Tags |
 |---|---|---|---|---|---|---|---|
-| 🌿 | Druid    | 8  | 1 | 1 | 2 | 6  | heal |
-| 👁️ | Scout    | 4  | 1 | 2 | 2 | 11 | — |
-| ✝️ | Crusader | 10 | 1 | 1 | 1 | 8  | — |
+| 🏰 | Sentinel    | 12 | 1 | 1 | 1 | 1 | —    |
+| 💀 | Necromancer | 6  | 1 | 1 | 2 | 4 | —    |
+| ✝️ | Crusader    | 10 | 1 | 1 | 1 | 8 | —    |
 
 Heroes never appear in the deck. They are gold-bordered on the board.
 
