@@ -60,11 +60,24 @@ Each match begins with a draft phase, followed by a deploy phase, then play.
 
 Each side ends with 3 heroes from the 12-hero roster. A pick removes the hero from the pool — no duplicates across sides.
 
-### Deploy
+### Deploy (alternating, face-down)
 
-After the draft, P1 places each of their 3 heroes into rows 2-3 (their half of the board); then P2 places into rows 0-1. Placement is sequential — for each hero in draft order, the player taps a highlighted empty tile in their deploy zone. An **Auto-place** button packs everything into a default formation (back-rank centered).
+Placement mimics tabletop play: players alternate placing one unit at a time, each token going down **face-down**. You see *where* the opponent placed their unit but not *which* hero is in each tile — identities are concealed until play begins, at which point all units flip face-up.
 
-P2 (the AI) auto-deploys with a simple rule: ranged units to row 0, melee to row 1, centered.
+**Placement order is the reverse of the draft** to keep things fair — whoever picked first in the draft places last in the deploy phase:
+
+| Place | Player |
+|---|---|
+| 1 | P2 |
+| 2 | P1 |
+| 3 | P1 |
+| 4 | P2 |
+| 5 | P2 |
+| 6 | P1 |
+
+Each turn, the active player picks one of their unplaced heroes from a tray, then taps a tile in their half of the board (rows 0–1 for P2, rows 2–3 for P1). The AI uses a simple heuristic (ranged units to the back row, melee to the front, centered).
+
+An **Auto** button lets the human burn through their remaining placements in a default formation; the deploy sequence then skips any consecutive P1 slots and the AI resumes.
 
 ### Decks
 
