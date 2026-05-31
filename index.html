@@ -189,17 +189,17 @@
     <button class="btn ghost" id="newBtn">New</button>
   </div>
 
-  <div class="legend">12-hero roster · 1-2-2-1 snake draft · 3 units per side &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
+  <div class="legend">9-hero roster · 1-2-2-1 snake draft · 3 units per side &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.10 · 12 heroes · draft &amp; deploy · tap for rules</div>
+    <div class="sub">v0.11 · 9 heroes · draft &amp; deploy · tap for rules</div>
   </button>
 </div>
 
 <div id="codex"><div class="cbox">
   <button class="x" onclick="closeCodex()">×</button>
   <h2>SIGIL TACTICS</h2>
-  <div class="cdx-sub">v0.10 — 4×5 grid · 12-hero roster · snake draft · 3 units per side · 30-card deck</div>
+  <div class="cdx-sub">v0.11 — 4×5 grid · 9-hero roster · snake draft · 3 units per side · 30-card deck</div>
 
   <h3>Match flow</h3>
   <ul>
@@ -222,20 +222,17 @@
     <li><b>HP dice:</b> every unit's max HP is a polyhedral die face count (4/6/8/10/12/20).</li>
   </ul>
 
-  <h3>Hero roster (12)</h3>
+  <h3>Hero roster (9)</h3>
   <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Move</th><th>Range</th><th>Speed</th><th>Tags</th></tr>
-    <tr><td>S Sentinel</td><td>12</td><td>1</td><td>1</td><td>1</td><td>1</td><td>—</td></tr>
-    <tr><td>P Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>heal</td></tr>
-    <tr><td>K Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>3</td><td>—</td></tr>
-    <tr><td>N Necromancer</td><td>6</td><td>1</td><td>1</td><td>2</td><td>4</td><td>—</td></tr>
-    <tr><td>W Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>5</td><td>—</td></tr>
-    <tr><td>D Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>6</td><td>heal</td></tr>
-    <tr><td>M Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>7</td><td>heal</td></tr>
-    <tr><td>C Crusader</td><td>10</td><td>1</td><td>1</td><td>1</td><td>8</td><td>—</td></tr>
-    <tr><td>B Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>9</td><td>—</td></tr>
-    <tr><td>R Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>10</td><td>—</td></tr>
-    <tr><td>T Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>11</td><td>—</td></tr>
-    <tr><td>A Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>12</td><td>flank</td></tr>
+    <tr><td>🏰 Sentinel</td><td>12</td><td>1</td><td>1</td><td>1</td><td>1</td><td>—</td></tr>
+    <tr><td>🛡️ Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>heal</td></tr>
+    <tr><td>⚔️ Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>3</td><td>—</td></tr>
+    <tr><td>💀 Necromancer</td><td>6</td><td>1</td><td>1</td><td>2</td><td>4</td><td>—</td></tr>
+    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>5</td><td>—</td></tr>
+    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>7</td><td>heal</td></tr>
+    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>9</td><td>—</td></tr>
+    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>10</td><td>—</td></tr>
+    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>12</td><td>flank</td></tr>
   </table>
 
   <h3>Card categories</h3>
@@ -283,22 +280,24 @@
 const R=4,C=5;
 
 /* ---------- definitions ---------- */
-// 12-hero roster. HP must come from {4,6,8,10,12,20} (polyhedral dice).
+// Hero roster. HP must come from {4,6,8,10,12,20} (polyhedral dice).
+// `hidden:true` keeps a class in the data but excludes it from the active roster / draft.
 const CLASSES={
-  knight:     {name:"Knight",     sym:"K", hp:10, atk:1, move:1, range:1, speed:3,  hero:true},
-  ranger:     {name:"Ranger",     sym:"R", hp:8,  atk:1, move:1, range:2, speed:10, hero:true},
-  mage:       {name:"Mage",       sym:"M", hp:6,  atk:1, move:1, range:2, speed:7,  hero:true, heal:true},
-  berserker:  {name:"Berserker",  sym:"B", hp:8,  atk:2, move:1, range:1, speed:9,  hero:true},
-  paladin:    {name:"Paladin",    sym:"P", hp:10, atk:1, move:1, range:1, speed:2,  hero:true, heal:true},
-  assassin:   {name:"Assassin",   sym:"A", hp:6,  atk:2, move:2, range:1, speed:12, hero:true, flank:true},
-  druid:      {name:"Druid",      sym:"D", hp:8,  atk:1, move:1, range:2, speed:6,  hero:true, heal:true},
-  warlock:    {name:"Warlock",    sym:"W", hp:6,  atk:1, move:1, range:3, speed:5,  hero:true},
-  sentinel:   {name:"Sentinel",   sym:"S", hp:12, atk:1, move:1, range:1, speed:1,  hero:true},
-  scout:      {name:"Scout",      sym:"T", hp:4,  atk:1, move:2, range:2, speed:11, hero:true},
-  crusader:   {name:"Crusader",   sym:"C", hp:10, atk:1, move:1, range:1, speed:8,  hero:true},
-  necromancer:{name:"Necromancer",sym:"N", hp:6,  atk:1, move:1, range:2, speed:4,  hero:true}
+  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, speed:3,  hero:true},
+  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, speed:10, hero:true},
+  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, speed:7,  hero:true, heal:true},
+  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, speed:9,  hero:true},
+  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, speed:2,  hero:true, heal:true},
+  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, speed:12, hero:true, flank:true},
+  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, speed:5,  hero:true},
+  sentinel:   {name:"Sentinel",   sym:"🏰", hp:12, atk:1, move:1, range:1, speed:1,  hero:true},
+  necromancer:{name:"Necromancer",sym:"💀", hp:6,  atk:1, move:1, range:2, speed:4,  hero:true},
+  // hidden — kept in data, excluded from roster for now
+  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, speed:6,  hero:true, heal:true, hidden:true},
+  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, speed:11, hero:true, hidden:true},
+  crusader:   {name:"Crusader",   sym:"✝️", hp:10, atk:1, move:1, range:1, speed:8,  hero:true, hidden:true}
 };
-const ROSTER=Object.keys(CLASSES);
+const ROSTER=Object.keys(CLASSES).filter(k=>!CLASSES[k].hidden);
 const DRAFT_SEQUENCE=["A","B","B","A","A","B"]; // 1-2-2-1 snake, 3v3
 const CARDS={
   // Knight suite (10): 5 equipment + 5 actions (1 spell-action)

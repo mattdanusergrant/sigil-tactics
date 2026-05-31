@@ -2,7 +2,7 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.10** (`index.html`).
+Current build: **v0.11** (`index.html`).
 
 ---
 
@@ -15,24 +15,31 @@ Current build: **v0.10** (`index.html`).
 
 ## Sides
 
-Each side fields **3 heroes** drafted from a 12-hero roster. HP must come from the polyhedral dice set `{4, 6, 8, 10, 12, 20}`.
+Each side fields **3 heroes** drafted from a **9-hero active roster**. Three additional classes (Druid, Scout, Crusader) remain defined in code under a `hidden:true` flag and are excluded from the draft for now. HP must come from the polyhedral dice set `{4, 6, 8, 10, 12, 20}`.
 
-| Hero | Sym | HP | ATK | Move | Range | Speed | Tags | Notes |
+### Active roster (9)
+
+| Glyph | Hero | HP | ATK | Move | Range | Speed | Tags | Notes |
 |---|---|---|---|---|---|---|---|---|
-| Sentinel    | S | 12 | 1 | 1 | 1 | 1  | —     | Heavy tank, always acts last |
-| Paladin     | P | 10 | 1 | 1 | 1 | 2  | heal  | Tank with adjacent-ally heal |
-| Knight      | K | 10 | 1 | 1 | 1 | 3  | —     | Tanky melee |
-| Necromancer | N | 6  | 1 | 1 | 2 | 4  | —     | Caster |
-| Warlock     | W | 6  | 1 | 1 | 3 | 5  | —     | Longest range in the roster |
-| Druid       | D | 8  | 1 | 1 | 2 | 6  | heal  | Ranged healer |
-| Mage        | M | 6  | 1 | 1 | 2 | 7  | heal  | Ranged caster, adjacent-ally heal |
-| Crusader    | C | 10 | 1 | 1 | 1 | 8  | —     | Balanced fighter |
-| Berserker   | B | 8  | 2 | 1 | 1 | 9  | —     | High-damage melee |
-| Ranger      | R | 8  | 1 | 1 | 2 | 10 | —     | Fast ranged |
-| Scout       | T | 4  | 1 | 2 | 2 | 11 | —     | Mobile recon, fragile |
-| Assassin    | A | 6  | 2 | 2 | 1 | 12 | flank | Fastest, ×2 side / ×2.5 rear |
+| 🏰 | Sentinel    | 12 | 1 | 1 | 1 | 1  | —     | Heavy tank, always acts last |
+| 🛡️ | Paladin     | 10 | 1 | 1 | 1 | 2  | heal  | Tank with adjacent-ally heal |
+| ⚔️ | Knight      | 10 | 1 | 1 | 1 | 3  | —     | Tanky melee |
+| 💀 | Necromancer | 6  | 1 | 1 | 2 | 4  | —     | Caster |
+| 🩸 | Warlock     | 6  | 1 | 1 | 3 | 5  | —     | Longest range in the roster |
+| 🔮 | Mage        | 6  | 1 | 1 | 2 | 7  | heal  | Ranged caster, adjacent-ally heal |
+| 🪓 | Berserker   | 8  | 2 | 1 | 1 | 9  | —     | High-damage melee |
+| 🏹 | Ranger      | 8  | 1 | 1 | 2 | 10 | —     | Fast ranged |
+| 🗡️ | Assassin    | 6  | 2 | 2 | 1 | 12 | flank | Fastest, ×2 side / ×2.5 rear |
 
-Speeds are **unique 1–12** across the roster — initiative ties never happen between heroes of different classes (and the 1-2-2-1 snake draft prevents duplicates within a match).
+Active-roster speeds are unique: `{1, 2, 3, 4, 5, 7, 9, 10, 12}`. Combined with the snake draft (no class duplicates within a match), initiative ties between heroes never occur.
+
+### Hidden roster (3, not in draft)
+
+| Glyph | Hero | HP | ATK | Move | Range | Speed | Tags |
+|---|---|---|---|---|---|---|---|
+| 🌿 | Druid    | 8  | 1 | 1 | 2 | 6  | heal |
+| 👁️ | Scout    | 4  | 1 | 2 | 2 | 11 | — |
+| ✝️ | Crusader | 10 | 1 | 1 | 1 | 8  | — |
 
 Heroes never appear in the deck. They are gold-bordered on the board.
 
