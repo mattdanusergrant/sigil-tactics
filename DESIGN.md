@@ -2,7 +2,7 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.7** (`index.html`).
+Current build: **v0.8** (`index.html`).
 
 ---
 
@@ -27,12 +27,7 @@ Heroes never appear in the deck. They are gold-bordered on the board and tracked
 
 ## Sidekicks
 
-Cheaper units played from hand. They count toward unit density but **not** toward win condition.
-
-| Sidekick | Sym | HP | ATK | Move | Range | Speed | Cost | Notes |
-|---|---|---|---|---|---|---|---|---|
-| Scout | s | 3 | 1 | 1 | 2 | 2 | 2 | Slower than every hero; ranged |
-| Skirmisher | S | 3 | 1 | 1 | 1 | 1 | 2 | Always acts last; flank ×2 / rear ×2.5 |
+Currently **not in the deck.** The Skirmisher and Scout classes remain defined in the engine for future use but no card summons them in v0.8.
 
 ## Round structure
 
@@ -76,19 +71,66 @@ Movement updates facing toward the destination; attacks update facing toward the
 
 ## Cards
 
-Hand size cap 8; draw 1 at start of each round. Starting hand 3.
+Each side runs a **30-card deck** built from three 10-card hero suites — Vanguard, Archer, Warden. Both sides currently use identical decks. Hand cap 8; draw 1 at start of each round; starting hand 3.
 
-| Card | Sym | Cost | Kind | Effect |
+Every card is a **one-shot consumable.** Categories (Weapon / Armor / Helmet / Artifact / Action / Spell) are flavor tags that drive theme and card-back color; mechanically a card is one of these **kinds**:
+
+| Kind | Target | Effect |
+|---|---|---|
+| `dmg` | enemy unit | Deal N damage (subject to defender's shield) |
+| `heal` | friendly unit | Restore N HP (caps at maxHp) |
+| `shield` | friendly unit | Add N shield (absorbs incoming damage before HP) |
+| `shield-all` | all friendly units | Add N shield to each |
+| `buff-atk` | friendly unit | +N ATK for the rest of this round |
+| `buff-atk-all` | all friendly units | +N ATK each for the rest of this round |
+| `charge` | friendly unit | +N move on its next turn (this round) |
+
+Shield persists across rounds until consumed. ATK buffs and move buffs both clear (atk-buff at round start, move-buff at end of the buffed unit's turn).
+
+### Vanguard suite (10)
+
+| # | Category | Name | Cost | Effect |
 |---|---|---|---|---|
-| Skirmisher | S | 2 | unit | Deploy a Skirmisher into your half |
-| Scout | s | 2 | unit | Deploy a Scout into your half |
-| Potion | + | 2 | heal | Restore +4 HP to a wounded ally anywhere |
-| Bolt | ϟ | 2 | dmg | 2 damage to any enemy on the board |
-| High Ground | ▲ | 2 | terrain | Place high ground on an empty tile in your half |
+| 1 | Weapon | Greatsword | 2 | 2 dmg to enemy |
+| 2 | Armor | Plate Mail | 2 | +2 shield to ally |
+| 3 | Helmet | Iron Helm | 1 | +1 shield to ally |
+| 4 | Artifact | War Banner | 3 | +1 shield to all allies |
+| 5 | Action | Charge | 1 | Ally +2 move this turn |
+| 6 | Action | Bulwark | 1 | Heal ally +2 |
+| 7 | Action | Rally | 3 | All allies +1 ATK this round |
+| 8 | Spell | Battle Cry | 2 | Ally +2 ATK this round |
+| 9 | Spell | Iron Will | 2 | Heal ally +3 |
+| 10 | Spell | Sundering Blow | 3 | 3 dmg to enemy |
 
-Deck (12 cards): Skirmisher×3, Scout×2, Potion×3, Bolt×2, High Ground×2.
+### Archer suite (10)
 
-**Summoning sickness — none.** A sidekick summoned this round is inserted into initiative at its Speed and acts this round if its slot hasn't passed (i.e. if any pending unit has equal-or-lower Speed). A Skirmisher (Speed 5) summoned by your Vanguard (Speed 2) effectively jumps the queue and acts the same round.
+| # | Category | Name | Cost | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Longbow | 2 | 2 dmg to enemy |
+| 2 | Armor | Leather Cloak | 1 | +1 shield to ally |
+| 3 | Helmet | Hawk Hood | 1 | Ally +1 move this turn |
+| 4 | Artifact | Hunter's Mark | 2 | 2 dmg to enemy |
+| 5 | Action | Quick Shot | 1 | 1 dmg to enemy |
+| 6 | Action | Volley | 3 | 2 dmg to enemy |
+| 7 | Action | Reposition | 1 | Ally +1 move this turn |
+| 8 | Spell | Wind Step | 2 | Ally +2 move this turn |
+| 9 | Spell | Piercing Arrow | 3 | 3 dmg to enemy |
+| 10 | Spell | Eagle's Eye | 1 | Ally +1 ATK this round |
+
+### Warden suite (10)
+
+| # | Category | Name | Cost | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Quarterstaff | 1 | 1 dmg to enemy |
+| 2 | Armor | Robe of Mending | 2 | Heal ally +2 |
+| 3 | Helmet | Crown of Light | 2 | +2 shield to ally |
+| 4 | Artifact | Sacred Chalice | 4 | Heal ally +6 (caps at maxHp) |
+| 5 | Action | Mend | 2 | Heal ally +3 |
+| 6 | Action | Restore | 4 | Heal ally +5 |
+| 7 | Action | Shield Wall | 3 | +1 shield to all allies |
+| 8 | Spell | Heal | 2 | Heal ally +3 |
+| 9 | Spell | Bless | 2 | Ally +1 ATK this round |
+| 10 | Spell | Smite | 2 | 2 dmg to enemy |
 
 ## HP & dice tracking
 

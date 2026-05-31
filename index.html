@@ -71,6 +71,7 @@
     font-size:10px; line-height:1; padding:1px 4px; border-radius:7px; border:1px solid #000;}
   .unit .face{position:absolute; top:-4px; left:50%; transform:translateX(-50%); font-size:11px; color:#fff; text-shadow:0 0 3px #000;}
   .unit.done{filter:grayscale(.55) brightness(.8);}
+  .unit .buffs{position:absolute; top:-4px; right:-2px; font-size:9px; font-weight:700; color:#fff; text-shadow:0 0 3px #000; background:#0c0d11; padding:1px 3px; border-radius:5px;}
 
   #status{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 10px;
     font-size:12.5px; min-height:34px; display:flex; align-items:center;}
@@ -92,9 +93,14 @@
   .card .cc{position:absolute; top:2px; left:4px; font-size:11px; font-weight:800; color:#56c5ff;}
   .card.sel{border-color:var(--hi); box-shadow:0 0 0 2px var(--hi);}
   .card.cant{opacity:.4;}
-  .card.terrain{background:#2c4a35;}
-  .card.spell{background:#2e2540;}
-  .card.spell .cs{color:#d6bcff;}
+  .card .cat{position:absolute; top:2px; right:4px; font-size:8px; color:var(--dim); letter-spacing:.4px;}
+  .card .ho{position:absolute; bottom:2px; left:4px; font-size:8px; font-weight:800;}
+  .card.cat-Weapon{box-shadow:inset 0 -3px 0 #c14a3a;}
+  .card.cat-Armor{box-shadow:inset 0 -3px 0 #4a78c1;}
+  .card.cat-Helmet{box-shadow:inset 0 -3px 0 #4ac1a8;}
+  .card.cat-Artifact{box-shadow:inset 0 -3px 0 var(--gold);}
+  .card.cat-Action{box-shadow:inset 0 -3px 0 #c7c9d1;}
+  .card.cat-Spell{box-shadow:inset 0 -3px 0 #b878ff;}
 
   .legend{font-size:10px; color:var(--dim); text-align:center; line-height:1.5;}
   #over{position:fixed; inset:0; background:rgba(8,9,12,.85); display:none; align-items:center; justify-content:center; z-index:9;}
@@ -118,9 +124,9 @@
     <button class="btn ghost" id="newBtn">New</button>
   </div>
 
-  <div class="legend">V Vanguard · A Archer · W Warden · S Skirmisher · s Scout · + Potion · ϟ Bolt · ▲ High Ground &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ▲ +1 ATK</div>
+  <div class="legend">V Vanguard · A Archer · W Warden · 30-card deck (3 hero suites × 10) &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ▲ +1 ATK · ⛨ shield · +A atk-buff</div>
   <h1>SIGIL TACTICS</h1>
-  <div class="sub">v0.7 prototype · ATK 1 · unique speeds · HP fits a d6</div>
+  <div class="sub">v0.8 prototype · 30-card hero suites · equip / action / spell</div>
 </div>
 
 <div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" onclick="location.reload()">Play again</button></div></div>
@@ -140,14 +146,44 @@ const CLASSES={
   scout:{name:"Scout",sym:"s",hp:3,atk:1,move:1,range:2,speed:2,cost:2}
 };
 const CARDS={
-  skirmisher:{kind:"unit",cls:"skirmisher",cost:2,sym:"S",name:"Skirmisher"},
-  scout:{kind:"unit",cls:"scout",cost:2,sym:"s",name:"Scout"},
-  potion:{kind:"heal",cost:2,sym:"+",name:"Potion",amount:4,spell:true},
-  bolt:{kind:"dmg",cost:2,sym:"ϟ",name:"Bolt",dmg:2,spell:true},
-  terrain:{kind:"terrain",cost:2,sym:"▲",name:"High Ground"}
+  // Vanguard suite (10)
+  vg_weapon:   {hero:"V", cat:"Weapon",   kind:"dmg",         cost:2, dmg:2,    sym:"⚔", name:"Greatsword"},
+  vg_armor:    {hero:"V", cat:"Armor",    kind:"shield",      cost:2, amount:2, sym:"⛨", name:"Plate Mail"},
+  vg_helm:     {hero:"V", cat:"Helmet",   kind:"shield",      cost:1, amount:1, sym:"⛑", name:"Iron Helm"},
+  vg_artifact: {hero:"V", cat:"Artifact", kind:"shield-all",  cost:3, amount:1, sym:"⚑", name:"War Banner"},
+  vg_act_charge:{hero:"V",cat:"Action",   kind:"charge",      cost:1, amount:2, sym:"»", name:"Charge"},
+  vg_act_bulwark:{hero:"V",cat:"Action",  kind:"heal",        cost:1, amount:2, sym:"+", name:"Bulwark"},
+  vg_act_rally:{hero:"V", cat:"Action",   kind:"buff-atk-all",cost:3, amount:1, sym:"!", name:"Rally"},
+  vg_spell_cry:{hero:"V", cat:"Spell",    kind:"buff-atk",    cost:2, amount:2, sym:"☄", name:"Battle Cry"},
+  vg_spell_will:{hero:"V",cat:"Spell",    kind:"heal",        cost:2, amount:3, sym:"✦", name:"Iron Will"},
+  vg_spell_sun:{hero:"V", cat:"Spell",    kind:"dmg",         cost:3, dmg:3,    sym:"✸", name:"Sundering Blow"},
+
+  // Archer suite (10)
+  ar_weapon:   {hero:"A", cat:"Weapon",   kind:"dmg",         cost:2, dmg:2,    sym:"➶", name:"Longbow"},
+  ar_armor:    {hero:"A", cat:"Armor",    kind:"shield",      cost:1, amount:1, sym:"⛨", name:"Leather Cloak"},
+  ar_helm:     {hero:"A", cat:"Helmet",   kind:"charge",      cost:1, amount:1, sym:"⛑", name:"Hawk Hood"},
+  ar_artifact: {hero:"A", cat:"Artifact", kind:"dmg",         cost:2, dmg:2,    sym:"⚑", name:"Hunter's Mark"},
+  ar_act_quick:{hero:"A", cat:"Action",   kind:"dmg",         cost:1, dmg:1,    sym:"›", name:"Quick Shot"},
+  ar_act_volley:{hero:"A",cat:"Action",   kind:"dmg",         cost:3, dmg:2,    sym:"⋮", name:"Volley"},
+  ar_act_rep:  {hero:"A", cat:"Action",   kind:"charge",      cost:1, amount:1, sym:"»", name:"Reposition"},
+  ar_spell_wind:{hero:"A",cat:"Spell",    kind:"charge",      cost:2, amount:2, sym:"≋", name:"Wind Step"},
+  ar_spell_pierce:{hero:"A",cat:"Spell",  kind:"dmg",         cost:3, dmg:3,    sym:"✸", name:"Piercing Arrow"},
+  ar_spell_eye:{hero:"A", cat:"Spell",    kind:"buff-atk",    cost:1, amount:1, sym:"◉", name:"Eagle's Eye"},
+
+  // Warden suite (10)
+  wr_weapon:   {hero:"W", cat:"Weapon",   kind:"dmg",         cost:1, dmg:1,    sym:"⚔", name:"Quarterstaff"},
+  wr_armor:    {hero:"W", cat:"Armor",    kind:"heal",        cost:2, amount:2, sym:"⛨", name:"Robe of Mending"},
+  wr_helm:     {hero:"W", cat:"Helmet",   kind:"shield",      cost:2, amount:2, sym:"⛑", name:"Crown of Light"},
+  wr_artifact: {hero:"W", cat:"Artifact", kind:"heal",        cost:4, amount:6, sym:"⚱", name:"Sacred Chalice"},
+  wr_act_mend: {hero:"W", cat:"Action",   kind:"heal",        cost:2, amount:3, sym:"+", name:"Mend"},
+  wr_act_restore:{hero:"W",cat:"Action",  kind:"heal",        cost:4, amount:5, sym:"+", name:"Restore"},
+  wr_act_wall: {hero:"W", cat:"Action",   kind:"shield-all",  cost:3, amount:1, sym:"⛨", name:"Shield Wall"},
+  wr_spell_heal:{hero:"W",cat:"Spell",    kind:"heal",        cost:2, amount:3, sym:"✚", name:"Heal"},
+  wr_spell_bless:{hero:"W",cat:"Spell",   kind:"buff-atk",    cost:2, amount:1, sym:"☼", name:"Bless"},
+  wr_spell_smite:{hero:"W",cat:"Spell",   kind:"dmg",         cost:2, dmg:2,    sym:"ϟ", name:"Smite"}
 };
-const DECK=["skirmisher","skirmisher","skirmisher","scout","scout",
-  "potion","potion","potion","bolt","bolt","terrain","terrain"];
+// Deck: each side runs the full 30-card suite (3 heroes × 10 cards).
+const DECK=Object.keys(CARDS);
 
 const VEC={N:[-1,0],S:[1,0],E:[0,1],W:[0,-1]};
 const OPP={N:"S",S:"N",E:"W",W:"E"};
@@ -165,7 +201,8 @@ function newUnit(owner,cls,r,c,facing){
   const d=CLASSES[cls];
   const u={id:++uid,owner,cls,r,c,facing,hp:d.hp,maxHp:d.hp,atk:d.atk,move:d.move,range:d.range,speed:d.speed,
     flank:!!d.flank,heal:!!d.heal,hero:!!d.hero,sym:d.sym,name:d.name,
-    hasMoved:false,hasActed:false};
+    hasMoved:false,hasActed:false,
+    shield:0,bonusAtkRound:0,bonusMoveTurn:0};
   units.push(u);
   return u;
 }
@@ -209,7 +246,7 @@ function startRound(){
     p.maxAether=Math.min(10,p.maxAether+1); p.aether=p.maxAether;
     if(p.deck.length && p.hand.length<8) p.hand.push(p.deck.pop());
   }
-  for(const u of units){ u.hasMoved=false; u.hasActed=false; }
+  for(const u of units){ u.hasMoved=false; u.hasActed=false; u.bonusAtkRound=0; u.bonusMoveTurn=0; }
   acted=new Set();
   liveToken=initiativeToken;
   prevBracketSpeed=null;
@@ -270,7 +307,7 @@ function forecastRemaining(){
   return result;
 }
 function endActiveTurn(){
-  const u=activeUnit(); if(u){ acted.add(u.id); }
+  const u=activeUnit(); if(u){ acted.add(u.id); u.bonusMoveTurn=0; }
   activeId=null; sel=null;
   if(over) return;
   advance(); render(); promptOrAi();
@@ -290,12 +327,15 @@ function promptOrAi(){
 /* ---------- combat / actions ---------- */
 function eachUnit(fn){ for(const u of units) if(u.hp>0) fn(u); }
 function heroesAlive(o){ return heroes[o].filter(h=>h.hp>0); }
+function effMove(u){ return u.move + (u.bonusMoveTurn||0); }
+function effAtk(u){ return u.atk + (u.bonusAtkRound||0); }
 function reachable(u){
   const dist={}, q=[{r:u.r,c:u.c}], res=[]; dist[u.r+","+u.c]=0;
+  const lim=effMove(u);
   while(q.length){
     const cur=q.shift(), d=dist[cur.r+","+cur.c];
     for(const k in VEC){const[dr,dc]=VEC[k]; const nr=cur.r+dr,nc=cur.c+dc,key=nr+","+nc;
-      if(!inB(nr,nc)||key in dist||board[nr][nc].unit||d+1>u.move)continue;
+      if(!inB(nr,nc)||key in dist||board[nr][nc].unit||d+1>lim)continue;
       dist[key]=d+1; q.push({r:nr,c:nc}); res.push({r:nr,c:nc});}
   }
   return res;
@@ -328,15 +368,26 @@ function killCheck(defender){
     }
   }
 }
+function applyDamage(defender,raw){
+  let dmg=raw;
+  if(defender.shield>0){
+    const absorbed=Math.min(defender.shield,dmg);
+    defender.shield-=absorbed; dmg-=absorbed;
+  }
+  defender.hp-=dmg;
+  return {absorbed:raw-dmg, taken:dmg};
+}
 function attack(attacker,defender){
   const arc=arcOf(attacker,defender);
   let mult=arc==="front"?1:arc==="side"?1.5:2;
   if(attacker.flank){ if(arc==="side")mult=2; if(arc==="rear")mult=2.5; }
   const high=board[attacker.r][attacker.c].terrain==="high"?1:0;
-  const dmg=Math.round((attacker.atk+high)*mult);
+  const raw=Math.round((effAtk(attacker)+high)*mult);
   attacker.facing=dirFromTo(attacker,defender);
-  defender.hp-=dmg; attacker.hasActed=true;
-  say(`${attacker.name} hit ${defender.name} <b>(${arc.toUpperCase()} ×${mult})</b> for ${dmg}.`);
+  const {taken}=applyDamage(defender,raw);
+  attacker.hasActed=true;
+  const shielded=raw-taken;
+  say(`${attacker.name} hit ${defender.name} <b>(${arc.toUpperCase()} ×${mult})</b> for ${taken}${shielded?` <i>(${shielded} absorbed)</i>`:""}.`);
   killCheck(defender);
 }
 function healAct(warden,ally){
@@ -349,10 +400,31 @@ function summon(o,cls,r,c){ const u=newUnit(o,cls,r,c,o==="A"?"N":"S"); place(u)
 function playCard(owner,handIdx,target){
   const p=players[owner]; const key=p.hand[handIdx]; const card=CARDS[key];
   p.aether-=card.cost; p.hand.splice(handIdx,1);
-  if(card.kind==="unit"){ summon(owner,card.cls,target.r,target.c); say(`${owner==="A"?"You":"Enemy"} deployed ${card.name}.`); }
-  else if(card.kind==="terrain"){ board[target.r][target.c].terrain="high"; say(`${owner==="A"?"You":"Enemy"} raised High Ground.`); }
-  else if(card.kind==="heal"){ const u=board[target.r][target.c].unit; u.hp=Math.min(u.maxHp,u.hp+card.amount); say(`Potion restored ${card.amount} HP to ${u.name}.`); }
-  else if(card.kind==="dmg"){ const u=board[target.r][target.c].unit; u.hp-=card.dmg; say(`Bolt struck ${u.name} for ${card.dmg}.`); killCheck(u); }
+  const who=owner==="A"?"You":"Enemy";
+  if(card.kind==="heal"){
+    const u=board[target.r][target.c].unit;
+    const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount);
+    say(`${card.name}: ${u.name} +${u.hp-before} HP.`);
+  } else if(card.kind==="dmg"){
+    const u=board[target.r][target.c].unit;
+    const {taken}=applyDamage(u,card.dmg);
+    say(`${card.name}: ${u.name} takes ${taken}.`); killCheck(u);
+  } else if(card.kind==="shield"){
+    const u=board[target.r][target.c].unit;
+    u.shield+=card.amount; say(`${card.name}: ${u.name} gains ${card.amount} shield.`);
+  } else if(card.kind==="shield-all"){
+    eachUnit(u=>{ if(u.owner===owner) u.shield+=card.amount; });
+    say(`${who} cast ${card.name} — all allies +${card.amount} shield.`);
+  } else if(card.kind==="buff-atk"){
+    const u=board[target.r][target.c].unit;
+    u.bonusAtkRound+=card.amount; say(`${card.name}: ${u.name} +${card.amount} ATK this round.`);
+  } else if(card.kind==="buff-atk-all"){
+    eachUnit(u=>{ if(u.owner===owner) u.bonusAtkRound+=card.amount; });
+    say(`${who} cast ${card.name} — all allies +${card.amount} ATK this round.`);
+  } else if(card.kind==="charge"){
+    const u=board[target.r][target.c].unit;
+    u.bonusMoveTurn+=card.amount; say(`${card.name}: ${u.name} +${card.amount} move this turn.`);
+  }
 }
 function canPlayCardNow(){
   const u=activeUnit(); return u && u.owner==="A" && !u.hasMoved && !u.hasActed;
@@ -374,6 +446,7 @@ function onTile(r,c){
   if(cell._hl==="atk"){ attack(u,tgt); render(); if(over) return; endActiveTurn(); return; }
   if(cell._hl==="heal"){ healAct(u,tgt); render(); endActiveTurn(); return; }
 }
+function anyAlly(o){ let any=false; eachUnit(u=>{if(u.owner===o)any=true;}); return any; }
 function onCard(i){
   if(busy||over) return;
   if(!canPlayCardNow()){ say("Cards may only be played at the start of one of your units' turns."); render(); return; }
@@ -381,6 +454,7 @@ function onCard(i){
   if(card.cost>players.A.aether) return;
   if(card.kind==="heal" && !anyDamagedAlly("A")){ say("No wounded ally to heal."); return; }
   if(card.kind==="dmg" && !anyEnemy("A")){ say("No enemy in play."); return; }
+  if((card.kind==="shield"||card.kind==="shield-all"||card.kind==="buff-atk"||card.kind==="buff-atk-all"||card.kind==="charge") && !anyAlly("A")){ say("No ally to target."); return; }
   sel=(sel&&sel.t==="card"&&sel.i===i)?null:{t:"card",i}; render();
 }
 function anyDamagedAlly(o){ let any=false; eachUnit(u=>{if(u.owner===o&&u.hp<u.maxHp)any=true;}); return any; }
@@ -422,14 +496,31 @@ function aiPickCardForUnit(u){
   B.hand.forEach((key,i)=>{
     const card=CARDS[key]; if(card.cost>B.aether) return;
     let score=0, target=null;
-    if(card.kind==="heal"){ const t=aiHealTarget("B"); if(!t) return; score=4+(t.maxHp-t.hp)+(t.hero?3:0); target={r:t.r,c:t.c}; }
-    else if(card.kind==="dmg"){ const t=aiDmgTarget("B",card.dmg); if(!t) return; score=3+(t.hp<=card.dmg?6:0)+(t.hero?3:0); target={r:t.r,c:t.c}; }
-    else if(card.kind==="terrain"){
-      let tile=null; for(const r of deployRows("B")) for(let c=0;c<C;c++) if(!board[r][c].unit&&!board[r][c].terrain){ tile={r,c}; break; }
-      if(!tile) return; score=2; target=tile;
-    } else if(card.kind==="unit"){
-      let tile=null; for(const r of [1,0]) for(const c of [2,1,3,0,4]) if(!board[r][c].unit){ tile={r,c}; break; }
-      if(!tile) return; score=3; target=tile;
+    if(card.kind==="heal"){
+      const t=aiHealTarget("B"); if(!t) return;
+      const heal=Math.min(card.amount, t.maxHp-t.hp);
+      if(heal<=0) return;
+      score=heal+(t.hero?3:0); target={r:t.r,c:t.c};
+    } else if(card.kind==="dmg"){
+      const t=aiDmgTarget("B",card.dmg); if(!t) return;
+      score=card.dmg*1.5+(t.hp<=card.dmg?6:0)+(t.hero?3:0); target={r:t.r,c:t.c};
+    } else if(card.kind==="shield"){
+      let bestT=null,bs=-1;
+      eachUnit(au=>{ if(au.owner==="B"){ let s=(au.maxHp-au.hp)+(au.hero?3:0)+(au.shield?-2:0); if(s>bs){bs=s;bestT=au;} } });
+      if(!bestT) return; score=card.amount+(bestT.hero?3:0); target={r:bestT.r,c:bestT.c};
+    } else if(card.kind==="buff-atk"){
+      // best on a unit that has enemies in range and hasn't acted
+      let bestT=null,bs=-1;
+      eachUnit(au=>{ if(au.owner==="B" && enemiesInRange(au).length){ let s=au.atk+(au.hero?2:0); if(s>bs){bs=s;bestT=au;} } });
+      if(!bestT) return; score=2+card.amount; target={r:bestT.r,c:bestT.c};
+    } else if(card.kind==="charge"){
+      let bestT=null,bs=-1;
+      eachUnit(au=>{ if(au.owner==="B" && !enemiesInRange(au).length){ let s=au.hero?3:1; if(s>bs){bs=s;bestT=au;} } });
+      if(!bestT) return; score=1+card.amount; target={r:bestT.r,c:bestT.c};
+    } else if(card.kind==="shield-all"||card.kind==="buff-atk-all"){
+      let allies=[]; eachUnit(au=>{ if(au.owner==="B") allies.push(au); });
+      if(!allies.length) return; score=allies.length*card.amount;
+      target={r:allies[0].r,c:allies[0].c}; // target tile is arbitrary; effect applies to all
     }
     if(!best || score>best.score){ best={handIdx:i,target,score}; }
   });
@@ -472,14 +563,14 @@ function computeHl(){
   const u=activeUnit(); if(!u||u.owner!=="A") return;
   if(sel&&sel.t==="card"){
     const key=players.A.hand[sel.i]; const card=CARDS[key];
-    if(card.kind==="unit"){
-      for(const r of deployRows("A"))for(let c=0;c<C;c++){ const cell=board[r][c]; if(!cell.unit) cell._hl="deploy"; }
-    } else if(card.kind==="terrain"){
-      for(const r of deployRows("A"))for(let c=0;c<C;c++){ const cell=board[r][c]; if(!cell.unit&&!cell.terrain) cell._hl="deploy"; }
-    } else if(card.kind==="heal"){
+    if(card.kind==="heal"){
       eachUnit(au=>{ if(au.owner==="A"&&au.hp<au.maxHp) board[au.r][au.c]._hl="heal"; });
     } else if(card.kind==="dmg"){
       eachUnit(au=>{ if(au.owner!=="A") board[au.r][au.c]._hl="spell"; });
+    } else if(card.kind==="shield"||card.kind==="buff-atk"||card.kind==="charge"){
+      eachUnit(au=>{ if(au.owner==="A") board[au.r][au.c]._hl="heal"; });
+    } else if(card.kind==="shield-all"||card.kind==="buff-atk-all"){
+      eachUnit(au=>{ if(au.owner==="A") board[au.r][au.c]._hl="heal"; });
     }
     return;
   }
@@ -529,8 +620,9 @@ function render(){
     const u=cell.unit;
     if(u&&u.id===activeId)t.classList.add("active");
     if(u){ const arrow={N:"↑",S:"↓",E:"→",W:"←"}[u.facing]; const done=acted.has(u.id);
+      const buffs=(u.shield?`⛨${u.shield}`:"")+(u.bonusAtkRound?` +${u.bonusAtkRound}A`:"");
       t.innerHTML=`<div class="unit ${u.owner}${u.hero?" hero":""}${done?" done":""}">
-        <span class="face">${arrow}</span><span class="sym">${u.sym}</span><span class="hp">${u.hp}</span></div>`; }
+        <span class="face">${arrow}</span><span class="sym">${u.sym}</span><span class="hp">${u.hp}</span>${buffs?`<span class="buffs">${buffs}</span>`:""}</div>`; }
     t.onclick=()=>onTile(r,c);
     bd.appendChild(t);
   }
@@ -540,16 +632,21 @@ function render(){
   const cardable=canPlayCardNow();
   players.A.hand.forEach((key,i)=>{ const card=CARDS[key]; const el=document.createElement("div");
     const cant=!cardable||card.cost>players.A.aether||busy||over;
-    const extra=card.kind==="terrain"?" terrain":(card.spell?" spell":"");
-    el.className="card"+extra+(cant?" cant":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
-    el.innerHTML=`<span class="cc">${card.cost}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span>`;
+    el.className="card cat-"+card.cat+(cant?" cant":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
+    el.innerHTML=`<span class="cc">${card.cost}</span><span class="cat">${card.cat.slice(0,3).toUpperCase()}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${card.hero}</span>`;
     el.onclick=()=>onCard(i); h.appendChild(el); });
   const ebtn=document.getElementById("endBtn"); const u=activeUnit();
   ebtn.disabled = over || busy || !u || u.owner!=="A";
   ebtn.textContent = (u && u.owner==="A") ? "END TURN" : "ENEMY…";
   if(!over && u && u.owner==="A" && sel && sel.t==="card"){
     const card=CARDS[players.A.hand[sel.i]];
-    const hint=card.kind==="unit"?"tap a highlighted tile to deploy.":card.kind==="terrain"?"tap an empty tile in your half.":card.kind==="heal"?"tap a wounded ally.":card.kind==="dmg"?"tap an enemy.":"";
+    let hint="";
+    if(card.kind==="heal") hint="tap a wounded ally.";
+    else if(card.kind==="dmg") hint="tap an enemy.";
+    else if(card.kind==="shield") hint="tap an ally to shield.";
+    else if(card.kind==="buff-atk") hint="tap an ally to buff.";
+    else if(card.kind==="charge") hint="tap an ally to charge.";
+    else if(card.kind==="shield-all"||card.kind==="buff-atk-all") hint="tap any ally to cast on all.";
     say(`Play <b>${card.name}</b> — ${hint}`);
   }
 }
