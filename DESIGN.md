@@ -2,7 +2,7 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.13** (`index.html`).
+Current build: **v0.14** (`index.html`).
 
 ---
 
@@ -125,7 +125,7 @@ Movement updates facing toward the destination; attacks update facing toward the
 
 ## Cards
 
-Each side runs a **30-card deck** built from three 10-card hero suites — Knight, Ranger, Mage. Each hero contributes **5 equipment + 5 actions**. Both sides currently use identical decks regardless of who they drafted.
+The card pool spans **9 hero suites × 10 cards = 90 cards total**. Each hero contributes **5 equipment + 5 actions** themed to their identity. After the draft, each player's **match deck is 30 cards** — the union of their 3 drafted heroes' suites — then shuffled. Both players draw from their own deck independently.
 
 ### Card economy
 
@@ -222,6 +222,108 @@ Caster / healer. Wide selection of heals, plus team shield/buff.
 | 8 | Action · Spell | Aegis | shield-all 2 | +2 shield to all allies |
 | 9 | Action · Spell | Bless | buff-atk 3 | Ally +3 ATK this round |
 | 10 | Action · Spell | Smite | dmg 4 | 4 dmg to enemy |
+
+### Paladin suite (10) — 5 equip, 5 actions (3 spells)
+
+Holy tank / heavy heals + heavy shields.
+
+| # | Slot/Type | Name | Kind | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Warhammer | dmg 4 | 4 dmg to enemy |
+| 2 | Armor | Holy Plate | shield 6 | +6 shield to ally (biggest single shield in pool) |
+| 3 | Helmet | Helm of Faith | shield-all 2 | +2 shield to all allies |
+| 4 | Boots | Sabatons | charge 2 | Ally +2 move this turn |
+| 5 | Artifact | Holy Symbol | heal-all 3 | Heal all allies +3 |
+| 6 | Action | Lay on Hands | heal 7 | Heal ally +7 |
+| 7 | Action | Smite Evil | dmg 4 | 4 dmg to enemy |
+| 8 | Action · Spell | Divine Shield | shield-all 3 | +3 shield to all allies |
+| 9 | Action · Spell | Consecration | dmg-adj 3 (+1) | 3 dmg + 1 splash to adjacent enemies |
+| 10 | Action · Spell | Sanctuary | buff-atk-all 2 | All allies +2 ATK this round |
+
+### Warlock suite (10) — 5 equip, 5 actions (4 spells)
+
+Dark caster — heavy single-target damage, AoE curses, life drain.
+
+| # | Slot/Type | Name | Kind | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Athame | dmg 3 | 3 dmg to enemy |
+| 2 | Armor | Shadow Cloak | shield 3 | +3 shield to ally |
+| 3 | Helmet | Hood of Shadows | charge 2 | Ally +2 move this turn |
+| 4 | Boots | Boots of Misdirection | charge 3 | Ally +3 move this turn |
+| 5 | Artifact | Cursed Skull | buff-atk 3 | Ally +3 ATK this round |
+| 6 | Action | Hex | dmg 4 | 4 dmg to enemy |
+| 7 | Action · Spell | Eldritch Blast | dmg 5 | 5 dmg to enemy |
+| 8 | Action · Spell | Pulse of Decay | dmg-adj 3 (+1) | 3 dmg + 1 splash to adjacent enemies |
+| 9 | Action · Spell | Drain Soul | heal 4 | Heal ally +4 (life-drain flavor) |
+| 10 | Action · Spell | Curse of Weakness | buff-atk-all 2 | All allies +2 ATK this round |
+
+### Druid suite (10) — 5 equip, 5 actions (4 spells)
+
+Nature magic — effects that spread (heal-all + dmg-adj heavy).
+
+| # | Slot/Type | Name | Kind | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Sickle | dmg-adj 2 (+1) | 2 dmg + 1 splash to adjacent enemies |
+| 2 | Armor | Bark Skin | shield 4 | +4 shield to ally |
+| 3 | Helmet | Antlered Crown | buff-atk-all 2 | All allies +2 ATK this round |
+| 4 | Boots | Mossy Wraps | charge 3 | Ally +3 move this turn |
+| 5 | Artifact | Living Wood | heal-all 4 | Heal all allies +4 (biggest group heal) |
+| 6 | Action | Thorns | dmg 4 | 4 dmg to enemy |
+| 7 | Action · Spell | Regrowth | heal 5 | Heal ally +5 |
+| 8 | Action · Spell | Entangle | dmg-adj 3 (+1) | 3 dmg + 1 splash to adjacent enemies |
+| 9 | Action · Spell | Lightning Bolt | dmg 5 | 5 dmg to enemy |
+| 10 | Action · Spell | Sunbeam | heal-all 3 | Heal all allies +3 |
+
+### Berserker suite (10) — 5 equip, 5 actions (1 spell)
+
+Rage — overwhelming damage, weak defense.
+
+| # | Slot/Type | Name | Kind | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Battle Axe | dmg 5 | 5 dmg to enemy |
+| 2 | Armor | Leather Wraps | shield 2 | +2 shield to ally (weakest armor in pool) |
+| 3 | Helmet | Horned Helm | buff-atk 3 | Ally +3 ATK this round |
+| 4 | Boots | War Boots | charge 3 | Ally +3 move this turn |
+| 5 | Artifact | Bloodthirster | dmg 6 | 6 dmg to enemy (largest dmg from equipment) |
+| 6 | Action | Frenzy | buff-atk-all 3 | All allies +3 ATK this round |
+| 7 | Action | Reckless Charge | charge 4 | Ally +4 move this turn |
+| 8 | Action | Whirlwind | dmg-adj 3 (+1) | 3 dmg + 1 splash to adjacent enemies |
+| 9 | Action | Rend | dmg-adj 4 (+1) | 4 dmg + 1 splash to adjacent enemies |
+| 10 | Action · Spell | Battle Trance | buff-atk 4 | Ally +4 ATK this round |
+
+### Scout suite (10) — 5 equip, 5 actions (1 spell)
+
+Mobility — hit-and-run, evasion, recon.
+
+| # | Slot/Type | Name | Kind | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Shortbow | dmg 3 | 3 dmg to enemy |
+| 2 | Armor | Camo Cloak | shield 3 | +3 shield to ally |
+| 3 | Helmet | Spyglass | buff-atk 3 | Ally +3 ATK this round |
+| 4 | Boots | Cat's Boots | charge 3 | Ally +3 move this turn |
+| 5 | Artifact | Trap | dmg-adj 3 (+1) | 3 dmg + 1 splash to adjacent enemies |
+| 6 | Action | Snipe | dmg 4 | 4 dmg to enemy |
+| 7 | Action | Dash | charge 5 | Ally +5 move this turn (biggest movement card) |
+| 8 | Action | Vanish | shield 4 | +4 shield to ally |
+| 9 | Action | Mark Target | buff-atk-all 2 | All allies +2 ATK this round |
+| 10 | Action · Spell | Shadow Step | charge 4 | Ally +4 move this turn |
+
+### Assassin suite (10) — 5 equip, 5 actions (2 spells)
+
+Lethal precision — spike damage, single-target kills.
+
+| # | Slot/Type | Name | Kind | Effect |
+|---|---|---|---|---|
+| 1 | Weapon | Dagger | dmg 4 | 4 dmg to enemy |
+| 2 | Armor | Black Leathers | shield 2 | +2 shield to ally |
+| 3 | Helmet | Mask | buff-atk 3 | Ally +3 ATK this round |
+| 4 | Boots | Shadow Boots | charge 4 | Ally +4 move this turn |
+| 5 | Artifact | Death Mark | dmg 5 | 5 dmg to enemy |
+| 6 | Action | Backstab | dmg 5 | 5 dmg to enemy |
+| 7 | Action | Garrote | dmg-adj 2 (+2) | 2 dmg + 2 splash to adjacent enemies |
+| 8 | Action | Smoke Bomb | shield-all 2 | +2 shield to all allies |
+| 9 | Action · Spell | Shadow Strike | dmg 7 | 7 dmg to enemy (biggest single hit in the pool) |
+| 10 | Action · Spell | Veil | charge 5 | Ally +5 move this turn |
 
 ## HP & dice tracking
 

@@ -200,17 +200,17 @@
     <button class="btn ghost" id="newBtn">New</button>
   </div>
 
-  <div class="legend">9-hero roster · 1-2-2-1 snake draft · 3 units per side &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
+  <div class="legend">9-hero roster · 90-card pool · your deck = your 3 drafted heroes' 30 cards &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.13 · 9 heroes · no aether · draw on turn end · tap for rules</div>
+    <div class="sub">v0.14 · 9 hero suites · deck = your draft · tap for rules</div>
   </button>
 </div>
 
 <div id="codex"><div class="cbox">
   <button class="x" onclick="closeCodex()">×</button>
   <h2>SIGIL TACTICS</h2>
-  <div class="cdx-sub">v0.13 — 9-hero roster · snake draft · face-down deploy · no-aether card economy</div>
+  <div class="cdx-sub">v0.14 — 9-hero roster · 9 × 10-card suites = 90-card pool · your deck = drafted heroes' suites</div>
 
   <h3>Match flow</h3>
   <ul>
@@ -250,7 +250,7 @@
   <ul class="kinds">
     <li><b>Equipment (5 per hero)</b> — one each of Weapon, Armor, Helmet, Boots, Artifact.</li>
     <li><b>Actions (5 per hero)</b> — moves, attacks, and effects performed by a hero. <b>Spells</b> are a subtype of action (purple stripe, tag <i>SPL</i>) — mechanically identical to actions, distinguished only by flavor.</li>
-    <li><i>TODO:</i> the deck is currently the fixed 30-card Knight/Ranger/Mage suite for both sides. Suites for the other 9 heroes are not yet authored — drafting a non-K/R/M hero gives you their unit but no themed cards.</li>
+    <li><b>Your deck:</b> 30 cards built at deploy time from your 3 drafted heroes' suites. Pool across the 9 active heroes is 90 cards total.</li>
   </ul>
 
   <h3>Card kinds (effects)</h3>
@@ -319,47 +319,123 @@ const CLASSES={
 };
 const ROSTER=Object.keys(CLASSES).filter(k=>!CLASSES[k].hidden);
 const DRAFT_SEQUENCE=["A","B","B","A","A","B"]; // 1-2-2-1 snake, 3v3
-// v0.13 card economy: no resource cost; each card consumes the active unit's turn.
-// Values tuned so every card clears the "worth a turn" bar (≥3 single-target dmg, ≥4 single-heal, etc.).
+// v0.14 — 9 suites × 10 cards = 90-card pool. Your match deck = 30 cards built from your 3 drafted heroes.
+// No resource cost; each card consumes the active unit's turn. Values tuned so every card clears the
+// "worth a turn" bar (≥3 single-target dmg, ≥4 single-heal, ≥6 total expected for AoE/all-ally).
 const CARDS={
-  // Knight — tank / team shield. 5 equip + 5 actions (1 spell).
-  kn_weapon:     {hero:"K", cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"⚔", name:"Greatsword"},
-  kn_armor:      {hero:"K", cat:"Armor",    kind:"shield",       amount:5,        sym:"⛨", name:"Plate Mail"},
-  kn_helm:       {hero:"K", cat:"Helmet",   kind:"shield",       amount:3,        sym:"⛑", name:"Iron Helm"},
-  kn_boots:      {hero:"K", cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"Steel Greaves"},
-  kn_artifact:   {hero:"K", cat:"Artifact", kind:"shield-all",   amount:2,        sym:"⚑", name:"War Banner"},
-  kn_act_cleave: {hero:"K", cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"⚒", name:"Cleave"},
-  kn_act_bulwark:{hero:"K", cat:"Action",   kind:"heal",         amount:4,        sym:"+", name:"Bulwark"},
-  kn_act_rally:  {hero:"K", cat:"Action",   kind:"heal-all",     amount:2,        sym:"✚", name:"Rally"},
-  kn_act_wall:   {hero:"K", cat:"Action",   kind:"shield-all",   amount:3,        sym:"⛨", name:"Shield Wall"},
-  kn_spell_cry:  {hero:"K", cat:"Action",   kind:"buff-atk-all", amount:3,        sym:"☄", name:"Battle Cry", spell:true},
+  // Knight — tank / team shield
+  kn_weapon:     {hero:"knight", cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"⚔", name:"Greatsword"},
+  kn_armor:      {hero:"knight", cat:"Armor",    kind:"shield",       amount:5,        sym:"⛨", name:"Plate Mail"},
+  kn_helm:       {hero:"knight", cat:"Helmet",   kind:"shield",       amount:3,        sym:"⛑", name:"Iron Helm"},
+  kn_boots:      {hero:"knight", cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"Steel Greaves"},
+  kn_artifact:   {hero:"knight", cat:"Artifact", kind:"shield-all",   amount:2,        sym:"⚑", name:"War Banner"},
+  kn_act_cleave: {hero:"knight", cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"⚒", name:"Cleave"},
+  kn_act_bulwark:{hero:"knight", cat:"Action",   kind:"heal",         amount:4,        sym:"+", name:"Bulwark"},
+  kn_act_rally:  {hero:"knight", cat:"Action",   kind:"heal-all",     amount:2,        sym:"✚", name:"Rally"},
+  kn_act_wall:   {hero:"knight", cat:"Action",   kind:"shield-all",   amount:3,        sym:"⛨", name:"Shield Wall"},
+  kn_spell_cry:  {hero:"knight", cat:"Action",   kind:"buff-atk-all", amount:3,        sym:"☄", name:"Battle Cry", spell:true},
 
-  // Ranger — mobile sniper / combat tricks. 5 equip + 5 actions (2 spells).
-  rn_weapon:     {hero:"R", cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"➶", name:"Longbow"},
-  rn_armor:      {hero:"R", cat:"Armor",    kind:"shield",       amount:3,        sym:"⛨", name:"Leather Cloak"},
-  rn_helm:       {hero:"R", cat:"Helmet",   kind:"charge",       amount:2,        sym:"⛑", name:"Hawk Hood"},
-  rn_boots:      {hero:"R", cat:"Boots",    kind:"charge",       amount:4,        sym:"⫯", name:"Swift Boots"},
-  rn_artifact:   {hero:"R", cat:"Artifact", kind:"buff-atk",     amount:3,        sym:"⚑", name:"Hunter's Mark"},
-  rn_act_quick:  {hero:"R", cat:"Action",   kind:"dmg",          dmg:3,           sym:"›", name:"Quick Shot"},
-  rn_act_volley: {hero:"R", cat:"Action",   kind:"dmg-adj",      dmg:2, splash:1, sym:"⋮", name:"Volley"},
-  rn_act_rep:    {hero:"R", cat:"Action",   kind:"charge",       amount:3,        sym:"»", name:"Reposition"},
-  rn_spell_pierce:{hero:"R",cat:"Action",   kind:"dmg",          dmg:5,           sym:"✸", name:"Piercing Arrow", spell:true},
-  rn_spell_eye:  {hero:"R", cat:"Action",   kind:"buff-atk-all", amount:2,        sym:"◉", name:"Eagle's Eye", spell:true},
+  // Ranger — mobile sniper / combat tricks
+  rn_weapon:     {hero:"ranger", cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"➶", name:"Longbow"},
+  rn_armor:      {hero:"ranger", cat:"Armor",    kind:"shield",       amount:3,        sym:"⛨", name:"Leather Cloak"},
+  rn_helm:       {hero:"ranger", cat:"Helmet",   kind:"charge",       amount:2,        sym:"⛑", name:"Hawk Hood"},
+  rn_boots:      {hero:"ranger", cat:"Boots",    kind:"charge",       amount:4,        sym:"⫯", name:"Swift Boots"},
+  rn_artifact:   {hero:"ranger", cat:"Artifact", kind:"buff-atk",     amount:3,        sym:"⚑", name:"Hunter's Mark"},
+  rn_act_quick:  {hero:"ranger", cat:"Action",   kind:"dmg",          dmg:3,           sym:"›", name:"Quick Shot"},
+  rn_act_volley: {hero:"ranger", cat:"Action",   kind:"dmg-adj",      dmg:2, splash:1, sym:"⋮", name:"Volley"},
+  rn_act_rep:    {hero:"ranger", cat:"Action",   kind:"charge",       amount:3,        sym:"»", name:"Reposition"},
+  rn_spell_pierce:{hero:"ranger",cat:"Action",   kind:"dmg",          dmg:5,           sym:"✸", name:"Piercing Arrow", spell:true},
+  rn_spell_eye:  {hero:"ranger", cat:"Action",   kind:"buff-atk-all", amount:2,        sym:"◉", name:"Eagle's Eye", spell:true},
 
-  // Mage — caster / healer. 5 equip + 5 actions (all spells).
-  mg_weapon:     {hero:"M", cat:"Weapon",   kind:"dmg",          dmg:3,           sym:"⚔", name:"Staff"},
-  mg_armor:      {hero:"M", cat:"Armor",    kind:"heal",         amount:3,        sym:"⛨", name:"Robe of Mending"},
-  mg_helm:       {hero:"M", cat:"Helmet",   kind:"shield",       amount:4,        sym:"⛑", name:"Crown of Light"},
-  mg_boots:      {hero:"M", cat:"Boots",    kind:"charge",       amount:2,        sym:"⫯", name:"Cleric Sandals"},
-  mg_artifact:   {hero:"M", cat:"Artifact", kind:"heal",         amount:8,        sym:"⚱", name:"Sacred Chalice"},
-  mg_spell_mend: {hero:"M", cat:"Action",   kind:"heal",         amount:5,        sym:"✚", name:"Mend", spell:true},
-  mg_spell_heal: {hero:"M", cat:"Action",   kind:"heal-all",     amount:3,        sym:"✚", name:"Heal", spell:true},
-  mg_spell_aegis:{hero:"M", cat:"Action",   kind:"shield-all",   amount:2,        sym:"⛨", name:"Aegis", spell:true},
-  mg_spell_bless:{hero:"M", cat:"Action",   kind:"buff-atk",     amount:3,        sym:"☼", name:"Bless", spell:true},
-  mg_spell_smite:{hero:"M", cat:"Action",   kind:"dmg",          dmg:4,           sym:"ϟ", name:"Smite", spell:true}
+  // Mage — caster / healer
+  mg_weapon:     {hero:"mage",   cat:"Weapon",   kind:"dmg",          dmg:3,           sym:"⚔", name:"Staff"},
+  mg_armor:      {hero:"mage",   cat:"Armor",    kind:"heal",         amount:3,        sym:"⛨", name:"Robe of Mending"},
+  mg_helm:       {hero:"mage",   cat:"Helmet",   kind:"shield",       amount:4,        sym:"⛑", name:"Crown of Light"},
+  mg_boots:      {hero:"mage",   cat:"Boots",    kind:"charge",       amount:2,        sym:"⫯", name:"Cleric Sandals"},
+  mg_artifact:   {hero:"mage",   cat:"Artifact", kind:"heal",         amount:8,        sym:"⚱", name:"Sacred Chalice"},
+  mg_spell_mend: {hero:"mage",   cat:"Action",   kind:"heal",         amount:5,        sym:"✚", name:"Mend", spell:true},
+  mg_spell_heal: {hero:"mage",   cat:"Action",   kind:"heal-all",     amount:3,        sym:"✚", name:"Heal", spell:true},
+  mg_spell_aegis:{hero:"mage",   cat:"Action",   kind:"shield-all",   amount:2,        sym:"⛨", name:"Aegis", spell:true},
+  mg_spell_bless:{hero:"mage",   cat:"Action",   kind:"buff-atk",     amount:3,        sym:"☼", name:"Bless", spell:true},
+  mg_spell_smite:{hero:"mage",   cat:"Action",   kind:"dmg",          dmg:4,           sym:"ϟ", name:"Smite", spell:true},
+
+  // Paladin — holy tank / heavy heals + heavy shields
+  pl_weapon:     {hero:"paladin",cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"⚒", name:"Warhammer"},
+  pl_armor:      {hero:"paladin",cat:"Armor",    kind:"shield",       amount:6,        sym:"⛨", name:"Holy Plate"},
+  pl_helm:       {hero:"paladin",cat:"Helmet",   kind:"shield-all",   amount:2,        sym:"⛑", name:"Helm of Faith"},
+  pl_boots:      {hero:"paladin",cat:"Boots",    kind:"charge",       amount:2,        sym:"⫯", name:"Sabatons"},
+  pl_artifact:   {hero:"paladin",cat:"Artifact", kind:"heal-all",     amount:3,        sym:"⚑", name:"Holy Symbol"},
+  pl_act_loh:    {hero:"paladin",cat:"Action",   kind:"heal",         amount:7,        sym:"+", name:"Lay on Hands"},
+  pl_act_smite:  {hero:"paladin",cat:"Action",   kind:"dmg",          dmg:4,           sym:"✸", name:"Smite Evil"},
+  pl_spell_div:  {hero:"paladin",cat:"Action",   kind:"shield-all",   amount:3,        sym:"☼", name:"Divine Shield", spell:true},
+  pl_spell_con:  {hero:"paladin",cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"☄", name:"Consecration",  spell:true},
+  pl_spell_sanct:{hero:"paladin",cat:"Action",   kind:"buff-atk-all", amount:2,        sym:"✚", name:"Sanctuary",     spell:true},
+
+  // Warlock — dark caster / AoE & life-drain
+  wl_weapon:     {hero:"warlock",cat:"Weapon",   kind:"dmg",          dmg:3,           sym:"⚔", name:"Athame"},
+  wl_armor:      {hero:"warlock",cat:"Armor",    kind:"shield",       amount:3,        sym:"⛨", name:"Shadow Cloak"},
+  wl_helm:       {hero:"warlock",cat:"Helmet",   kind:"charge",       amount:2,        sym:"⛑", name:"Hood of Shadows"},
+  wl_boots:      {hero:"warlock",cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"Boots of Misdirection"},
+  wl_artifact:   {hero:"warlock",cat:"Artifact", kind:"buff-atk",     amount:3,        sym:"⚑", name:"Cursed Skull"},
+  wl_act_hex:    {hero:"warlock",cat:"Action",   kind:"dmg",          dmg:4,           sym:"✸", name:"Hex"},
+  wl_spell_blast:{hero:"warlock",cat:"Action",   kind:"dmg",          dmg:5,           sym:"☠", name:"Eldritch Blast",   spell:true},
+  wl_spell_pulse:{hero:"warlock",cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"❦", name:"Pulse of Decay",    spell:true},
+  wl_spell_drain:{hero:"warlock",cat:"Action",   kind:"heal",         amount:4,        sym:"🩸", name:"Drain Soul",        spell:true},
+  wl_spell_curse:{hero:"warlock",cat:"Action",   kind:"buff-atk-all", amount:2,        sym:"✤", name:"Curse of Weakness", spell:true},
+
+  // Druid — nature: spread effects (heal-all + dmg-adj)
+  dr_weapon:     {hero:"druid",  cat:"Weapon",   kind:"dmg-adj",      dmg:2, splash:1, sym:"⚔", name:"Sickle"},
+  dr_armor:      {hero:"druid",  cat:"Armor",    kind:"shield",       amount:4,        sym:"⛨", name:"Bark Skin"},
+  dr_helm:       {hero:"druid",  cat:"Helmet",   kind:"buff-atk-all", amount:2,        sym:"⛑", name:"Antlered Crown"},
+  dr_boots:      {hero:"druid",  cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"Mossy Wraps"},
+  dr_artifact:   {hero:"druid",  cat:"Artifact", kind:"heal-all",     amount:4,        sym:"⚑", name:"Living Wood"},
+  dr_act_thorns: {hero:"druid",  cat:"Action",   kind:"dmg",          dmg:4,           sym:"❦", name:"Thorns"},
+  dr_spell_regro:{hero:"druid",  cat:"Action",   kind:"heal",         amount:5,        sym:"✚", name:"Regrowth",      spell:true},
+  dr_spell_tang: {hero:"druid",  cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"⋮", name:"Entangle",      spell:true},
+  dr_spell_light:{hero:"druid",  cat:"Action",   kind:"dmg",          dmg:5,           sym:"ϟ", name:"Lightning Bolt",spell:true},
+  dr_spell_sun:  {hero:"druid",  cat:"Action",   kind:"heal-all",     amount:3,        sym:"☼", name:"Sunbeam",       spell:true},
+
+  // Berserker — rage / overwhelming damage
+  br_weapon:     {hero:"berserker",cat:"Weapon",   kind:"dmg",          dmg:5,           sym:"⚔", name:"Battle Axe"},
+  br_armor:      {hero:"berserker",cat:"Armor",    kind:"shield",       amount:2,        sym:"⛨", name:"Leather Wraps"},
+  br_helm:       {hero:"berserker",cat:"Helmet",   kind:"buff-atk",     amount:3,        sym:"⛑", name:"Horned Helm"},
+  br_boots:      {hero:"berserker",cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"War Boots"},
+  br_artifact:   {hero:"berserker",cat:"Artifact", kind:"dmg",          dmg:6,           sym:"⚑", name:"Bloodthirster"},
+  br_act_frenzy: {hero:"berserker",cat:"Action",   kind:"buff-atk-all", amount:3,        sym:"☄", name:"Frenzy"},
+  br_act_charge: {hero:"berserker",cat:"Action",   kind:"charge",       amount:4,        sym:"»", name:"Reckless Charge"},
+  br_act_whirl:  {hero:"berserker",cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"⚒", name:"Whirlwind"},
+  br_act_rend:   {hero:"berserker",cat:"Action",   kind:"dmg-adj",      dmg:4, splash:1, sym:"✸", name:"Rend"},
+  br_spell_trance:{hero:"berserker",cat:"Action",  kind:"buff-atk",     amount:4,        sym:"⚠", name:"Battle Trance", spell:true},
+
+  // Scout — mobility / hit-and-run
+  sc_weapon:     {hero:"scout",  cat:"Weapon",   kind:"dmg",          dmg:3,           sym:"⚔", name:"Shortbow"},
+  sc_armor:      {hero:"scout",  cat:"Armor",    kind:"shield",       amount:3,        sym:"⛨", name:"Camo Cloak"},
+  sc_helm:       {hero:"scout",  cat:"Helmet",   kind:"buff-atk",     amount:3,        sym:"⛑", name:"Spyglass"},
+  sc_boots:      {hero:"scout",  cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"Cat's Boots"},
+  sc_artifact:   {hero:"scout",  cat:"Artifact", kind:"dmg-adj",      dmg:3, splash:1, sym:"⚑", name:"Trap"},
+  sc_act_snipe:  {hero:"scout",  cat:"Action",   kind:"dmg",          dmg:4,           sym:"✸", name:"Snipe"},
+  sc_act_dash:   {hero:"scout",  cat:"Action",   kind:"charge",       amount:5,        sym:"»", name:"Dash"},
+  sc_act_vanish: {hero:"scout",  cat:"Action",   kind:"shield",       amount:4,        sym:"⛨", name:"Vanish"},
+  sc_act_mark:   {hero:"scout",  cat:"Action",   kind:"buff-atk-all", amount:2,        sym:"◉", name:"Mark Target"},
+  sc_spell_step: {hero:"scout",  cat:"Action",   kind:"charge",       amount:4,        sym:"≋", name:"Shadow Step", spell:true},
+
+  // Assassin — lethal precision / spike damage
+  as_weapon:     {hero:"assassin",cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"⚔", name:"Dagger"},
+  as_armor:      {hero:"assassin",cat:"Armor",    kind:"shield",       amount:2,        sym:"⛨", name:"Black Leathers"},
+  as_helm:       {hero:"assassin",cat:"Helmet",   kind:"buff-atk",     amount:3,        sym:"⛑", name:"Mask"},
+  as_boots:      {hero:"assassin",cat:"Boots",    kind:"charge",       amount:4,        sym:"⫯", name:"Shadow Boots"},
+  as_artifact:   {hero:"assassin",cat:"Artifact", kind:"dmg",          dmg:5,           sym:"⚑", name:"Death Mark"},
+  as_act_back:   {hero:"assassin",cat:"Action",   kind:"dmg",          dmg:5,           sym:"✸", name:"Backstab"},
+  as_act_gar:    {hero:"assassin",cat:"Action",   kind:"dmg-adj",      dmg:2, splash:2, sym:"⚒", name:"Garrote"},
+  as_act_smoke:  {hero:"assassin",cat:"Action",   kind:"shield-all",   amount:2,        sym:"❦", name:"Smoke Bomb"},
+  as_spell_strike:{hero:"assassin",cat:"Action",  kind:"dmg",          dmg:7,           sym:"☠", name:"Shadow Strike", spell:true},
+  as_spell_veil: {hero:"assassin",cat:"Action",   kind:"charge",       amount:5,        sym:"≋", name:"Veil", spell:true}
 };
-// Deck: each side runs the full 30-card suite (3 heroes × 10 cards).
-const DECK=Object.keys(CARDS);
+// Per-player deck built at finishDeploy from drafted heroes' suites (3 × 10 = 30 cards).
+function buildDeckFor(player){
+  const cls=new Set(draft[player]);
+  return Object.keys(CARDS).filter(k => cls.has(CARDS[k].hero));
+}
 
 const VEC={N:[-1,0],S:[1,0],E:[0,1],W:[0,-1]};
 const OPP={N:"S",S:"N",E:"W",W:"E"};
@@ -391,8 +467,8 @@ function newGame(){
   uid=0; sel=null; busy=false; over=false; units=[]; acted=new Set(); activeId=null; roundNum=0;
   heroes={A:[],B:[]};
   players={
-    A:{deck:shuffle(DECK.slice()),hand:[],human:true},
-    B:{deck:shuffle(DECK.slice()),hand:[],human:false}
+    A:{deck:[],hand:[],human:true},
+    B:{deck:[],hand:[],human:false}
   };
   document.getElementById("over").style.display="none";
   draft={A:[],B:[]}; pickIdx=0; placeSeq=null; placeIdx=0; unplaced=null; selectedDeployUnit=null;
@@ -565,6 +641,10 @@ function finishDeploy(){
   phase="play";
   document.body.classList.remove("deploy");
   document.getElementById("deployBar").classList.remove("show");
+  // Build each player's deck from their drafted heroes' suites
+  for(const o of ["A","B"]){
+    players[o].deck=shuffle(buildDeckFor(o));
+  }
   for(let i=0;i<2;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
   const maxSpd=Math.max(...units.map(u=>u.speed));
   const sidesAtMax=new Set(units.filter(u=>u.speed===maxSpd).map(u=>u.owner));
@@ -956,15 +1036,17 @@ function cardEffText(c){
 }
 function buildCodex(){
   const root=document.getElementById("cdxCards"); if(!root||root.dataset.built) return;
-  const groups={K:{name:"Knight suite",cards:[]}, R:{name:"Ranger suite",cards:[]}, M:{name:"Mage suite",cards:[]}};
+  const groups={};
+  for(const cls of ROSTER) groups[cls]={name:CLASSES[cls].name, sym:CLASSES[cls].sym, cards:[]};
   for(const k in CARDS){ const c=CARDS[k]; if(groups[c.hero]) groups[c.hero].cards.push(c); }
   let html="";
-  for(const h of ["K","R","M"]){
-    html+=`<div class="suite"><div class="suite-h">${groups[h].name} — 5 equipment + 5 actions</div>`;
-    for(const c of groups[h].cards){
-      const cls="cdx-card cat-"+c.cat+(c.spell?" spell":"");
+  for(const cls of ROSTER){
+    const g=groups[cls]; if(!g.cards.length) continue;
+    html+=`<div class="suite"><div class="suite-h">${g.sym} ${g.name} suite — ${g.cards.length} cards</div>`;
+    for(const c of g.cards){
+      const css="cdx-card cat-"+c.cat+(c.spell?" spell":"");
       const tag=c.spell?`${c.cat}·Spell`:c.cat;
-      html+=`<div class="${cls}"><span class="cdx-cat">${tag}</span><span class="cdx-name">${c.name}</span><span>${c.sym}</span><span class="cdx-eff">${cardEffText(c)}</span></div>`;
+      html+=`<div class="${css}"><span class="cdx-cat">${tag}</span><span class="cdx-name">${c.name}</span><span>${c.sym}</span><span class="cdx-eff">${cardEffText(c)}</span></div>`;
     }
     html+=`</div>`;
   }
@@ -1097,7 +1179,8 @@ function render(){
     const cant=!cardable||busy||over;
     el.className="card cat-"+card.cat+(card.spell?" spell":"")+(cant?" cant":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
     const tag=card.spell?"SPL":card.cat.slice(0,3).toUpperCase();
-    el.innerHTML=`<span class="cat">${tag}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${card.hero}</span>`;
+    const heroGlyph=CLASSES[card.hero]?CLASSES[card.hero].sym:"";
+    el.innerHTML=`<span class="cat">${tag}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${heroGlyph}</span>`;
     el.onclick=()=>onCard(i); h.appendChild(el); });
   const ebtn=document.getElementById("endBtn"); const u=activeUnit();
   ebtn.disabled = over || busy || !u || u.owner!=="A";
