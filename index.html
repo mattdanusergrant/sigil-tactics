@@ -120,7 +120,7 @@
 
   <div class="legend">V Vanguard · A Archer · W Warden · S Skirmisher · s Scout · + Potion · ϟ Bolt · ▲ High Ground &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ▲ +1 ATK</div>
   <h1>SIGIL TACTICS</h1>
-  <div class="sub">v0.5 prototype · round-based · speed initiative + token</div>
+  <div class="sub">v0.6 prototype · stats pass · move 1 · tighter speed buckets</div>
 </div>
 
 <div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" onclick="location.reload()">Play again</button></div></div>
@@ -132,19 +132,19 @@ const R=4,C=5;
 /* ---------- definitions ---------- */
 const CLASSES={
   // heroes (placed at start, never in deck)
-  vanguard:{name:"Vanguard",sym:"V",hp:7,atk:3,move:2,range:1,speed:2,hero:true},
-  archer:{name:"Archer",sym:"A",hp:5,atk:3,move:2,range:2,speed:3,hero:true},
-  warden:{name:"Warden",sym:"W",hp:6,atk:2,move:2,range:1,speed:2,hero:true,heal:true},
+  vanguard:{name:"Vanguard",sym:"V",hp:7,atk:3,move:1,range:1,speed:2,hero:true},
+  archer:{name:"Archer",sym:"A",hp:5,atk:2,move:1,range:2,speed:3,hero:true},
+  warden:{name:"Warden",sym:"W",hp:6,atk:2,move:1,range:1,speed:3,hero:true,heal:true},
   // sidekicks (unit cards)
-  skirmisher:{name:"Skirmisher",sym:"S",hp:4,atk:2,move:3,range:1,speed:5,cost:2,flank:true},
-  scout:{name:"Scout",sym:"s",hp:3,atk:2,move:3,range:2,speed:4,cost:3}
+  skirmisher:{name:"Skirmisher",sym:"S",hp:4,atk:2,move:1,range:1,speed:4,cost:2,flank:true},
+  scout:{name:"Scout",sym:"s",hp:4,atk:2,move:1,range:2,speed:4,cost:2}
 };
 const CARDS={
   skirmisher:{kind:"unit",cls:"skirmisher",cost:2,sym:"S",name:"Skirmisher"},
-  scout:{kind:"unit",cls:"scout",cost:3,sym:"s",name:"Scout"},
+  scout:{kind:"unit",cls:"scout",cost:2,sym:"s",name:"Scout"},
   potion:{kind:"heal",cost:2,sym:"+",name:"Potion",amount:4,spell:true},
   bolt:{kind:"dmg",cost:2,sym:"ϟ",name:"Bolt",dmg:2,spell:true},
-  terrain:{kind:"terrain",cost:1,sym:"▲",name:"High Ground"}
+  terrain:{kind:"terrain",cost:2,sym:"▲",name:"High Ground"}
 };
 const DECK=["skirmisher","skirmisher","skirmisher","scout","scout",
   "potion","potion","potion","bolt","bolt","terrain","terrain"];

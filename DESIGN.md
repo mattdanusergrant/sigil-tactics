@@ -2,7 +2,7 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.5** (`index.html`).
+Current build: **v0.6** (`index.html`).
 
 ---
 
@@ -19,9 +19,9 @@ Each side starts with **3 distinct heroes** on the board, placed in their back r
 
 | Hero | Sym | HP | ATK | Move | Range | Speed | Notes |
 |---|---|---|---|---|---|---|---|
-| Vanguard | V | 7 | 3 | 2 | 1 | 2 | Frontline melee |
-| Warden | W | 6 | 2 | 2 | 1 | 2 | Heals adjacent ally for +3 as an action |
-| Archer | A | 5 | 3 | 2 | 2 | 3 | Ranged |
+| Vanguard | V | 7 | 3 | 1 | 1 | 2 | Frontline bruiser |
+| Warden | W | 6 | 2 | 1 | 1 | 3 | Heals adjacent ally for +3 as an action |
+| Archer | A | 5 | 2 | 1 | 2 | 3 | Ranged — pays in ATK for the reach |
 
 Heroes never appear in the deck. They are gold-bordered on the board and tracked in mini HP bars above the grid.
 
@@ -31,8 +31,8 @@ Cheaper units played from hand. They count toward unit density but **not** towar
 
 | Sidekick | Sym | HP | ATK | Move | Range | Speed | Cost | Notes |
 |---|---|---|---|---|---|---|---|---|
-| Skirmisher | S | 4 | 2 | 3 | 1 | 5 | 2 | Flanker — side ×2, rear ×2.5 |
-| Scout | s | 3 | 2 | 3 | 2 | 4 | 3 | Cheap ranged |
+| Skirmisher | S | 4 | 2 | 1 | 1 | 4 | 2 | Flanker — side ×2, rear ×2.5 |
+| Scout | s | 4 | 2 | 1 | 2 | 4 | 2 | Same cost as Skirmisher — pays HP-and-flank for range |
 
 ## Round structure
 
@@ -81,10 +81,10 @@ Hand size cap 8; draw 1 at start of each round. Starting hand 3.
 | Card | Sym | Cost | Kind | Effect |
 |---|---|---|---|---|
 | Skirmisher | S | 2 | unit | Deploy a Skirmisher into your half |
-| Scout | s | 3 | unit | Deploy a Scout into your half |
+| Scout | s | 2 | unit | Deploy a Scout into your half |
 | Potion | + | 2 | heal | Restore +4 HP to a wounded ally anywhere |
 | Bolt | ϟ | 2 | dmg | 2 damage to any enemy on the board |
-| High Ground | ▲ | 1 | terrain | Place high ground on an empty tile in your half |
+| High Ground | ▲ | 2 | terrain | Place high ground on an empty tile in your half |
 
 Deck (12 cards): Skirmisher×3, Scout×2, Potion×3, Bolt×2, High Ground×2.
 
