@@ -137,17 +137,21 @@ Shield persists across rounds until consumed. ATK buffs and move buffs both clea
 | 9 | Action · Spell | Bless | 2 | Ally +1 ATK this round |
 | 10 | Action · Spell | Smite | 2 | 2 dmg to enemy |
 
-## HP tracking
+## HP & dice tracking
 
-Hero HP now exceeds a single d6, so tabletop play needs a d10 (or d12) per hero — or a paper tracker. Sidekicks still fit on a d6.
+**Rule:** every unit's max HP equals the face count of a classic polyhedral die — one of `{4, 6, 8, 10, 12, 20}`. New unit classes must pick from this set.
 
-| Unit | Max HP |
-|---|---|
-| Knight | 10 |
-| Ranger | 8 |
-| Mage | 6 |
-| Skirmisher | 3 |
-| Scout | 3 |
+For tabletop play, place the matching die next to each minifig showing its current HP; rotate it down as damage is taken; the unit dies when the die would go below 1.
+
+| Unit | Max HP | Die |
+|---|---|---|
+| Knight | 10 | d10 |
+| Ranger | 8 | d8 |
+| Mage | 6 | d6 |
+| Skirmisher | 4 | d4 |
+| Scout | 4 | d4 |
+
+Healing rotates the die back up (capped at max).
 
 ## Combat
 
