@@ -118,7 +118,7 @@ Activation order is **strictly by Speed**, ties broken by the Initiative token.
 When a unit is the active one, its owner does **one** of:
 
 - **Act normally** — move (up to `move`) and/or perform one action (attack any enemy in range; Mage may instead heal an adjacent ally).
-- **Play one card** from hand — spends aether and the unit's entire activation. No move, no attack on this turn.
+- **Play one card** from hand — consumes the unit's entire turn. No move, no attack on this turn. There is no resource cost; the trade-off is opportunity cost.
 - **Pass** — end the turn with no effect (the END TURN button).
 
 Movement updates facing toward the destination; attacks update facing toward the target. A Mage may attack instead of healing.
@@ -127,79 +127,101 @@ Movement updates facing toward the destination; attacks update facing toward the
 
 Each side runs a **30-card deck** built from three 10-card hero suites — Knight, Ranger, Mage. Each hero contributes **5 equipment + 5 actions**. Both sides currently use identical decks regardless of who they drafted.
 
-### Card economy (v0.13)
+### Card economy
 
 - **Starting hand:** 2 cards.
 - **Max hand size:** none.
-- **Draw timing:** at the end of every turn — yours or the AI's — the active unit's owner draws 1 card.
-- **No aether.** Cards have no resource cost. A card's price is paid in **opportunity cost**: playing a card *replaces* the active unit's normal turn (no move, no attack — the card is what that turn does).
-- **Design target:** cards should be tuned so the ideal play is "I have a card better than this unit's normal action — play it, then draw a replacement." If most cards are weaker than a normal attack, the player will just attack and the system breaks down.
+- **Draw timing:** at the end of every turn — yours or the AI's — the active unit's owner draws 1 card from their deck.
+- **No aether / no costs.** Cards have no resource gate. A card's price is paid in **opportunity cost**: playing a card *consumes the active unit's entire turn* (no move, no attack — the card is what that turn does).
+- **Design target:** a card should be tuned so that, in the moment, it is the *best play* the active unit could make this turn. The intended loop is: play 1 of your 2 cards → draw 1 → consider the new card next turn → repeat. If most cards are weaker than a normal attack, players will just attack and the system breaks down.
 
-The current `cost` field on every card is unused by play logic but kept in `CARDS` data for the case where partial-cost mechanics get re-introduced later.
+### Card-value baselines
+
+A "normal turn" from a unit moves up to its `move` and deals roughly **1–2 damage** to one enemy (with the relevant arc multiplier on top). Cards must clear that bar. Working baselines:
+
+| Effect shape | Threshold value to feel "worth a turn" |
+|---|---|
+| Single-target damage | ≥ 3 |
+| Single-target heal | ≥ 4 |
+| Single-target shield | ≥ 4 |
+| Single-target buff (this round) | +2 ATK on a unit that will attack this round |
+| Single-target charge (move) | +3 move, or +2 move that enables a kill/flank |
+| Area / all-allies effect | ≥ ~2 per affected unit (so ≥ 6 total expected value) |
+| Multi-target damage | total damage ≥ 4 across all hit enemies |
+
+Below those thresholds the card is dead weight; well above them it warps the game.
 
 **Categories:**
 - **Equipment** — one each of: Weapon, Armor, Helmet, Boots, Artifact.
 - **Action** — moves, attacks, and effects performed by a hero.
 - **Spell** — a *subtype of action*. Mechanically identical to a non-spell action; distinguished by flavor (and shown with a purple stripe and `SPL` tag in-game).
 
-Every card is a **one-shot consumable.** Mechanically a card resolves as one of these **kinds**:
+Every card is a **one-shot consumable** with no resource cost — playing it consumes the active unit's turn. Mechanically a card resolves as one of these **kinds**:
 
 | Kind | Target | Effect |
 |---|---|---|
-| `dmg` | enemy unit | Deal N damage (subject to defender's shield) |
+| `dmg` | enemy unit | Deal N damage (defender's shield absorbs first) |
+| `dmg-adj` | enemy unit | Deal N to target + S splash to enemies orthogonally adjacent to it |
 | `heal` | friendly unit | Restore N HP (caps at maxHp) |
+| `heal-all` | all friendly units | Restore N HP to each |
 | `shield` | friendly unit | Add N shield (absorbs incoming damage before HP) |
 | `shield-all` | all friendly units | Add N shield to each |
 | `buff-atk` | friendly unit | +N ATK for the rest of this round |
 | `buff-atk-all` | all friendly units | +N ATK each for the rest of this round |
-| `charge` | friendly unit | +N move on its next turn (this round) |
+| `charge` | friendly unit | +N move on the buffed unit's next turn |
 
-Shield persists across rounds until consumed. ATK buffs and move buffs both clear (atk-buff at round start, move-buff at end of the buffed unit's turn).
+Shield persists across rounds until consumed. ATK buffs clear at round start. Move buffs clear at end of the buffed unit's turn.
 
 ### Knight suite (10) — 5 equip, 5 actions (1 spell)
 
-| # | Slot/Type | Name | Cost | Effect |
+Tank / team-shield identity. Big single hit, layered defense, group heals.
+
+| # | Slot/Type | Name | Kind | Effect |
 |---|---|---|---|---|
-| 1 | Weapon | Greatsword | 2 | 2 dmg to enemy |
-| 2 | Armor | Plate Mail | 2 | +2 shield to ally |
-| 3 | Helmet | Iron Helm | 1 | +1 shield to ally |
-| 4 | Boots | Steel Greaves | 1 | Ally +1 move this turn |
-| 5 | Artifact | War Banner | 3 | +1 shield to all allies |
-| 6 | Action | Charge | 1 | Ally +2 move this turn |
-| 7 | Action | Bulwark | 1 | Heal ally +2 |
-| 8 | Action | Rally | 3 | All allies +1 ATK this round |
-| 9 | Action | Sundering Blow | 3 | 3 dmg to enemy |
-| 10 | Action · Spell | Battle Cry | 2 | Ally +2 ATK this round |
+| 1 | Weapon | Greatsword | dmg 4 | 4 dmg to enemy |
+| 2 | Armor | Plate Mail | shield 5 | +5 shield to ally |
+| 3 | Helmet | Iron Helm | shield 3 | +3 shield to ally |
+| 4 | Boots | Steel Greaves | charge 3 | Ally +3 move this turn |
+| 5 | Artifact | War Banner | shield-all 2 | +2 shield to all allies |
+| 6 | Action | Cleave | dmg-adj 3 (+1) | 3 dmg to enemy + 1 splash to adjacent enemies |
+| 7 | Action | Bulwark | heal 4 | Heal ally +4 |
+| 8 | Action | Rally | heal-all 2 | Heal all allies +2 |
+| 9 | Action | Shield Wall | shield-all 3 | +3 shield to all allies |
+| 10 | Action · Spell | Battle Cry | buff-atk-all 3 | All allies +3 ATK this round |
 
 ### Ranger suite (10) — 5 equip, 5 actions (2 spells)
 
-| # | Slot/Type | Name | Cost | Effect |
+Mobile sniper / combat tricks. Strong single-target damage, lots of movement.
+
+| # | Slot/Type | Name | Kind | Effect |
 |---|---|---|---|---|
-| 1 | Weapon | Longbow | 2 | 2 dmg to enemy |
-| 2 | Armor | Leather Cloak | 1 | +1 shield to ally |
-| 3 | Helmet | Hawk Hood | 1 | Ally +1 move this turn |
-| 4 | Boots | Swift Boots | 2 | Ally +2 move this turn |
-| 5 | Artifact | Hunter's Mark | 2 | 2 dmg to enemy |
-| 6 | Action | Quick Shot | 1 | 1 dmg to enemy |
-| 7 | Action | Volley | 3 | 2 dmg to enemy |
-| 8 | Action | Reposition | 1 | Ally +1 move this turn |
-| 9 | Action · Spell | Piercing Arrow | 3 | 3 dmg to enemy |
-| 10 | Action · Spell | Eagle's Eye | 1 | Ally +1 ATK this round |
+| 1 | Weapon | Longbow | dmg 4 | 4 dmg to enemy |
+| 2 | Armor | Leather Cloak | shield 3 | +3 shield to ally |
+| 3 | Helmet | Hawk Hood | charge 2 | Ally +2 move this turn |
+| 4 | Boots | Swift Boots | charge 4 | Ally +4 move this turn |
+| 5 | Artifact | Hunter's Mark | buff-atk 3 | Ally +3 ATK this round |
+| 6 | Action | Quick Shot | dmg 3 | 3 dmg to enemy |
+| 7 | Action | Volley | dmg-adj 2 (+1) | 2 dmg to enemy + 1 splash to adjacent enemies |
+| 8 | Action | Reposition | charge 3 | Ally +3 move this turn |
+| 9 | Action · Spell | Piercing Arrow | dmg 5 | 5 dmg to enemy (biggest single hit in the deck) |
+| 10 | Action · Spell | Eagle's Eye | buff-atk-all 2 | All allies +2 ATK this round |
 
 ### Mage suite (10) — 5 equip, 5 actions (all spells)
 
-| # | Slot/Type | Name | Cost | Effect |
+Caster / healer. Wide selection of heals, plus team shield/buff.
+
+| # | Slot/Type | Name | Kind | Effect |
 |---|---|---|---|---|
-| 1 | Weapon | Staff | 1 | 1 dmg to enemy |
-| 2 | Armor | Robe of Mending | 2 | Heal ally +2 |
-| 3 | Helmet | Crown of Light | 2 | +2 shield to ally |
-| 4 | Boots | Cleric Sandals | 1 | Heal ally +1 |
-| 5 | Artifact | Sacred Chalice | 4 | Heal ally +6 (caps at maxHp) |
-| 6 | Action · Spell | Mend | 2 | Heal ally +3 |
-| 7 | Action · Spell | Restore | 4 | Heal ally +5 |
-| 8 | Action · Spell | Shield Wall | 3 | +1 shield to all allies |
-| 9 | Action · Spell | Bless | 2 | Ally +1 ATK this round |
-| 10 | Action · Spell | Smite | 2 | 2 dmg to enemy |
+| 1 | Weapon | Staff | dmg 3 | 3 dmg to enemy |
+| 2 | Armor | Robe of Mending | heal 3 | Heal ally +3 |
+| 3 | Helmet | Crown of Light | shield 4 | +4 shield to ally |
+| 4 | Boots | Cleric Sandals | charge 2 | Ally +2 move this turn |
+| 5 | Artifact | Sacred Chalice | heal 8 | Heal ally +8 (caps at maxHp — effectively top-up for any hero) |
+| 6 | Action · Spell | Mend | heal 5 | Heal ally +5 |
+| 7 | Action · Spell | Heal | heal-all 3 | Heal all allies +3 |
+| 8 | Action · Spell | Aegis | shield-all 2 | +2 shield to all allies |
+| 9 | Action · Spell | Bless | buff-atk 3 | Ally +3 ATK this round |
+| 10 | Action · Spell | Smite | dmg 4 | 4 dmg to enemy |
 
 ## HP & dice tracking
 

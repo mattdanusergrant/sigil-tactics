@@ -124,7 +124,7 @@
   #codex .x:hover{color:#fff;}
   #codex .suite{margin-bottom:10px;}
   #codex .suite-h{font-size:12px; color:var(--gold); margin:8px 0 4px; font-weight:700;}
-  #codex .cdx-card{display:grid; grid-template-columns:18px 60px 1fr 18px; gap:6px; align-items:center; font-size:11px; padding:3px 4px; border-left:3px solid var(--line); margin-bottom:2px; background:rgba(255,255,255,.02);}
+  #codex .cdx-card{display:grid; grid-template-columns:80px 1fr 18px; gap:6px; align-items:center; font-size:11px; padding:3px 4px; border-left:3px solid var(--line); margin-bottom:2px; background:rgba(255,255,255,.02);}
   #codex .cdx-card .cdx-cat{color:var(--dim); font-size:10px;}
   #codex .cdx-card .cdx-name{color:#fff;}
   #codex .cdx-card .cdx-eff{color:var(--dim); font-size:10px; grid-column:1/-1; padding-left:24px;}
@@ -256,7 +256,9 @@
   <h3>Card kinds (effects)</h3>
   <ul class="kinds">
     <li><b>dmg</b> — N damage to target enemy (shield absorbs first)</li>
+    <li><b>dmg-adj</b> — N damage to target enemy + S splash damage to enemies orthogonally adjacent to it</li>
     <li><b>heal</b> — restore N HP to target ally (caps at maxHp)</li>
+    <li><b>heal-all</b> — restore N HP to every ally</li>
     <li><b>shield</b> — +N shield on target ally</li>
     <li><b>shield-all</b> — +N shield on every ally</li>
     <li><b>buff-atk</b> — target ally +N ATK this round</li>
@@ -317,42 +319,44 @@ const CLASSES={
 };
 const ROSTER=Object.keys(CLASSES).filter(k=>!CLASSES[k].hidden);
 const DRAFT_SEQUENCE=["A","B","B","A","A","B"]; // 1-2-2-1 snake, 3v3
+// v0.13 card economy: no resource cost; each card consumes the active unit's turn.
+// Values tuned so every card clears the "worth a turn" bar (≥3 single-target dmg, ≥4 single-heal, etc.).
 const CARDS={
-  // Knight suite (10): 5 equipment + 5 actions (1 spell-action)
-  kn_weapon:    {hero:"K", cat:"Weapon",   kind:"dmg",          cost:2, dmg:2,    sym:"⚔", name:"Greatsword"},
-  kn_armor:     {hero:"K", cat:"Armor",    kind:"shield",       cost:2, amount:2, sym:"⛨", name:"Plate Mail"},
-  kn_helm:      {hero:"K", cat:"Helmet",   kind:"shield",       cost:1, amount:1, sym:"⛑", name:"Iron Helm"},
-  kn_boots:     {hero:"K", cat:"Boots",    kind:"charge",       cost:1, amount:1, sym:"⫯", name:"Steel Greaves"},
-  kn_artifact:  {hero:"K", cat:"Artifact", kind:"shield-all",   cost:3, amount:1, sym:"⚑", name:"War Banner"},
-  kn_act_charge:{hero:"K", cat:"Action",   kind:"charge",       cost:1, amount:2, sym:"»", name:"Charge"},
-  kn_act_bulwark:{hero:"K",cat:"Action",   kind:"heal",         cost:1, amount:2, sym:"+", name:"Bulwark"},
-  kn_act_rally: {hero:"K", cat:"Action",   kind:"buff-atk-all", cost:3, amount:1, sym:"!", name:"Rally"},
-  kn_act_sunder:{hero:"K", cat:"Action",   kind:"dmg",          cost:3, dmg:3,    sym:"✸", name:"Sundering Blow"},
-  kn_spell_cry: {hero:"K", cat:"Action",   kind:"buff-atk",     cost:2, amount:2, sym:"☄", name:"Battle Cry", spell:true},
+  // Knight — tank / team shield. 5 equip + 5 actions (1 spell).
+  kn_weapon:     {hero:"K", cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"⚔", name:"Greatsword"},
+  kn_armor:      {hero:"K", cat:"Armor",    kind:"shield",       amount:5,        sym:"⛨", name:"Plate Mail"},
+  kn_helm:       {hero:"K", cat:"Helmet",   kind:"shield",       amount:3,        sym:"⛑", name:"Iron Helm"},
+  kn_boots:      {hero:"K", cat:"Boots",    kind:"charge",       amount:3,        sym:"⫯", name:"Steel Greaves"},
+  kn_artifact:   {hero:"K", cat:"Artifact", kind:"shield-all",   amount:2,        sym:"⚑", name:"War Banner"},
+  kn_act_cleave: {hero:"K", cat:"Action",   kind:"dmg-adj",      dmg:3, splash:1, sym:"⚒", name:"Cleave"},
+  kn_act_bulwark:{hero:"K", cat:"Action",   kind:"heal",         amount:4,        sym:"+", name:"Bulwark"},
+  kn_act_rally:  {hero:"K", cat:"Action",   kind:"heal-all",     amount:2,        sym:"✚", name:"Rally"},
+  kn_act_wall:   {hero:"K", cat:"Action",   kind:"shield-all",   amount:3,        sym:"⛨", name:"Shield Wall"},
+  kn_spell_cry:  {hero:"K", cat:"Action",   kind:"buff-atk-all", amount:3,        sym:"☄", name:"Battle Cry", spell:true},
 
-  // Ranger suite (10): 5 equipment + 5 actions (2 spell-actions)
-  rn_weapon:    {hero:"R", cat:"Weapon",   kind:"dmg",          cost:2, dmg:2,    sym:"➶", name:"Longbow"},
-  rn_armor:     {hero:"R", cat:"Armor",    kind:"shield",       cost:1, amount:1, sym:"⛨", name:"Leather Cloak"},
-  rn_helm:      {hero:"R", cat:"Helmet",   kind:"charge",       cost:1, amount:1, sym:"⛑", name:"Hawk Hood"},
-  rn_boots:     {hero:"R", cat:"Boots",    kind:"charge",       cost:2, amount:2, sym:"⫯", name:"Swift Boots"},
-  rn_artifact:  {hero:"R", cat:"Artifact", kind:"dmg",          cost:2, dmg:2,    sym:"⚑", name:"Hunter's Mark"},
-  rn_act_quick: {hero:"R", cat:"Action",   kind:"dmg",          cost:1, dmg:1,    sym:"›", name:"Quick Shot"},
-  rn_act_volley:{hero:"R", cat:"Action",   kind:"dmg",          cost:3, dmg:2,    sym:"⋮", name:"Volley"},
-  rn_act_rep:   {hero:"R", cat:"Action",   kind:"charge",       cost:1, amount:1, sym:"»", name:"Reposition"},
-  rn_spell_pierce:{hero:"R",cat:"Action",  kind:"dmg",          cost:3, dmg:3,    sym:"✸", name:"Piercing Arrow", spell:true},
-  rn_spell_eye: {hero:"R", cat:"Action",   kind:"buff-atk",     cost:1, amount:1, sym:"◉", name:"Eagle's Eye", spell:true},
+  // Ranger — mobile sniper / combat tricks. 5 equip + 5 actions (2 spells).
+  rn_weapon:     {hero:"R", cat:"Weapon",   kind:"dmg",          dmg:4,           sym:"➶", name:"Longbow"},
+  rn_armor:      {hero:"R", cat:"Armor",    kind:"shield",       amount:3,        sym:"⛨", name:"Leather Cloak"},
+  rn_helm:       {hero:"R", cat:"Helmet",   kind:"charge",       amount:2,        sym:"⛑", name:"Hawk Hood"},
+  rn_boots:      {hero:"R", cat:"Boots",    kind:"charge",       amount:4,        sym:"⫯", name:"Swift Boots"},
+  rn_artifact:   {hero:"R", cat:"Artifact", kind:"buff-atk",     amount:3,        sym:"⚑", name:"Hunter's Mark"},
+  rn_act_quick:  {hero:"R", cat:"Action",   kind:"dmg",          dmg:3,           sym:"›", name:"Quick Shot"},
+  rn_act_volley: {hero:"R", cat:"Action",   kind:"dmg-adj",      dmg:2, splash:1, sym:"⋮", name:"Volley"},
+  rn_act_rep:    {hero:"R", cat:"Action",   kind:"charge",       amount:3,        sym:"»", name:"Reposition"},
+  rn_spell_pierce:{hero:"R",cat:"Action",   kind:"dmg",          dmg:5,           sym:"✸", name:"Piercing Arrow", spell:true},
+  rn_spell_eye:  {hero:"R", cat:"Action",   kind:"buff-atk-all", amount:2,        sym:"◉", name:"Eagle's Eye", spell:true},
 
-  // Mage suite (10): 5 equipment + 5 actions (all spell-actions)
-  mg_weapon:    {hero:"M", cat:"Weapon",   kind:"dmg",          cost:1, dmg:1,    sym:"⚔", name:"Staff"},
-  mg_armor:     {hero:"M", cat:"Armor",    kind:"heal",         cost:2, amount:2, sym:"⛨", name:"Robe of Mending"},
-  mg_helm:      {hero:"M", cat:"Helmet",   kind:"shield",       cost:2, amount:2, sym:"⛑", name:"Crown of Light"},
-  mg_boots:     {hero:"M", cat:"Boots",    kind:"heal",         cost:1, amount:1, sym:"⫯", name:"Cleric Sandals"},
-  mg_artifact:  {hero:"M", cat:"Artifact", kind:"heal",         cost:4, amount:6, sym:"⚱", name:"Sacred Chalice"},
-  mg_spell_mend:{hero:"M", cat:"Action",   kind:"heal",         cost:2, amount:3, sym:"✚", name:"Mend", spell:true},
-  mg_spell_restore:{hero:"M",cat:"Action", kind:"heal",         cost:4, amount:5, sym:"✚", name:"Restore", spell:true},
-  mg_spell_wall:{hero:"M", cat:"Action",   kind:"shield-all",   cost:3, amount:1, sym:"⛨", name:"Shield Wall", spell:true},
-  mg_spell_bless:{hero:"M",cat:"Action",   kind:"buff-atk",     cost:2, amount:1, sym:"☼", name:"Bless", spell:true},
-  mg_spell_smite:{hero:"M",cat:"Action",   kind:"dmg",          cost:2, dmg:2,    sym:"ϟ", name:"Smite", spell:true}
+  // Mage — caster / healer. 5 equip + 5 actions (all spells).
+  mg_weapon:     {hero:"M", cat:"Weapon",   kind:"dmg",          dmg:3,           sym:"⚔", name:"Staff"},
+  mg_armor:      {hero:"M", cat:"Armor",    kind:"heal",         amount:3,        sym:"⛨", name:"Robe of Mending"},
+  mg_helm:       {hero:"M", cat:"Helmet",   kind:"shield",       amount:4,        sym:"⛑", name:"Crown of Light"},
+  mg_boots:      {hero:"M", cat:"Boots",    kind:"charge",       amount:2,        sym:"⫯", name:"Cleric Sandals"},
+  mg_artifact:   {hero:"M", cat:"Artifact", kind:"heal",         amount:8,        sym:"⚱", name:"Sacred Chalice"},
+  mg_spell_mend: {hero:"M", cat:"Action",   kind:"heal",         amount:5,        sym:"✚", name:"Mend", spell:true},
+  mg_spell_heal: {hero:"M", cat:"Action",   kind:"heal-all",     amount:3,        sym:"✚", name:"Heal", spell:true},
+  mg_spell_aegis:{hero:"M", cat:"Action",   kind:"shield-all",   amount:2,        sym:"⛨", name:"Aegis", spell:true},
+  mg_spell_bless:{hero:"M", cat:"Action",   kind:"buff-atk",     amount:3,        sym:"☼", name:"Bless", spell:true},
+  mg_spell_smite:{hero:"M", cat:"Action",   kind:"dmg",          dmg:4,           sym:"ϟ", name:"Smite", spell:true}
 };
 // Deck: each side runs the full 30-card suite (3 heroes × 10 cards).
 const DECK=Object.keys(CARDS);
@@ -761,6 +765,26 @@ function playCard(owner,handIdx,target){
   } else if(card.kind==="charge"){
     const u=board[target.r][target.c].unit;
     u.bonusMoveTurn+=card.amount; say(`${card.name}: ${u.name} +${card.amount} move this turn.`);
+  } else if(card.kind==="dmg-adj"){
+    const u=board[target.r][target.c].unit;
+    const main=applyDamage(u,card.dmg);
+    const splashed=[];
+    for(const k in VEC){
+      const [dr,dc]=VEC[k]; const nr=u.r+dr, nc=u.c+dc;
+      if(!inB(nr,nc)) continue;
+      const adj=board[nr][nc].unit;
+      if(adj && adj.owner!==owner){ applyDamage(adj,card.splash); splashed.push(adj); }
+    }
+    const tag = splashed.length ? ` (+${card.splash} splash to ${splashed.length})` : "";
+    say(`${card.name}: ${u.name} takes ${main.taken}${tag}.`);
+    killCheck(u);
+    for(const a of splashed) killCheck(a);
+  } else if(card.kind==="heal-all"){
+    let total=0;
+    eachUnit(u=>{
+      if(u.owner===owner){ const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount); total+=u.hp-before; }
+    });
+    say(`${who} cast ${card.name} — all allies +${card.amount} HP (${total} restored).`);
   }
 }
 function canPlayCardNow(){
@@ -801,8 +825,8 @@ function onCard(i){
   if(busy||over) return;
   if(!canPlayCardNow()){ say("Cards may only be played at the start of one of your units' turns."); render(); return; }
   const key=players.A.hand[i]; const card=CARDS[key];
-  if(card.kind==="heal" && !anyDamagedAlly("A")){ say("No wounded ally to heal."); return; }
-  if(card.kind==="dmg" && !anyEnemy("A")){ say("No enemy in play."); return; }
+  if((card.kind==="heal"||card.kind==="heal-all") && !anyDamagedAlly("A")){ say("No wounded ally to heal."); return; }
+  if((card.kind==="dmg"||card.kind==="dmg-adj") && !anyEnemy("A")){ say("No enemy in play."); return; }
   if((card.kind==="shield"||card.kind==="shield-all"||card.kind==="buff-atk"||card.kind==="buff-atk-all"||card.kind==="charge") && !anyAlly("A")){ say("No ally to target."); return; }
   sel=(sel&&sel.t==="card"&&sel.i===i)?null:{t:"card",i}; render();
 }
@@ -869,7 +893,28 @@ function aiPickCardForUnit(u){
     } else if(card.kind==="shield-all"||card.kind==="buff-atk-all"){
       let allies=[]; eachUnit(au=>{ if(au.owner==="B") allies.push(au); });
       if(!allies.length) return; score=allies.length*card.amount;
-      target={r:allies[0].r,c:allies[0].c}; // target tile is arbitrary; effect applies to all
+      target={r:allies[0].r,c:allies[0].c};
+    } else if(card.kind==="dmg-adj"){
+      // score = main damage + estimated splash from clustering
+      let bestT=null,bs=-1;
+      eachUnit(au=>{
+        if(au.owner==="A"){
+          let splashTargets=0;
+          for(const k in VEC){ const [dr,dc]=VEC[k]; const nr=au.r+dr,nc=au.c+dc;
+            if(!inB(nr,nc)) continue;
+            const adj=board[nr][nc].unit;
+            if(adj && adj.owner==="A") splashTargets++;
+          }
+          const s=card.dmg*1.5 + splashTargets*card.splash + (au.hp<=card.dmg?6:0) + (au.hero?3:0);
+          if(s>bs){bs=s;bestT=au;}
+        }
+      });
+      if(!bestT) return; score=bs; target={r:bestT.r,c:bestT.c};
+    } else if(card.kind==="heal-all"){
+      let wounded=0; eachUnit(au=>{ if(au.owner==="B" && au.hp<au.maxHp){ wounded+=Math.min(card.amount, au.maxHp-au.hp); } });
+      if(wounded<=0) return; score=wounded;
+      let any=null; eachUnit(au=>{ if(au.owner==="B" && !any) any=au; });
+      if(!any) return; target={r:any.r,c:any.c};
     }
     if(!best || score>best.score){ best={handIdx:i,target,score}; }
   });
@@ -899,7 +944,9 @@ function bestStep(u,goal){ const tiles=reachable(u); if(!tiles.length) return nu
 /* ---------- codex ---------- */
 function cardEffText(c){
   if(c.kind==="dmg") return `${c.dmg} dmg to enemy`;
+  if(c.kind==="dmg-adj") return `${c.dmg} dmg to enemy, +${c.splash} to adjacent enemies`;
   if(c.kind==="heal") return `heal ally +${c.amount}`;
+  if(c.kind==="heal-all") return `heal all allies +${c.amount}`;
   if(c.kind==="shield") return `+${c.amount} shield to ally`;
   if(c.kind==="shield-all") return `+${c.amount} shield to all allies`;
   if(c.kind==="buff-atk") return `ally +${c.amount} ATK this round`;
@@ -917,7 +964,7 @@ function buildCodex(){
     for(const c of groups[h].cards){
       const cls="cdx-card cat-"+c.cat+(c.spell?" spell":"");
       const tag=c.spell?`${c.cat}·Spell`:c.cat;
-      html+=`<div class="${cls}"><span>${c.cost}</span><span class="cdx-cat">${tag}</span><span class="cdx-name">${c.name}</span><span>${c.sym}</span><span class="cdx-eff">${cardEffText(c)}</span></div>`;
+      html+=`<div class="${cls}"><span class="cdx-cat">${tag}</span><span class="cdx-name">${c.name}</span><span>${c.sym}</span><span class="cdx-eff">${cardEffText(c)}</span></div>`;
     }
     html+=`</div>`;
   }
@@ -951,11 +998,11 @@ function computeHl(){
     const key=players.A.hand[sel.i]; const card=CARDS[key];
     if(card.kind==="heal"){
       eachUnit(au=>{ if(au.owner==="A"&&au.hp<au.maxHp) board[au.r][au.c]._hl="heal"; });
-    } else if(card.kind==="dmg"){
+    } else if(card.kind==="dmg"||card.kind==="dmg-adj"){
       eachUnit(au=>{ if(au.owner!=="A") board[au.r][au.c]._hl="spell"; });
     } else if(card.kind==="shield"||card.kind==="buff-atk"||card.kind==="charge"){
       eachUnit(au=>{ if(au.owner==="A") board[au.r][au.c]._hl="heal"; });
-    } else if(card.kind==="shield-all"||card.kind==="buff-atk-all"){
+    } else if(card.kind==="shield-all"||card.kind==="buff-atk-all"||card.kind==="heal-all"){
       eachUnit(au=>{ if(au.owner==="A") board[au.r][au.c]._hl="heal"; });
     }
     return;
