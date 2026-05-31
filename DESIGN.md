@@ -2,7 +2,7 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.11** (`index.html`).
+Current build: **v0.13** (`index.html`).
 
 ---
 
@@ -125,7 +125,17 @@ Movement updates facing toward the destination; attacks update facing toward the
 
 ## Cards
 
-Each side runs a **30-card deck** built from three 10-card hero suites — Knight, Ranger, Mage. Each hero contributes **5 equipment + 5 actions**. Both sides currently use identical decks. Hand cap 8; draw 1 at start of each round; starting hand 3.
+Each side runs a **30-card deck** built from three 10-card hero suites — Knight, Ranger, Mage. Each hero contributes **5 equipment + 5 actions**. Both sides currently use identical decks regardless of who they drafted.
+
+### Card economy (v0.13)
+
+- **Starting hand:** 2 cards.
+- **Max hand size:** none.
+- **Draw timing:** at the end of every turn — yours or the AI's — the active unit's owner draws 1 card.
+- **No aether.** Cards have no resource cost. A card's price is paid in **opportunity cost**: playing a card *replaces* the active unit's normal turn (no move, no attack — the card is what that turn does).
+- **Design target:** cards should be tuned so the ideal play is "I have a card better than this unit's normal action — play it, then draw a replacement." If most cards are weaker than a normal attack, the player will just attack and the system breaks down.
+
+The current `cost` field on every card is unused by play logic but kept in `CARDS` data for the case where partial-cost mechanics get re-introduced later.
 
 **Categories:**
 - **Equipment** — one each of: Weapon, Armor, Helmet, Boots, Artifact.
@@ -215,10 +225,6 @@ Healing rotates the die back up (capped at max).
 - **High ground**: attacker on `terrain="high"` gets +1 ATK before the arc multiplier.
 - **Damage**: `round((ATK + highground) × arc)`. Shield absorbs before HP.
 - **Range**: Manhattan distance. No line-of-sight blocking currently.
-
-## Aether
-
-- Both sides gain +1 max aether per round (cap 10), refilling to full each round.
 
 ## Win condition
 

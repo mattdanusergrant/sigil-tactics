@@ -83,8 +83,7 @@
   #status b{color:var(--gold);}
 
   .barrow{display:flex; gap:8px; align-items:center;}
-  .aether{font-size:13px; font-weight:700;}
-  .aether .a{color:#56c5ff;}
+  .deck-info{font-size:11px; color:var(--dim); font-weight:600;}
   .btn{flex:1; background:var(--gold); color:#1a1407; border:none; border-radius:10px; padding:11px;
     font-size:14px; font-weight:800; letter-spacing:.3px;}
   .btn:active{filter:brightness(.9);}
@@ -196,7 +195,7 @@
   <div id="status"></div>
 
   <div class="barrow">
-    <span class="aether">Aether <span class="a" id="aether"></span></span>
+    <span class="deck-info" id="deckInfo">—</span>
     <button class="btn" id="endBtn">END TURN</button>
     <button class="btn ghost" id="newBtn">New</button>
   </div>
@@ -204,14 +203,14 @@
   <div class="legend">9-hero roster · 1-2-2-1 snake draft · 3 units per side &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.11 · 9 heroes · draft &amp; deploy · tap for rules</div>
+    <div class="sub">v0.13 · 9 heroes · no aether · draw on turn end · tap for rules</div>
   </button>
 </div>
 
 <div id="codex"><div class="cbox">
   <button class="x" onclick="closeCodex()">×</button>
   <h2>SIGIL TACTICS</h2>
-  <div class="cdx-sub">v0.11 — 4×5 grid · 9-hero roster · snake draft · 3 units per side · 30-card deck</div>
+  <div class="cdx-sub">v0.13 — 9-hero roster · snake draft · face-down deploy · no-aether card economy</div>
 
   <h3>Match flow</h3>
   <ul>
@@ -226,8 +225,8 @@
     <li><b>Initiative:</b> each round, units act in Speed order (high → low). A unit can move + attack (or skip either).</li>
     <li><b>Facing:</b> attacks from the SIDE deal ×1.5, REAR ×2 (Assassin: ×2 / ×2.5).</li>
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
-    <li><b>Cards:</b> draw 1 at the start of each round (hand cap 8, start 3). Cards may be played at the start of one of your units' turns. Each card is one-shot.</li>
-    <li><b>Aether:</b> spent to play cards. Refreshes / grows each round.</li>
+    <li><b>Cards:</b> start with 2 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
+    <li><b>Opportunity cost:</b> there is no aether. Playing a card <i>replaces</i> the active unit's normal turn — so the choice is "use this unit, or play this card." Aim to always have a card better than the unit's normal action.</li>
     <li><b>Shield (⛨N):</b> absorbs damage before HP. Persists across rounds.</li>
     <li><b>ATK buff (+NA):</b> bonus damage that clears at round start.</li>
     <li><b>Move buff:</b> extra movement on the buffed unit's next turn only.</li>
@@ -388,8 +387,8 @@ function newGame(){
   uid=0; sel=null; busy=false; over=false; units=[]; acted=new Set(); activeId=null; roundNum=0;
   heroes={A:[],B:[]};
   players={
-    A:{aether:0,maxAether:0,deck:shuffle(DECK.slice()),hand:[],human:true},
-    B:{aether:0,maxAether:0,deck:shuffle(DECK.slice()),hand:[],human:false}
+    A:{deck:shuffle(DECK.slice()),hand:[],human:true},
+    B:{deck:shuffle(DECK.slice()),hand:[],human:false}
   };
   document.getElementById("over").style.display="none";
   draft={A:[],B:[]}; pickIdx=0; placeSeq=null; placeIdx=0; unplaced=null; selectedDeployUnit=null;
@@ -562,7 +561,7 @@ function finishDeploy(){
   phase="play";
   document.body.classList.remove("deploy");
   document.getElementById("deployBar").classList.remove("show");
-  for(let i=0;i<3;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
+  for(let i=0;i<2;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
   const maxSpd=Math.max(...units.map(u=>u.speed));
   const sidesAtMax=new Set(units.filter(u=>u.speed===maxSpd).map(u=>u.owner));
   let firstActor;
@@ -578,11 +577,6 @@ function finishDeploy(){
 function flipToken(){ liveToken = liveToken==="A" ? "B" : "A"; }
 function startRound(){
   roundNum++;
-  for(const o of ["A","B"]){
-    const p=players[o];
-    p.maxAether=Math.min(10,p.maxAether+1); p.aether=p.maxAether;
-    if(p.deck.length && p.hand.length<8) p.hand.push(p.deck.pop());
-  }
   for(const u of units){ u.hasMoved=false; u.hasActed=false; u.bonusAtkRound=0; u.bonusMoveTurn=0; }
   acted=new Set();
   liveToken=initiativeToken;
@@ -644,7 +638,13 @@ function forecastRemaining(){
   return result;
 }
 function endActiveTurn(){
-  const u=activeUnit(); if(u){ acted.add(u.id); u.bonusMoveTurn=0; }
+  const u=activeUnit();
+  if(u){
+    acted.add(u.id);
+    u.bonusMoveTurn=0;
+    const p=players[u.owner];
+    if(p.deck.length) p.hand.push(p.deck.pop());
+  }
   activeId=null; sel=null;
   if(over) return;
   advance(); render(); promptOrAi();
@@ -736,7 +736,7 @@ function summon(o,cls,r,c){ const u=newUnit(o,cls,r,c,o==="A"?"N":"S"); place(u)
 /* ---------- card play (consumes the active unit's turn) ---------- */
 function playCard(owner,handIdx,target){
   const p=players[owner]; const key=p.hand[handIdx]; const card=CARDS[key];
-  p.aether-=card.cost; p.hand.splice(handIdx,1);
+  p.hand.splice(handIdx,1);
   const who=owner==="A"?"You":"Enemy";
   if(card.kind==="heal"){
     const u=board[target.r][target.c].unit;
@@ -801,7 +801,6 @@ function onCard(i){
   if(busy||over) return;
   if(!canPlayCardNow()){ say("Cards may only be played at the start of one of your units' turns."); render(); return; }
   const key=players.A.hand[i]; const card=CARDS[key];
-  if(card.cost>players.A.aether) return;
   if(card.kind==="heal" && !anyDamagedAlly("A")){ say("No wounded ally to heal."); return; }
   if(card.kind==="dmg" && !anyEnemy("A")){ say("No enemy in play."); return; }
   if((card.kind==="shield"||card.kind==="shield-all"||card.kind==="buff-atk"||card.kind==="buff-atk-all"||card.kind==="charge") && !anyAlly("A")){ say("No ally to target."); return; }
@@ -844,7 +843,7 @@ function aiNormalActionScore(u){
 function aiPickCardForUnit(u){
   const B=players.B; let best=null;
   B.hand.forEach((key,i)=>{
-    const card=CARDS[key]; if(card.cost>B.aether) return;
+    const card=CARDS[key];
     let score=0, target=null;
     if(card.kind==="heal"){
       const t=aiHealTarget("B"); if(!t) return;
@@ -1044,14 +1043,14 @@ function render(){
   }
   if(!playing){ return; }
   renderHeroes(); renderInit();
-  document.getElementById("aether").textContent=players.A.aether+" / "+players.A.maxAether;
+  document.getElementById("deckInfo").textContent=`Hand ${players.A.hand.length} · Deck ${players.A.deck.length}`;
   const h=document.getElementById("hand"); h.innerHTML="";
   const cardable=canPlayCardNow();
   players.A.hand.forEach((key,i)=>{ const card=CARDS[key]; const el=document.createElement("div");
-    const cant=!cardable||card.cost>players.A.aether||busy||over;
+    const cant=!cardable||busy||over;
     el.className="card cat-"+card.cat+(card.spell?" spell":"")+(cant?" cant":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
     const tag=card.spell?"SPL":card.cat.slice(0,3).toUpperCase();
-    el.innerHTML=`<span class="cc">${card.cost}</span><span class="cat">${tag}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${card.hero}</span>`;
+    el.innerHTML=`<span class="cat">${tag}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${card.hero}</span>`;
     el.onclick=()=>onCard(i); h.appendChild(el); });
   const ebtn=document.getElementById("endBtn"); const u=activeUnit();
   ebtn.disabled = over || busy || !u || u.owner!=="A";
