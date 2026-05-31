@@ -224,18 +224,18 @@
 
   <h3>Hero roster (12)</h3>
   <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Move</th><th>Range</th><th>Speed</th><th>Tags</th></tr>
-    <tr><td>K Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>3</td><td>—</td></tr>
-    <tr><td>R Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>5</td><td>—</td></tr>
-    <tr><td>M Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>4</td><td>heal</td></tr>
-    <tr><td>B Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>4</td><td>—</td></tr>
-    <tr><td>P Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>heal</td></tr>
-    <tr><td>A Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>6</td><td>flank</td></tr>
-    <tr><td>D Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>3</td><td>heal</td></tr>
-    <tr><td>W Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>3</td><td>—</td></tr>
     <tr><td>S Sentinel</td><td>12</td><td>1</td><td>1</td><td>1</td><td>1</td><td>—</td></tr>
-    <tr><td>T Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>6</td><td>—</td></tr>
-    <tr><td>C Crusader</td><td>10</td><td>1</td><td>1</td><td>1</td><td>4</td><td>—</td></tr>
-    <tr><td>N Necromancer</td><td>6</td><td>1</td><td>1</td><td>2</td><td>3</td><td>—</td></tr>
+    <tr><td>P Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>heal</td></tr>
+    <tr><td>K Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>3</td><td>—</td></tr>
+    <tr><td>N Necromancer</td><td>6</td><td>1</td><td>1</td><td>2</td><td>4</td><td>—</td></tr>
+    <tr><td>W Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>5</td><td>—</td></tr>
+    <tr><td>D Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>6</td><td>heal</td></tr>
+    <tr><td>M Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>7</td><td>heal</td></tr>
+    <tr><td>C Crusader</td><td>10</td><td>1</td><td>1</td><td>1</td><td>8</td><td>—</td></tr>
+    <tr><td>B Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>9</td><td>—</td></tr>
+    <tr><td>R Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>10</td><td>—</td></tr>
+    <tr><td>T Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>11</td><td>—</td></tr>
+    <tr><td>A Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>12</td><td>flank</td></tr>
   </table>
 
   <h3>Card categories</h3>
@@ -285,18 +285,18 @@ const R=4,C=5;
 /* ---------- definitions ---------- */
 // 12-hero roster. HP must come from {4,6,8,10,12,20} (polyhedral dice).
 const CLASSES={
-  knight:     {name:"Knight",     sym:"K", hp:10, atk:1, move:1, range:1, speed:3, hero:true},
-  ranger:     {name:"Ranger",     sym:"R", hp:8,  atk:1, move:1, range:2, speed:5, hero:true},
-  mage:       {name:"Mage",       sym:"M", hp:6,  atk:1, move:1, range:2, speed:4, hero:true, heal:true},
-  berserker:  {name:"Berserker",  sym:"B", hp:8,  atk:2, move:1, range:1, speed:4, hero:true},
-  paladin:    {name:"Paladin",    sym:"P", hp:10, atk:1, move:1, range:1, speed:2, hero:true, heal:true},
-  assassin:   {name:"Assassin",   sym:"A", hp:6,  atk:2, move:2, range:1, speed:6, hero:true, flank:true},
-  druid:      {name:"Druid",      sym:"D", hp:8,  atk:1, move:1, range:2, speed:3, hero:true, heal:true},
-  warlock:    {name:"Warlock",    sym:"W", hp:6,  atk:1, move:1, range:3, speed:3, hero:true},
-  sentinel:   {name:"Sentinel",   sym:"S", hp:12, atk:1, move:1, range:1, speed:1, hero:true},
-  scout:      {name:"Scout",      sym:"T", hp:4,  atk:1, move:2, range:2, speed:6, hero:true},
-  crusader:   {name:"Crusader",   sym:"C", hp:10, atk:1, move:1, range:1, speed:4, hero:true},
-  necromancer:{name:"Necromancer",sym:"N", hp:6,  atk:1, move:1, range:2, speed:3, hero:true}
+  knight:     {name:"Knight",     sym:"K", hp:10, atk:1, move:1, range:1, speed:3,  hero:true},
+  ranger:     {name:"Ranger",     sym:"R", hp:8,  atk:1, move:1, range:2, speed:10, hero:true},
+  mage:       {name:"Mage",       sym:"M", hp:6,  atk:1, move:1, range:2, speed:7,  hero:true, heal:true},
+  berserker:  {name:"Berserker",  sym:"B", hp:8,  atk:2, move:1, range:1, speed:9,  hero:true},
+  paladin:    {name:"Paladin",    sym:"P", hp:10, atk:1, move:1, range:1, speed:2,  hero:true, heal:true},
+  assassin:   {name:"Assassin",   sym:"A", hp:6,  atk:2, move:2, range:1, speed:12, hero:true, flank:true},
+  druid:      {name:"Druid",      sym:"D", hp:8,  atk:1, move:1, range:2, speed:6,  hero:true, heal:true},
+  warlock:    {name:"Warlock",    sym:"W", hp:6,  atk:1, move:1, range:3, speed:5,  hero:true},
+  sentinel:   {name:"Sentinel",   sym:"S", hp:12, atk:1, move:1, range:1, speed:1,  hero:true},
+  scout:      {name:"Scout",      sym:"T", hp:4,  atk:1, move:2, range:2, speed:11, hero:true},
+  crusader:   {name:"Crusader",   sym:"C", hp:10, atk:1, move:1, range:1, speed:8,  hero:true},
+  necromancer:{name:"Necromancer",sym:"N", hp:6,  atk:1, move:1, range:2, speed:4,  hero:true}
 };
 const ROSTER=Object.keys(CLASSES);
 const DRAFT_SEQUENCE=["A","B","B","A","A","B"]; // 1-2-2-1 snake, 3v3

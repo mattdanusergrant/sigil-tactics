@@ -19,18 +19,20 @@ Each side fields **3 heroes** drafted from a 12-hero roster. HP must come from t
 
 | Hero | Sym | HP | ATK | Move | Range | Speed | Tags | Notes |
 |---|---|---|---|---|---|---|---|---|
-| Knight      | K | 10 | 1 | 1 | 1 | 3 | —    | Tanky melee |
-| Ranger      | R | 8  | 1 | 1 | 2 | 5 | —    | Fast ranged |
-| Mage        | M | 6  | 1 | 1 | 2 | 4 | heal | Ranged caster, can heal adjacent ally |
-| Berserker   | B | 8  | 2 | 1 | 1 | 4 | —    | High-damage melee |
-| Paladin     | P | 10 | 1 | 1 | 1 | 2 | heal | Tank with adjacent-ally heal |
-| Assassin    | A | 6  | 2 | 2 | 1 | 6 | flank | Mobile flanker, ×2 side / ×2.5 rear |
-| Druid       | D | 8  | 1 | 1 | 2 | 3 | heal | Ranged healer |
-| Warlock     | W | 6  | 1 | 1 | 3 | 3 | —    | Longest range in the roster |
-| Sentinel    | S | 12 | 1 | 1 | 1 | 1 | —    | Heavy tank, always acts last |
-| Scout       | T | 4  | 1 | 2 | 2 | 6 | —    | Mobile recon, fragile |
-| Crusader    | C | 10 | 1 | 1 | 1 | 4 | —    | Balanced fighter |
-| Necromancer | N | 6  | 1 | 1 | 2 | 3 | —    | Caster |
+| Sentinel    | S | 12 | 1 | 1 | 1 | 1  | —     | Heavy tank, always acts last |
+| Paladin     | P | 10 | 1 | 1 | 1 | 2  | heal  | Tank with adjacent-ally heal |
+| Knight      | K | 10 | 1 | 1 | 1 | 3  | —     | Tanky melee |
+| Necromancer | N | 6  | 1 | 1 | 2 | 4  | —     | Caster |
+| Warlock     | W | 6  | 1 | 1 | 3 | 5  | —     | Longest range in the roster |
+| Druid       | D | 8  | 1 | 1 | 2 | 6  | heal  | Ranged healer |
+| Mage        | M | 6  | 1 | 1 | 2 | 7  | heal  | Ranged caster, adjacent-ally heal |
+| Crusader    | C | 10 | 1 | 1 | 1 | 8  | —     | Balanced fighter |
+| Berserker   | B | 8  | 2 | 1 | 1 | 9  | —     | High-damage melee |
+| Ranger      | R | 8  | 1 | 1 | 2 | 10 | —     | Fast ranged |
+| Scout       | T | 4  | 1 | 2 | 2 | 11 | —     | Mobile recon, fragile |
+| Assassin    | A | 6  | 2 | 2 | 1 | 12 | flank | Fastest, ×2 side / ×2.5 rear |
+
+Speeds are **unique 1–12** across the roster — initiative ties never happen between heroes of different classes (and the 1-2-2-1 snake draft prevents duplicates within a match).
 
 Heroes never appear in the deck. They are gold-bordered on the board.
 
