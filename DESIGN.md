@@ -156,7 +156,7 @@ Movement updates facing toward the destination; attacks update facing toward the
 
 ## Cards
 
-The card pool spans **9 hero suites × 10 cards = 90 cards total**. Each hero contributes **5 equipment + 5 actions** themed to their identity. After the draft, each player's **match deck is 30 cards** — the union of their 3 drafted heroes' suites — then shuffled. Both players draw from their own deck independently.
+Each hero suite contributes **6 cards** — 3 Standard, 2 Epic, 1 Legendary — themed to their identity. On top of that, every deck includes the universal **10-card Sigil pool**: generic action cards that any unit can cast on its own turn. After the draft, each player's **match deck is 40 cards**: the union of their 5 drafted heroes' suites (5 × 6 = 30) plus the 10 sigils, shuffled. Both players draw from their own deck independently.
 
 ### Card economy
 
@@ -164,9 +164,10 @@ The card pool spans **9 hero suites × 10 cards = 90 cards total**. Each hero co
 - **Max hand size:** none.
 - **Draw timing:** at the end of every turn — yours or the AI's — the active unit's owner draws 1 card from their deck.
 - **No aether / no costs.** Cards have no resource gate. A card's price is paid in **opportunity cost**: a card takes the active unit's *action slot* for the turn — the unit may still move before playing it, but cannot also attack or heal that turn.
-- **Cards are cast by a source hero.** Each card belongs to one of your three drafted heroes (the same hero whose suite contributed the card to your deck). A card can only be played:
+- **Hero cards are cast by a source hero.** Each hero card belongs to one of your drafted heroes (the same hero whose suite contributed it to your deck). A hero card can only be played:
   1. On its **source hero's turn** (active unit's class must match `card.hero`), and
   2. When the source hero is still **alive**.
+- **Sigils are unbound.** The 10 universal sigil cards (`card.hero === "sigil"`) bypass the source-hero rule: any of your units can cast any sigil on its own turn. Sigils still consume the active unit's action slot, and damage sigils use the caster's range. Sigils are never "dead-source" — they remain playable as long as you have any living unit.
   When a hero dies, all 10 of their cards in your deck/hand become unplayable — a kill on either side disables a third of that side's deck. Killing the opponent's "anchor" hero (Mage, Paladin, etc.) is now a strategic priority worth more than just removing a unit.
 - **Range.** Damage cards (anything `dmg-*`) only target enemies within the casting hero's normal attack range. So a Knight's Greatsword (Knight range 1) hits adjacent enemies; a Warlock's Eldritch Blast (Warlock range 3) reaches across the board. Ally-target cards (heal / shield / charge / compound heal-*) have no range constraint — they reach any of your heroes anywhere on the board. Group cards (`-all` variants) don't need a target tile, just any one ally to confirm the cast.
 - **Design target:** a card should be tuned so that, in the moment, it is the *best play* the active unit could make this turn. The intended loop is: play 1 of your 2 cards → draw 1 → consider the new card next turn → repeat. If most cards are weaker than a normal attack, players will just attack and the system breaks down.
