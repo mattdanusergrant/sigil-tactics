@@ -299,7 +299,7 @@
     <li><b>Initiative deck:</b> each round, each side builds their own deck — every living unit contributes <i>Init</i> copies of itself (slow units: 1, normal: 2, fast: 3). Decks are shuffled. Sides alternate drawing one token at a time; whoever draws acts. Round ends when both decks are empty.</li>
     <li><b>Facing:</b> attacks from the SIDE deal ×1.5, REAR ×2 (Assassin: ×2 / ×2.5).</li>
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
-    <li><b>Cards:</b> start with 3 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
+    <li><b>Cards:</b> start with 5 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
     <li><b>Cycle:</b> once per turn, a unit may <i>forfeit its move</i> and discard 2 cards to draw 1 — useful for digging past dead-source cards.</li>
     <li><b>Cast by source hero:</b> every card belongs to one of your 5 drafted heroes. It can <i>only</i> be played on that hero's turn — and only if that hero is still alive. Killing an enemy hero locks out their 8 cards (the entire suite they brought to the deck).</li>
     <li><b>Range:</b> damage cards target enemies within the casting hero's range (the same range they use for normal attacks). Ally-target cards (heal/shield/charge/buff) reach any of your allies.</li>
@@ -962,7 +962,7 @@ function finishDeploy(){
   for(const o of ["A","B"]){
     players[o].deck=shuffle(buildDeckFor(o));
   }
-  for(let i=0;i<3;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
+  for(let i=0;i<5;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
   // Pick a random side to draw first in the initiative deck for round 1.
   initiativeToken = Math.random()<0.5 ? "A" : "B";
   startRound();
