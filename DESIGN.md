@@ -2,7 +2,7 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.19** (`index.html`).
+Current build: **v0.20** (`index.html`).
 
 ## Modes
 
@@ -47,17 +47,17 @@ Each side fields **3 heroes** drafted from a **9-hero active roster**. Three add
 
 ### Active roster (9)
 
-| Glyph | Hero | HP | ATK | Move | Range | Speed | Tags | Notes |
-|---|---|---|---|---|---|---|---|---|
-| 🛡️ | Paladin   | 10 | 1 | 1 | 1 | 1 | heal  | Tank with adjacent-ally heal |
-| ⚔️ | Knight    | 10 | 1 | 1 | 1 | 2 | —     | Tanky melee |
-| 🩸 | Warlock   | 6  | 1 | 1 | 3 | 3 | —     | Longest range in the roster |
-| 🌿 | Druid     | 8  | 1 | 1 | 2 | 4 | heal  | Ranged healer |
-| 🔮 | Mage      | 6  | 1 | 1 | 2 | 5 | —     | Pyromancer / arcane damage caster |
-| 🪓 | Berserker | 8  | 2 | 1 | 1 | 6 | —     | High-damage melee |
-| 🏹 | Ranger    | 8  | 1 | 1 | 2 | 7 | —     | Fast ranged |
-| 👁️ | Scout     | 4  | 1 | 2 | 2 | 8 | —     | Mobile recon, fragile |
-| 🗡️ | Assassin  | 6  | 2 | 2 | 1 | 9 | flank | Fastest, ×2 side / ×2.5 rear |
+| Glyph | Hero | HP | ATK | Move | Range | Speed | Passive |
+|---|---|---|---|---|---|---|---|
+| 🛡️ | Paladin   | 10 | 1 | 1 | 1 | 1 | **Bulwark** — all damage taken −1 (min 1) |
+| ⚔️ | Knight    | 10 | 1 | 1 | 1 | 2 | **Rallying Presence** — allies adjacent to Knight get +1 ATK |
+| 🩸 | Warlock   | 6  | 1 | 1 | 3 | 3 | **Soul Drain** — heal 2 HP each time Warlock kills with an attack |
+| 🌿 | Druid     | 8  | 1 | 1 | 2 | 4 | **Nature's Renewal** — +1 HP at the start of every round |
+| 🔮 | Mage      | 6  | 1 | 1 | 2 | 5 | **Arcane Burn** — every Mage attack leaves +1 vuln on target |
+| 🪓 | Berserker | 8  | 2 | 1 | 1 | 6 | **Bloodlust** — +1 ATK while at or below half HP |
+| 🏹 | Ranger    | 8  | 1 | 1 | 2 | 7 | **Sniper** — +1 dmg when attacking from max range (2 tiles) |
+| 👁️ | Scout     | 4  | 1 | 2 | 2 | 8 | **Evasive** — takes −1 dmg from melee attackers (min 1) |
+| 🗡️ | Assassin  | 6  | 2 | 2 | 1 | 9 | **Backstab Mastery** — rear-arc multiplier ×3 (was ×2.5 from flank tag) |
 
 Active-roster speeds form a contiguous `{1, 2, 3, 4, 5, 6, 7, 8, 9}` — all unique. Combined with the snake draft (no class duplicates within a match), initiative ties between heroes never occur. Hidden-roster speeds (Sentinel 1, Necromancer 4, Crusader 8) currently collide with active speeds; if any of those are un-hidden later, the active roster will need to be re-numbered accordingly.
 

@@ -270,7 +270,7 @@
   <div class="legend">9-hero roster · 90-card pool · your deck = your 3 drafted heroes' 30 cards &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.19 · cycle mechanic · forfeit move + discard 2 → draw 1 · tap for rules</div>
+    <div class="sub">v0.20 · unique hero passives · cycle mechanic · tap for rules</div>
   </button>
 </div>
 
@@ -311,16 +311,16 @@
   </ul>
 
   <h3>Hero roster (9)</h3>
-  <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Move</th><th>Range</th><th>Speed</th><th>Tags</th></tr>
-    <tr><td>🛡️ Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>1</td><td>heal</td></tr>
-    <tr><td>⚔️ Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>—</td></tr>
-    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>3</td><td>—</td></tr>
-    <tr><td>🌿 Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>4</td><td>heal</td></tr>
-    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>5</td><td>—</td></tr>
-    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>6</td><td>—</td></tr>
-    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>7</td><td>—</td></tr>
-    <tr><td>👁️ Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>8</td><td>—</td></tr>
-    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>9</td><td>flank</td></tr>
+  <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Mv</th><th>Rng</th><th>Spd</th><th>Passive</th></tr>
+    <tr><td>🛡️ Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Bulwark — damage taken −1 (min 1)</td></tr>
+    <tr><td>⚔️ Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>Rallying Presence — adjacent allies +1 ATK</td></tr>
+    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>3</td><td>Soul Drain — heal 2 HP per kill</td></tr>
+    <tr><td>🌿 Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>4</td><td>Nature's Renewal — +1 HP per round</td></tr>
+    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>5</td><td>Arcane Burn — attacks leave +1 vuln</td></tr>
+    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>6</td><td>Bloodlust — +1 ATK at ≤½ HP</td></tr>
+    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>7</td><td>Sniper — +1 dmg at max range</td></tr>
+    <tr><td>👁️ Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>8</td><td>Evasive — −1 dmg from melee (min 1)</td></tr>
+    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>9</td><td>Backstab Mastery — rear arc ×3</td></tr>
   </table>
 
   <h3>Card categories</h3>
@@ -424,15 +424,15 @@ const R=4,C=5;
 // Hero roster. HP must come from {4,6,8,10,12,20} (polyhedral dice).
 // `hidden:true` keeps a class in the data but excludes it from the active roster / draft.
 const CLASSES={
-  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, speed:2,  hero:true},
-  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, speed:7,  hero:true},
-  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, speed:5,  hero:true},
-  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, speed:6,  hero:true},
-  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, speed:1,  hero:true, heal:true},
-  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, speed:9,  hero:true, flank:true},
-  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, speed:3,  hero:true},
-  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, speed:4,  hero:true, heal:true},
-  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, speed:8,  hero:true},
+  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, speed:2,  hero:true,            passive:"Rallying Presence: allies adjacent to Knight get +1 ATK."},
+  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, speed:7,  hero:true,            passive:"Sniper: +1 damage when attacking from max range (2 tiles)."},
+  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, speed:5,  hero:true,            passive:"Arcane Burn: each Mage attack leaves the target +1 vulnerable."},
+  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, speed:6,  hero:true,            passive:"Bloodlust: +1 ATK while at or below half HP."},
+  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, speed:1,  hero:true, heal:true, passive:"Bulwark: all damage taken is reduced by 1 (minimum 1)."},
+  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, speed:9,  hero:true, flank:true, passive:"Backstab Mastery: rear-arc multiplier ×3 (instead of ×2.5)."},
+  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, speed:3,  hero:true,            passive:"Soul Drain: heals 2 HP each time Warlock kills an enemy with an attack."},
+  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, speed:4,  hero:true, heal:true, passive:"Nature's Renewal: regenerates 1 HP at the start of every round."},
+  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, speed:8,  hero:true,            passive:"Evasive: takes 1 less damage from melee attackers (minimum 1)."},
   // hidden — kept in data, excluded from roster for now
   sentinel:   {name:"Sentinel",   sym:"🏰", hp:12, atk:1, move:1, range:1, speed:1,  hero:true, hidden:true},
   necromancer:{name:"Necromancer",sym:"💀", hp:6,  atk:1, move:1, range:2, speed:4,  hero:true, hidden:true},
@@ -975,6 +975,13 @@ function flipToken(){ liveToken = liveToken==="A" ? "B" : "A"; }
 function startRound(){
   roundNum++;
   for(const u of units){ u.hasMoved=false; u.hasActed=false; u.bonusAtkRound=0; u.bonusMoveTurn=0; u.vuln=0; }
+  // Druid — Nature's Renewal: +1 HP at start of round
+  for(const u of units){
+    if(u.hp>0 && u.cls==="druid"){
+      const before=u.hp; u.hp=Math.min(u.maxHp, u.hp+1);
+      if(u.hp>before) say(`Nature's Renewal: ${u.name} +1 HP.`);
+    }
+  }
   acted=new Set();
   liveToken=initiativeToken;
   prevBracketSpeed=null;
@@ -1062,7 +1069,20 @@ function promptOrAi(){
 function eachUnit(fn){ for(const u of units) if(u.hp>0) fn(u); }
 function heroesAlive(o){ return heroes[o].filter(h=>h.hp>0); }
 function effMove(u){ return u.move + (u.bonusMoveTurn||0); }
-function effAtk(u){ return u.atk + (u.bonusAtkRound||0); }
+function effAtk(u){
+  let a = u.atk + (u.bonusAtkRound||0);
+  // Berserker — Bloodlust: +1 ATK at or below half HP
+  if(u.cls==="berserker" && u.hp>0 && u.hp <= u.maxHp/2) a += 1;
+  // Knight — Rallying Presence: ally adjacent to a Knight gets +1 ATK
+  if(u.cls!=="knight"){
+    for(const k in VEC){ const [dr,dc]=VEC[k]; const nr=u.r+dr, nc=u.c+dc;
+      if(!inB(nr,nc)) continue;
+      const adj=board[nr][nc].unit;
+      if(adj && adj.owner===u.owner && adj.cls==="knight" && adj.hp>0){ a += 1; break; }
+    }
+  }
+  return a;
+}
 function reachable(u){
   const dist={}, q=[{r:u.r,c:u.c}], res=[]; dist[u.r+","+u.c]=0;
   const lim=effMove(u);
@@ -1115,16 +1135,32 @@ function attack(attacker,defender){
   const arc=arcOf(attacker,defender);
   let mult=arc==="front"?1:arc==="side"?1.5:2;
   if(attacker.flank){ if(arc==="side")mult=2; if(arc==="rear")mult=2.5; }
+  // Assassin — Backstab Mastery: rear-arc ×3
+  if(attacker.cls==="assassin" && arc==="rear") mult = 3;
   const high=board[attacker.r][attacker.c].terrain==="high"?1:0;
   let raw=Math.round((effAtk(attacker)+high)*mult);
+  // Ranger — Sniper: +1 dmg at max range
+  if(attacker.cls==="ranger" && manh(attacker,defender)===attacker.range) raw += 1;
   const vulnBonus = defender.vuln || 0;
   if(vulnBonus){ raw += vulnBonus; defender.vuln = 0; }
+  // Paladin — Bulwark: damage taken reduced by 1 (min 1)
+  if(defender.cls==="paladin") raw = Math.max(1, raw - 1);
+  // Scout — Evasive: -1 dmg from melee attackers (min 1)
+  if(defender.cls==="scout" && attacker.range===1) raw = Math.max(1, raw - 1);
   attacker.facing=dirFromTo(attacker,defender);
   const {taken}=applyDamage(defender,raw);
   attacker.hasActed=true;
   const shielded=raw-taken;
   const vulnTag = vulnBonus ? ` <i>+${vulnBonus} vuln</i>` : "";
   say(`${attacker.name} hit ${defender.name} <b>(${arc.toUpperCase()} ×${mult})</b>${vulnTag} for ${taken}${shielded?` <i>(${shielded} absorbed)</i>`:""}.`);
+  // Mage — Arcane Burn: leaves the target +1 vulnerable if still alive
+  if(attacker.cls==="mage" && defender.hp>0) defender.vuln = (defender.vuln||0) + 1;
+  // Warlock — Soul Drain: heal 2 HP when killing an enemy with an attack
+  if(attacker.cls==="warlock" && defender.hp<=0 && attacker.hp>0){
+    const before=attacker.hp;
+    attacker.hp=Math.min(attacker.maxHp, attacker.hp+2);
+    if(attacker.hp>before) say(`${attacker.name} drains soul — +${attacker.hp-before} HP.`);
+  }
   killCheck(defender);
 }
 function healAct(mage,ally){
