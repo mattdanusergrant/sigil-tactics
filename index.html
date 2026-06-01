@@ -113,14 +113,11 @@
   .btn.active{background:var(--gold); color:#0c0d11;}
   .card .cat{position:absolute; top:2px; right:4px; font-size:8px; color:var(--dim); letter-spacing:.4px;}
   .card .ho{position:absolute; bottom:2px; left:4px; font-size:8px; font-weight:800;}
-  .card.cat-Weapon{box-shadow:inset 0 -3px 0 #c14a3a;}
-  .card.cat-Armor{box-shadow:inset 0 -3px 0 #4a78c1;}
-  .card.cat-Helmet{box-shadow:inset 0 -3px 0 #4ac1a8;}
-  .card.cat-Boots{box-shadow:inset 0 -3px 0 #7fb04a;}
-  .card.cat-Artifact{box-shadow:inset 0 -3px 0 var(--gold);}
-  .card.cat-Action{box-shadow:inset 0 -3px 0 #c7c9d1;}
-  .card.spell{box-shadow:inset 0 -3px 0 #b878ff;}
-  .card.spell .cs{color:#d6bcff;}
+  .card.tier-S{box-shadow:inset 0 -3px 0 #6a6e78;}
+  .card.tier-E{box-shadow:inset 0 -3px 0 #b878ff;}
+  .card.tier-E .cs{color:#d6bcff;}
+  .card.tier-L{box-shadow:inset 0 -3px 0 var(--gold); background:linear-gradient(165deg,#2a241a 0%,#1c1f24 65%);}
+  .card.tier-L .cs{color:var(--gold);}
 
   .legend{font-size:10px; color:var(--dim); text-align:center; line-height:1.5;}
   #codex{position:fixed; inset:0; background:rgba(8,9,12,.92); display:none; align-items:flex-start; justify-content:center; z-index:20; overflow-y:auto; padding:20px 12px;}
@@ -142,6 +139,10 @@
   #codex .cdx-card .cdx-cat{color:var(--dim); font-size:10px;}
   #codex .cdx-card .cdx-name{color:#fff;}
   #codex .cdx-card .cdx-eff{color:var(--dim); font-size:10px; grid-column:1/-1; padding-left:24px;}
+  #codex .cdx-card.tier-S{border-left-color:#6a6e78;}
+  #codex .cdx-card.tier-E{border-left-color:#b878ff;}
+  #codex .cdx-card.tier-L{border-left-color:var(--gold);}
+  #codex .cdx-card.unused-Weapon{display:none;}
   #codex .cdx-card.cat-Weapon{border-left-color:#c14a3a;}
   #codex .cdx-card.cat-Armor{border-left-color:#4a78c1;}
   #codex .cdx-card.cat-Helmet{border-left-color:#4ac1a8;}
@@ -264,20 +265,19 @@
     <span class="deck-info" id="deckInfo">—</span>
     <button class="btn" id="endBtn">END TURN</button>
     <button class="btn ghost" id="cycleBtn">CYCLE</button>
-    <button class="btn ghost" id="newBtn">New</button>
   </div>
 
-  <div class="legend">9-hero roster · 90-card pool · your deck = your 3 drafted heroes' 30 cards &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
+  <div class="legend">11-hero roster · 88-card pool · 5v5 · per-side initiative deck &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · ☠ vuln</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.20 · unique hero passives · cycle mechanic · tap for rules</div>
+    <div class="sub">v0.21 · 5v5 · initiative deck · 11 heroes · S/E/L card tiers · tap for rules</div>
   </button>
 </div>
 
 <div id="codex"><div class="cbox">
   <button class="x" onclick="closeCodex()">×</button>
   <h2>SIGIL TACTICS</h2>
-  <div class="cdx-sub">v0.18 — cards cast from a source hero · source must be alive AND active · enemy targets use source range</div>
+  <div class="cdx-sub">v0.21 — 5v5 · 11-hero roster · 88-card pool (4 STD / 3 EPIC / 1 LEG per hero) · per-side Initiative deck</div>
 
   <h3>Modes</h3>
   <ul>
@@ -295,8 +295,8 @@
 
   <h3>Rules</h3>
   <ul>
-    <li><b>Win:</b> defeat all 3 enemy heroes.</li>
-    <li><b>Initiative:</b> each round, units act in Speed order (high → low). A unit may move and take one action (attack, heal, or play a card) — in either order — then ends its turn.</li>
+    <li><b>Win:</b> defeat all enemy heroes (5v5 — both sides field 5 drafted heroes).</li>
+    <li><b>Initiative deck:</b> each round, each side builds their own deck — every living unit contributes <i>Init</i> copies of itself (slow units: 1, normal: 2, fast: 3). Decks are shuffled. Sides alternate drawing one token at a time; whoever draws acts. Round ends when both decks are empty.</li>
     <li><b>Facing:</b> attacks from the SIDE deal ×1.5, REAR ×2 (Assassin: ×2 / ×2.5).</li>
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
     <li><b>Cards:</b> start with 3 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
@@ -310,17 +310,19 @@
     <li><b>HP dice:</b> every unit's max HP is a polyhedral die face count (4/6/8/10/12/20).</li>
   </ul>
 
-  <h3>Hero roster (9)</h3>
-  <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Mv</th><th>Rng</th><th>Spd</th><th>Passive</th></tr>
+  <h3>Hero roster (11)</h3>
+  <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Mv</th><th>Rng</th><th>Init</th><th>Passive</th></tr>
+    <tr><td>🏰 Sentinel</td><td>12</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Aegis — friendly heroes take −1 dmg (min 1)</td></tr>
     <tr><td>🛡️ Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Bulwark — damage taken −1 (min 1)</td></tr>
     <tr><td>⚔️ Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>Rallying Presence — adjacent allies +1 ATK</td></tr>
-    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>3</td><td>Soul Drain — heal 2 HP per kill</td></tr>
-    <tr><td>🌿 Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>4</td><td>Nature's Renewal — +1 HP per round</td></tr>
-    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>5</td><td>Arcane Burn — attacks leave +1 vuln</td></tr>
-    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>6</td><td>Bloodlust — +1 ATK at ≤½ HP</td></tr>
-    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>7</td><td>Sniper — +1 dmg at max range</td></tr>
-    <tr><td>👁️ Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>8</td><td>Evasive — −1 dmg from melee (min 1)</td></tr>
-    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>9</td><td>Backstab Mastery — rear arc ×3</td></tr>
+    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>2</td><td>Soul Drain — heal 2 HP per kill</td></tr>
+    <tr><td>🌿 Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Nature's Renewal — +1 HP per round</td></tr>
+    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Arcane Burn — attacks leave +1 vuln</td></tr>
+    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>2</td><td>Bloodlust — +1 ATK at ≤½ HP</td></tr>
+    <tr><td>💀 Necromancer</td><td>6</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Death Touch — enemies adjacent take +1 dmg</td></tr>
+    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>3</td><td>Sniper — +1 dmg at max range</td></tr>
+    <tr><td>👁️ Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>3</td><td>Evasive — −1 dmg from melee (min 1)</td></tr>
+    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>3</td><td>Backstab Mastery — rear arc ×3</td></tr>
   </table>
 
   <h3>Card categories</h3>
@@ -365,7 +367,7 @@
   </div>
   <ul class="d-sub">
     <li>Snake draft: P1, P2-P2, P1-P1, P2</li>
-    <li>3 heroes per side</li>
+    <li>5 heroes per side</li>
     <li>9 active classes, no duplicates</li>
   </ul>
 </div></div>
@@ -422,46 +424,47 @@ const R=4,C=5;
 
 /* ---------- definitions ---------- */
 // Hero roster. HP must come from {4,6,8,10,12,20} (polyhedral dice).
-// `hidden:true` keeps a class in the data but excludes it from the active roster / draft.
+// `init` is how many cards this unit contributes to its side's per-round Initiative deck.
 const CLASSES={
-  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, speed:2,  hero:true,            passive:"Rallying Presence: allies adjacent to Knight get +1 ATK."},
-  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, speed:7,  hero:true,            passive:"Sniper: +1 damage when attacking from max range (2 tiles)."},
-  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, speed:5,  hero:true,            passive:"Arcane Burn: each Mage attack leaves the target +1 vulnerable."},
-  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, speed:6,  hero:true,            passive:"Bloodlust: +1 ATK while at or below half HP."},
-  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, speed:1,  hero:true, heal:true, passive:"Bulwark: all damage taken is reduced by 1 (minimum 1)."},
-  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, speed:9,  hero:true, flank:true, passive:"Backstab Mastery: rear-arc multiplier ×3 (instead of ×2.5)."},
-  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, speed:3,  hero:true,            passive:"Soul Drain: heals 2 HP each time Warlock kills an enemy with an attack."},
-  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, speed:4,  hero:true, heal:true, passive:"Nature's Renewal: regenerates 1 HP at the start of every round."},
-  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, speed:8,  hero:true,            passive:"Evasive: takes 1 less damage from melee attackers (minimum 1)."},
-  // hidden — kept in data, excluded from roster for now
-  sentinel:   {name:"Sentinel",   sym:"🏰", hp:12, atk:1, move:1, range:1, speed:1,  hero:true, hidden:true},
-  necromancer:{name:"Necromancer",sym:"💀", hp:6,  atk:1, move:1, range:2, speed:4,  hero:true, hidden:true},
-  crusader:   {name:"Crusader",   sym:"✝️", hp:10, atk:1, move:1, range:1, speed:8,  hero:true, hidden:true}
+  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, init:2, hero:true,            passive:"Rallying Presence: allies adjacent to Knight get +1 ATK."},
+  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, init:3, hero:true,            passive:"Sniper: +1 damage when attacking from max range (2 tiles)."},
+  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, init:2, hero:true,            passive:"Arcane Burn: each Mage attack leaves the target +1 vulnerable."},
+  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, init:2, hero:true,            passive:"Bloodlust: +1 ATK while at or below half HP."},
+  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, init:1, hero:true, heal:true, passive:"Bulwark: all damage taken is reduced by 1 (minimum 1)."},
+  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, init:3, hero:true, flank:true, passive:"Backstab Mastery: rear-arc multiplier ×3."},
+  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, init:2, hero:true,            passive:"Soul Drain: heals 2 HP each time Warlock kills an enemy with an attack."},
+  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, init:2, hero:true, heal:true, passive:"Nature's Renewal: regenerates 1 HP at the start of every round."},
+  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, init:3, hero:true,            passive:"Evasive: takes 1 less damage from melee attackers (minimum 1)."},
+  sentinel:   {name:"Sentinel",   sym:"🏰", hp:12, atk:1, move:1, range:1, init:1, hero:true,            passive:"Aegis: while alive, all friendly heroes take 1 less damage (minimum 1)."},
+  necromancer:{name:"Necromancer",sym:"💀", hp:6,  atk:1, move:1, range:2, init:2, hero:true,            passive:"Death Touch: enemies adjacent to Necromancer take +1 damage from all sources."},
+  // hidden — kept in data, excluded from roster
+  crusader:   {name:"Crusader",   sym:"✝️", hp:10, atk:1, move:1, range:1, init:2, hero:true, hidden:true, passive:"—"}
 };
 const ROSTER=Object.keys(CLASSES).filter(k=>!CLASSES[k].hidden);
-const DRAFT_SEQUENCE=["A","B","B","A","A","B"]; // 1-2-2-1 snake, 3v3
+const DRAFT_SEQUENCE=["A","B","B","A","A","B","B","A","A","B"]; // 5v5 snake (1-2-2-2-2-1)
+const TEAM_SIZE=5;
 
 /* ---------- PvE campaign ---------- */
-const STARTERS=["knight","ranger","mage"];
+const STARTERS=["knight","ranger","mage","assassin","berserker"];
 const MISSIONS=[
-  {id:1, boss:"paladin",   aiPool:["paladin","knight","mage","ranger"],
+  {id:1, boss:"paladin",     aiPool:["paladin","knight","mage","ranger","assassin"],
     title:"The Sworn Oath",
     intro:"A knight of the old order guards the mountain pass. To win their loyalty, you must defeat them in honorable combat."},
-  {id:2, boss:"druid",     aiPool:["druid","mage","ranger","paladin"],
+  {id:2, boss:"druid",       aiPool:["druid","mage","ranger","paladin","berserker"],
     title:"The Wild Heart",
     intro:"Deep in the grove, a druid binds nature against trespassers. Earn their trust through battle."},
-  {id:3, boss:"scout",     aiPool:["scout","ranger","knight","druid"],
+  {id:3, boss:"scout",       aiPool:["scout","ranger","knight","assassin","druid"],
     title:"The Quick Shadow",
     intro:"A swift scout has been shadowing your party for days. Catch them and they'll join you."},
-  {id:4, boss:"berserker", aiPool:["berserker","knight","mage","paladin"],
-    title:"The Wild Rage",
-    intro:"A berserker challenges your captain to single combat. Outlast their fury."},
-  {id:5, boss:"warlock",   aiPool:["warlock","mage","druid","ranger"],
+  {id:4, boss:"warlock",     aiPool:["warlock","mage","druid","ranger","paladin"],
     title:"The Pact of Shadows",
     intro:"A warlock bargains with old powers. Break their will, gain a mighty caster."},
-  {id:6, boss:"assassin",  aiPool:["assassin","scout","ranger","berserker"],
-    title:"The Silent Blade",
-    intro:"A silent killer waits in the dunes. Best the swiftest blade in the realm."}
+  {id:5, boss:"sentinel",    aiPool:["sentinel","paladin","knight","warlock","druid"],
+    title:"The Iron Watcher",
+    intro:"A towering sentinel guards a ruined keep. Bring down the fortress."},
+  {id:6, boss:"necromancer", aiPool:["necromancer","warlock","mage","assassin","scout"],
+    title:"The Pale Hand",
+    intro:"A necromancer commands the shadows of the dead. End their reign over the graveyard."}
 ];
 let mode="title"; // "title" | "campaign-menu" | "skirmish" | "campaign-play"
 let campaign={
@@ -544,13 +547,13 @@ function computeMissionAITeam(m, playerPicks){
   team.push(m.boss); taken.add(m.boss);
   // then themed allies from aiPool in order
   for(const cls of m.aiPool){
-    if(team.length>=3) break;
+    if(team.length>=TEAM_SIZE) break;
     if(taken.has(cls)) continue;
     team.push(cls); taken.add(cls);
   }
   // fallback to any active hero
   for(const cls of ROSTER){
-    if(team.length>=3) break;
+    if(team.length>=TEAM_SIZE) break;
     if(taken.has(cls)) continue;
     team.push(cls); taken.add(cls);
   }
@@ -582,17 +585,18 @@ function renderTeamPicker(){
     root.appendChild(btn);
   }
   // Auto-fill if exactly 3 unlocked and nothing picked yet
-  if(unlocked.length===3 && campaign.teamSelection.length===0){
+  if(unlocked.length===TEAM_SIZE && campaign.teamSelection.length===0){
     campaign.teamSelection=unlocked.slice();
     return renderTeamPicker();
   }
   document.getElementById("intCount").textContent=`${campaign.teamSelection.length}/3 selected`;
-  document.getElementById("beginBtn").disabled = campaign.teamSelection.length!==3;
+  document.getElementById("beginBtn").disabled = campaign.teamSelection.length!==TEAM_SIZE;
+  document.getElementById("intCount").textContent = `${campaign.teamSelection.length}/${TEAM_SIZE} selected`;
 }
 function toggleTeamPick(cls){
   const i=campaign.teamSelection.indexOf(cls);
   if(i>=0) campaign.teamSelection.splice(i,1);
-  else if(campaign.teamSelection.length<3) campaign.teamSelection.push(cls);
+  else if(campaign.teamSelection.length<TEAM_SIZE) campaign.teamSelection.push(cls);
   renderTeamPicker();
 }
 function cancelMission(){
@@ -609,117 +613,118 @@ function returnToMissions(){
   document.getElementById("victory").classList.remove("open");
   openMissions();
 }
-// v0.17 — no pure buff/debuff cards. Every card makes something happen this turn; some carry a
-// secondary lasting effect (e.g. attack-that-also-marks-target, heal-that-also-shields).
-// `vuln` is a per-target counter consumed (and added to damage) by the next attack on that target.
+// v0.21 — 8 cards per hero × 11 heroes = 88 cards. Tiers: 4 Standard / 3 Epic / 1 Legendary.
+// Equipment/Spell split removed; cards just have a tier band for flavor and tuning guidelines.
 const CARDS={
-  // Knight — captain. Heavy single shield + group heal + compound rally cards.
-  kn_weapon:     {hero:"knight", cat:"Weapon",   kind:"dmg",            dmg:4,                sym:"⚔", name:"Greatsword"},
-  kn_armor:      {hero:"knight", cat:"Armor",    kind:"shield",         amount:5,             sym:"⛨", name:"Plate Mail"},
-  kn_helm:       {hero:"knight", cat:"Helmet",   kind:"dmg",            dmg:4,                sym:"⛑", name:"Iron Helm"},
-  kn_boots:      {hero:"knight", cat:"Boots",    kind:"charge",         amount:3,             sym:"⫯", name:"Steel Greaves"},
-  kn_artifact:   {hero:"knight", cat:"Artifact", kind:"heal-all-buff",  amount:2, buff:1,     sym:"⚑", name:"War Banner"},
-  kn_act_cleave: {hero:"knight", cat:"Action",   kind:"dmg-adj",        dmg:3, splash:1,      sym:"⚒", name:"Cleave"},
-  kn_act_bulwark:{hero:"knight", cat:"Action",   kind:"dmg-vuln",       dmg:4, vuln:2,        sym:"⚒", name:"Shield Bash"},
-  kn_act_rally:  {hero:"knight", cat:"Action",   kind:"heal-all",       amount:2,             sym:"✚", name:"Rally"},
-  kn_act_wall:   {hero:"knight", cat:"Action",   kind:"shield-all",     amount:3,             sym:"⛨", name:"Shield Wall"},
-  kn_spell_cry:  {hero:"knight", cat:"Action",   kind:"dmg-team-buff",  dmg:3, buff:2,        sym:"☄", name:"Battle Cry", spell:true},
+  /* ⚔️ KNIGHT */
+  kn_greatsword: {hero:"knight",  tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Greatsword"},
+  kn_cleave:     {hero:"knight",  tier:"S", kind:"dmg-adj",        dmg:3, splash:1,      sym:"⚒", name:"Cleave"},
+  kn_greaves:    {hero:"knight",  tier:"S", kind:"charge",         amount:3,             sym:"⫯", name:"Steel Greaves"},
+  kn_rally:      {hero:"knight",  tier:"S", kind:"heal-all",       amount:2,             sym:"✚", name:"Rally"},
+  kn_plate:      {hero:"knight",  tier:"E", kind:"shield",         amount:5,             sym:"⛨", name:"Plate Mail"},
+  kn_bash:       {hero:"knight",  tier:"E", kind:"dmg-vuln",       dmg:4, vuln:2,        sym:"⚒", name:"Shield Bash"},
+  kn_banner:     {hero:"knight",  tier:"E", kind:"heal-all-buff",  amount:2, buff:1,     sym:"⚑", name:"War Banner"},
+  kn_battlecry:  {hero:"knight",  tier:"L", kind:"dmg-team-buff",  dmg:3, buff:2,        sym:"☄", name:"Battle Cry"},
 
-  // Ranger — sniper. Pure offense / mobility, marks targets for vulnerability.
-  rn_weapon:     {hero:"ranger", cat:"Weapon",   kind:"dmg",            dmg:4,                sym:"➶", name:"Longbow"},
-  rn_armor:      {hero:"ranger", cat:"Armor",    kind:"dmg-adj",        dmg:3, splash:1,      sym:"⛨", name:"Quiver of Sharps"},
-  rn_helm:       {hero:"ranger", cat:"Helmet",   kind:"charge",         amount:2,             sym:"⛑", name:"Hawk Hood"},
-  rn_boots:      {hero:"ranger", cat:"Boots",    kind:"charge",         amount:4,             sym:"⫯", name:"Swift Boots"},
-  rn_artifact:   {hero:"ranger", cat:"Artifact", kind:"dmg-vuln",       dmg:3, vuln:3,        sym:"⚑", name:"Hunter's Mark"},
-  rn_act_quick:  {hero:"ranger", cat:"Action",   kind:"dmg",            dmg:3,                sym:"›", name:"Quick Shot"},
-  rn_act_volley: {hero:"ranger", cat:"Action",   kind:"dmg-adj",        dmg:2, splash:1,      sym:"⋮", name:"Volley"},
-  rn_act_rep:    {hero:"ranger", cat:"Action",   kind:"charge",         amount:3,             sym:"»", name:"Reposition"},
-  rn_spell_pierce:{hero:"ranger",cat:"Action",   kind:"dmg",            dmg:5,                sym:"✸", name:"Piercing Arrow", spell:true},
-  rn_spell_eye:  {hero:"ranger", cat:"Action",   kind:"dmg-team-buff",  dmg:2, buff:1,        sym:"◉", name:"Eagle's Eye", spell:true},
+  /* 🏹 RANGER */
+  rn_quickshot:  {hero:"ranger",  tier:"S", kind:"dmg",            dmg:3,                sym:"›", name:"Quick Shot"},
+  rn_volley:     {hero:"ranger",  tier:"S", kind:"dmg-adj",        dmg:2, splash:1,      sym:"⋮", name:"Volley"},
+  rn_hawkhood:   {hero:"ranger",  tier:"S", kind:"charge",         amount:2,             sym:"⛑", name:"Hawk Hood"},
+  rn_reposition: {hero:"ranger",  tier:"S", kind:"charge",         amount:3,             sym:"»", name:"Reposition"},
+  rn_longbow:    {hero:"ranger",  tier:"E", kind:"dmg",            dmg:4,                sym:"➶", name:"Longbow"},
+  rn_quiver:     {hero:"ranger",  tier:"E", kind:"dmg-adj",        dmg:3, splash:1,      sym:"⛨", name:"Quiver of Sharps"},
+  rn_swiftboots: {hero:"ranger",  tier:"E", kind:"charge",         amount:4,             sym:"⫯", name:"Swift Boots"},
+  rn_pierce:     {hero:"ranger",  tier:"L", kind:"dmg",            dmg:5,                sym:"✸", name:"Piercing Arrow"},
 
-  // Mage — pyromancer / arcane damage caster. No more heals; big AoEs and elemental spells.
-  mg_weapon:        {hero:"mage",   cat:"Weapon",   kind:"dmg",       dmg:3,                sym:"⚔", name:"Staff"},
-  mg_armor:         {hero:"mage",   cat:"Armor",    kind:"dmg-adj",   dmg:2, splash:1,      sym:"⛨", name:"Robe of Sparks"},
-  mg_helm:          {hero:"mage",   cat:"Helmet",   kind:"dmg",       dmg:4,                sym:"⛑", name:"Crown of Light"},
-  mg_boots:         {hero:"mage",   cat:"Boots",    kind:"charge",    amount:2,             sym:"⫯", name:"Ember Sandals"},
-  mg_artifact:      {hero:"mage",   cat:"Artifact", kind:"dmg-adj",   dmg:4, splash:2,      sym:"🔥", name:"Sunflame Orb"},
-  mg_spell_fire:    {hero:"mage",   cat:"Action",   kind:"dmg-adj",   dmg:3, splash:2,      sym:"🔥", name:"Fireball",        spell:true},
-  mg_spell_frost:   {hero:"mage",   cat:"Action",   kind:"dmg-vuln",  dmg:4, vuln:2,        sym:"❄", name:"Frostbolt",       spell:true},
-  mg_spell_lightning:{hero:"mage",  cat:"Action",   kind:"dmg",       dmg:5,                sym:"ϟ", name:"Lightning Strike",spell:true},
-  mg_spell_arcane:  {hero:"mage",   cat:"Action",   kind:"dmg-vuln",  dmg:3, vuln:3,        sym:"✦", name:"Arcane Blast",    spell:true},
-  mg_spell_meteor:  {hero:"mage",   cat:"Action",   kind:"dmg",       dmg:6,                sym:"☄", name:"Meteor",          spell:true},
+  /* 🔮 MAGE */
+  mg_staff:      {hero:"mage",    tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Staff"},
+  mg_sparks:     {hero:"mage",    tier:"S", kind:"dmg-adj",        dmg:2, splash:1,      sym:"⛨", name:"Robe of Sparks"},
+  mg_crown:      {hero:"mage",    tier:"S", kind:"dmg",            dmg:4,                sym:"⛑", name:"Crown of Light"},
+  mg_ember:      {hero:"mage",    tier:"S", kind:"charge",         amount:2,             sym:"⫯", name:"Ember Sandals"},
+  mg_fireball:   {hero:"mage",    tier:"E", kind:"dmg-adj",        dmg:3, splash:2,      sym:"🔥", name:"Fireball"},
+  mg_frostbolt:  {hero:"mage",    tier:"E", kind:"dmg-vuln",       dmg:4, vuln:2,        sym:"❄", name:"Frostbolt"},
+  mg_lightning:  {hero:"mage",    tier:"E", kind:"dmg",            dmg:5,                sym:"ϟ", name:"Lightning Strike"},
+  mg_meteor:     {hero:"mage",    tier:"L", kind:"dmg",            dmg:6,                sym:"☄", name:"Meteor"},
 
-  // Paladin — holy fighter. Big shield + compound heals + AoE smiting.
-  pl_weapon:     {hero:"paladin",cat:"Weapon",   kind:"dmg",            dmg:4,                sym:"⚒", name:"Warhammer"},
-  pl_armor:      {hero:"paladin",cat:"Armor",    kind:"shield",         amount:6,             sym:"⛨", name:"Holy Plate"},
-  pl_helm:       {hero:"paladin",cat:"Helmet",   kind:"heal-all-buff",  amount:1, buff:1,     sym:"⛑", name:"Helm of Faith"},
-  pl_boots:      {hero:"paladin",cat:"Boots",    kind:"charge",         amount:2,             sym:"⫯", name:"Sabatons"},
-  pl_artifact:   {hero:"paladin",cat:"Artifact", kind:"heal-all",       amount:3,             sym:"⚑", name:"Holy Symbol"},
-  pl_act_loh:    {hero:"paladin",cat:"Action",   kind:"heal-shield",    amount:5, shield:3,   sym:"+", name:"Lay on Hands"},
-  pl_act_smite:  {hero:"paladin",cat:"Action",   kind:"dmg",            dmg:4,                sym:"✸", name:"Smite Evil"},
-  pl_spell_div:  {hero:"paladin",cat:"Action",   kind:"dmg-adj",        dmg:4, splash:1,      sym:"☼", name:"Divine Wrath",  spell:true},
-  pl_spell_con:  {hero:"paladin",cat:"Action",   kind:"dmg-adj",        dmg:3, splash:1,      sym:"☄", name:"Consecration",  spell:true},
-  pl_spell_sanct:{hero:"paladin",cat:"Action",   kind:"dmg",            dmg:5,                sym:"✚", name:"Sanctuary",     spell:true},
+  /* 🪓 BERSERKER */
+  br_axe:        {hero:"berserker",tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Battle Axe"},
+  br_pauldrons:  {hero:"berserker",tier:"S", kind:"dmg",            dmg:3,                sym:"⛨", name:"Spiked Pauldrons"},
+  br_boots:      {hero:"berserker",tier:"S", kind:"charge",         amount:3,             sym:"⫯", name:"War Boots"},
+  br_whirl:      {hero:"berserker",tier:"S", kind:"dmg-adj",        dmg:3, splash:1,      sym:"⚒", name:"Whirlwind"},
+  br_horned:     {hero:"berserker",tier:"E", kind:"dmg-self-buff",  dmg:3, buff:2,        sym:"⛑", name:"Horned Helm"},
+  br_charge:     {hero:"berserker",tier:"E", kind:"dmg-self-charge",dmg:3, charge:3,      sym:"»", name:"Reckless Charge"},
+  br_rend:       {hero:"berserker",tier:"E", kind:"dmg-adj",        dmg:4, splash:1,      sym:"✸", name:"Rend"},
+  br_thirster:   {hero:"berserker",tier:"L", kind:"dmg",            dmg:6,                sym:"⚑", name:"Bloodthirster"},
 
-  // Warlock — dark caster. Vulnerability marks + lifesteal + AoE.
-  wl_weapon:     {hero:"warlock",cat:"Weapon",   kind:"dmg",            dmg:3,                sym:"⚔", name:"Athame"},
-  wl_armor:      {hero:"warlock",cat:"Armor",    kind:"dmg-adj",        dmg:2, splash:1,      sym:"⛨", name:"Shadow Veil"},
-  wl_helm:       {hero:"warlock",cat:"Helmet",   kind:"charge",         amount:2,             sym:"⛑", name:"Hood of Shadows"},
-  wl_boots:      {hero:"warlock",cat:"Boots",    kind:"charge",         amount:3,             sym:"⫯", name:"Boots of Misdirection"},
-  wl_artifact:   {hero:"warlock",cat:"Artifact", kind:"dmg-vuln",       dmg:3, vuln:3,        sym:"⚑", name:"Cursed Skull"},
-  wl_act_hex:    {hero:"warlock",cat:"Action",   kind:"dmg",            dmg:4,                sym:"✸", name:"Hex"},
-  wl_spell_blast:{hero:"warlock",cat:"Action",   kind:"dmg",            dmg:5,                sym:"☠", name:"Eldritch Blast",   spell:true},
-  wl_spell_pulse:{hero:"warlock",cat:"Action",   kind:"dmg-adj",        dmg:3, splash:1,      sym:"❦", name:"Pulse of Decay",    spell:true},
-  wl_spell_drain:{hero:"warlock",cat:"Action",   kind:"dmg-self-heal",  dmg:3, heal:3,        sym:"🩸", name:"Drain Soul",        spell:true},
-  wl_spell_curse:{hero:"warlock",cat:"Action",   kind:"dmg-adj",        dmg:2, splash:2,      sym:"✤", name:"Curse of Weakness", spell:true},
+  /* 🛡️ PALADIN */
+  pl_warhammer:  {hero:"paladin", tier:"S", kind:"dmg",            dmg:3,                sym:"⚒", name:"Warhammer"},
+  pl_sabatons:   {hero:"paladin", tier:"S", kind:"charge",         amount:2,             sym:"⫯", name:"Sabatons"},
+  pl_smite:      {hero:"paladin", tier:"S", kind:"dmg",            dmg:4,                sym:"✸", name:"Smite Evil"},
+  pl_symbol:     {hero:"paladin", tier:"S", kind:"heal-all",       amount:3,             sym:"⚑", name:"Holy Symbol"},
+  pl_plate:      {hero:"paladin", tier:"E", kind:"shield",         amount:6,             sym:"⛨", name:"Holy Plate"},
+  pl_loh:        {hero:"paladin", tier:"E", kind:"heal-shield",    amount:5, shield:3,   sym:"+", name:"Lay on Hands"},
+  pl_consec:     {hero:"paladin", tier:"E", kind:"dmg-adj",        dmg:3, splash:1,      sym:"☄", name:"Consecration"},
+  pl_wrath:      {hero:"paladin", tier:"L", kind:"dmg-adj",        dmg:4, splash:2,      sym:"☼", name:"Divine Wrath"},
 
-  // Druid — nature support. Compound heal+shield, heal+buff; AoE damage.
-  dr_weapon:     {hero:"druid",  cat:"Weapon",   kind:"dmg-adj",        dmg:2, splash:1,      sym:"⚔", name:"Sickle"},
-  dr_armor:      {hero:"druid",  cat:"Armor",    kind:"heal-shield",    amount:2, shield:2,   sym:"⛨", name:"Bark Skin"},
-  dr_helm:       {hero:"druid",  cat:"Helmet",   kind:"dmg-team-buff",  dmg:2, buff:1,        sym:"⛑", name:"Antlered Crown"},
-  dr_boots:      {hero:"druid",  cat:"Boots",    kind:"charge",         amount:3,             sym:"⫯", name:"Mossy Wraps"},
-  dr_artifact:   {hero:"druid",  cat:"Artifact", kind:"heal-all",       amount:4,             sym:"⚑", name:"Living Wood"},
-  dr_act_thorns: {hero:"druid",  cat:"Action",   kind:"dmg",            dmg:4,                sym:"❦", name:"Thorns"},
-  dr_spell_regro:{hero:"druid",  cat:"Action",   kind:"heal-buff",      amount:4, buff:2,     sym:"✚", name:"Regrowth",       spell:true},
-  dr_spell_tang: {hero:"druid",  cat:"Action",   kind:"dmg-adj",        dmg:3, splash:1,      sym:"⋮", name:"Entangle",       spell:true},
-  dr_spell_light:{hero:"druid",  cat:"Action",   kind:"dmg",            dmg:5,                sym:"ϟ", name:"Lightning Bolt", spell:true},
-  dr_spell_sun:  {hero:"druid",  cat:"Action",   kind:"dmg-adj",        dmg:3, splash:1,      sym:"☼", name:"Sunbeam",        spell:true},
+  /* 🩸 WARLOCK */
+  wl_athame:     {hero:"warlock", tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Athame"},
+  wl_veil:       {hero:"warlock", tier:"S", kind:"dmg-adj",        dmg:2, splash:1,      sym:"⛨", name:"Shadow Veil"},
+  wl_hood:       {hero:"warlock", tier:"S", kind:"charge",         amount:2,             sym:"⛑", name:"Hood of Shadows"},
+  wl_hex:        {hero:"warlock", tier:"S", kind:"dmg",            dmg:4,                sym:"✸", name:"Hex"},
+  wl_skull:      {hero:"warlock", tier:"E", kind:"dmg-vuln",       dmg:3, vuln:3,        sym:"⚑", name:"Cursed Skull"},
+  wl_drain:      {hero:"warlock", tier:"E", kind:"dmg-self-heal",  dmg:3, heal:3,        sym:"🩸", name:"Drain Soul"},
+  wl_pulse:      {hero:"warlock", tier:"E", kind:"dmg-adj",        dmg:3, splash:1,      sym:"❦", name:"Pulse of Decay"},
+  wl_blast:      {hero:"warlock", tier:"L", kind:"dmg",            dmg:6,                sym:"☠", name:"Eldritch Blast"},
 
-  // Berserker — rage. All offense; compound strikes that also pump the caster.
-  br_weapon:     {hero:"berserker",cat:"Weapon",   kind:"dmg",            dmg:5,                sym:"⚔", name:"Battle Axe"},
-  br_armor:      {hero:"berserker",cat:"Armor",    kind:"dmg",            dmg:4,                sym:"⛨", name:"Spiked Pauldrons"},
-  br_helm:       {hero:"berserker",cat:"Helmet",   kind:"dmg-self-buff",  dmg:3, buff:2,        sym:"⛑", name:"Horned Helm"},
-  br_boots:      {hero:"berserker",cat:"Boots",    kind:"charge",         amount:3,             sym:"⫯", name:"War Boots"},
-  br_artifact:   {hero:"berserker",cat:"Artifact", kind:"dmg",            dmg:6,                sym:"⚑", name:"Bloodthirster"},
-  br_act_frenzy: {hero:"berserker",cat:"Action",   kind:"dmg-team-buff",  dmg:3, buff:2,        sym:"☄", name:"Frenzy"},
-  br_act_charge: {hero:"berserker",cat:"Action",   kind:"dmg-self-charge",dmg:3, charge:3,      sym:"»", name:"Reckless Charge"},
-  br_act_whirl:  {hero:"berserker",cat:"Action",   kind:"dmg-adj",        dmg:3, splash:1,      sym:"⚒", name:"Whirlwind"},
-  br_act_rend:   {hero:"berserker",cat:"Action",   kind:"dmg-adj",        dmg:4, splash:1,      sym:"✸", name:"Rend"},
-  br_spell_trance:{hero:"berserker",cat:"Action",  kind:"dmg-self-buff",  dmg:4, buff:3,        sym:"⚠", name:"Battle Trance", spell:true},
+  /* 🌿 DRUID */
+  dr_sickle:     {hero:"druid",   tier:"S", kind:"dmg-adj",        dmg:2, splash:1,      sym:"⚔", name:"Sickle"},
+  dr_mossy:      {hero:"druid",   tier:"S", kind:"charge",         amount:3,             sym:"⫯", name:"Mossy Wraps"},
+  dr_thorns:     {hero:"druid",   tier:"S", kind:"dmg",            dmg:3,                sym:"❦", name:"Thorns"},
+  dr_sunbeam:    {hero:"druid",   tier:"S", kind:"dmg-adj",        dmg:3, splash:1,      sym:"☼", name:"Sunbeam"},
+  dr_bark:       {hero:"druid",   tier:"E", kind:"heal-shield",    amount:2, shield:2,   sym:"⛨", name:"Bark Skin"},
+  dr_regrowth:   {hero:"druid",   tier:"E", kind:"heal-buff",      amount:4, buff:2,     sym:"✚", name:"Regrowth"},
+  dr_entangle:   {hero:"druid",   tier:"E", kind:"dmg-adj",        dmg:3, splash:1,      sym:"⋮", name:"Entangle"},
+  dr_livingwood: {hero:"druid",   tier:"L", kind:"heal-all",       amount:4,             sym:"⚑", name:"Living Wood"},
 
-  // Scout — hit-and-run. Mobility + vuln-marks + strike-and-dash cards.
-  sc_weapon:     {hero:"scout",  cat:"Weapon",   kind:"dmg",            dmg:3,                sym:"⚔", name:"Shortbow"},
-  sc_armor:      {hero:"scout",  cat:"Armor",    kind:"dmg",            dmg:4,                sym:"⛨", name:"Studded Cloak"},
-  sc_helm:       {hero:"scout",  cat:"Helmet",   kind:"dmg-vuln",       dmg:3, vuln:2,        sym:"⛑", name:"Spyglass"},
-  sc_boots:      {hero:"scout",  cat:"Boots",    kind:"charge",         amount:3,             sym:"⫯", name:"Cat's Boots"},
-  sc_artifact:   {hero:"scout",  cat:"Artifact", kind:"dmg-adj",        dmg:3, splash:1,      sym:"⚑", name:"Trap"},
-  sc_act_snipe:  {hero:"scout",  cat:"Action",   kind:"dmg",            dmg:5,                sym:"✸", name:"Snipe"},
-  sc_act_dash:   {hero:"scout",  cat:"Action",   kind:"charge",         amount:5,             sym:"»", name:"Dash"},
-  sc_act_vanish: {hero:"scout",  cat:"Action",   kind:"dmg-self-charge",dmg:3, charge:3,      sym:"≈", name:"Vanish"},
-  sc_act_mark:   {hero:"scout",  cat:"Action",   kind:"dmg-team-buff",  dmg:2, buff:1,        sym:"◉", name:"Mark Target"},
-  sc_spell_step: {hero:"scout",  cat:"Action",   kind:"charge",         amount:4,             sym:"≋", name:"Shadow Step", spell:true},
+  /* 👁️ SCOUT */
+  sc_shortbow:   {hero:"scout",   tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Shortbow"},
+  sc_catboots:   {hero:"scout",   tier:"S", kind:"charge",         amount:3,             sym:"⫯", name:"Cat's Boots"},
+  sc_studded:    {hero:"scout",   tier:"S", kind:"dmg",            dmg:3,                sym:"⛨", name:"Studded Cloak"},
+  sc_mark:       {hero:"scout",   tier:"S", kind:"dmg-team-buff",  dmg:2, buff:1,        sym:"◉", name:"Mark Target"},
+  sc_spyglass:   {hero:"scout",   tier:"E", kind:"dmg-vuln",       dmg:3, vuln:2,        sym:"⛑", name:"Spyglass"},
+  sc_trap:       {hero:"scout",   tier:"E", kind:"dmg-adj",        dmg:3, splash:1,      sym:"⚑", name:"Trap"},
+  sc_vanish:     {hero:"scout",   tier:"E", kind:"dmg-self-charge",dmg:3, charge:3,      sym:"≈", name:"Vanish"},
+  sc_snipe:      {hero:"scout",   tier:"L", kind:"dmg",            dmg:5,                sym:"✸", name:"Snipe"},
 
-  // Assassin — spike damage. Vuln stacking + strike-and-vanish.
-  as_weapon:     {hero:"assassin",cat:"Weapon",   kind:"dmg",            dmg:4,                sym:"⚔", name:"Dagger"},
-  as_armor:      {hero:"assassin",cat:"Armor",    kind:"dmg",            dmg:3,                sym:"⛨", name:"Razor Leathers"},
-  as_helm:       {hero:"assassin",cat:"Helmet",   kind:"dmg-vuln",       dmg:4, vuln:2,        sym:"⛑", name:"Mask"},
-  as_boots:      {hero:"assassin",cat:"Boots",    kind:"charge",         amount:4,             sym:"⫯", name:"Shadow Boots"},
-  as_artifact:   {hero:"assassin",cat:"Artifact", kind:"dmg-vuln",       dmg:3, vuln:5,        sym:"⚑", name:"Death Mark"},
-  as_act_back:   {hero:"assassin",cat:"Action",   kind:"dmg",            dmg:5,                sym:"✸", name:"Backstab"},
-  as_act_gar:    {hero:"assassin",cat:"Action",   kind:"dmg-adj",        dmg:2, splash:2,      sym:"⚒", name:"Garrote"},
-  as_act_smoke:  {hero:"assassin",cat:"Action",   kind:"dmg-team-buff",  dmg:2, buff:1,        sym:"❦", name:"Smoke Bomb"},
-  as_spell_strike:{hero:"assassin",cat:"Action",  kind:"dmg",            dmg:7,                sym:"☠", name:"Shadow Strike", spell:true},
-  as_spell_veil: {hero:"assassin",cat:"Action",   kind:"dmg-self-charge",dmg:3, charge:5,      sym:"≋", name:"Veil",          spell:true}
+  /* 🗡️ ASSASSIN */
+  as_dagger:     {hero:"assassin",tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Dagger"},
+  as_leathers:   {hero:"assassin",tier:"S", kind:"dmg",            dmg:3,                sym:"⛨", name:"Razor Leathers"},
+  as_shadowboot: {hero:"assassin",tier:"S", kind:"charge",         amount:4,             sym:"⫯", name:"Shadow Boots"},
+  as_garrote:    {hero:"assassin",tier:"S", kind:"dmg-adj",        dmg:2, splash:2,      sym:"⚒", name:"Garrote"},
+  as_mask:       {hero:"assassin",tier:"E", kind:"dmg-vuln",       dmg:4, vuln:2,        sym:"⛑", name:"Mask"},
+  as_deathmark:  {hero:"assassin",tier:"E", kind:"dmg-vuln",       dmg:3, vuln:5,        sym:"⚑", name:"Death Mark"},
+  as_backstab:   {hero:"assassin",tier:"E", kind:"dmg",            dmg:5,                sym:"✸", name:"Backstab"},
+  as_strike:     {hero:"assassin",tier:"L", kind:"dmg",            dmg:7,                sym:"☠", name:"Shadow Strike"},
+
+  /* 🏰 SENTINEL — heavy tank, single-target damage and protection */
+  sn_halberd:    {hero:"sentinel",tier:"S", kind:"dmg",            dmg:3,                sym:"⚔", name:"Halberd"},
+  sn_brace:      {hero:"sentinel",tier:"S", kind:"shield",         amount:3,             sym:"⛨", name:"Bracer"},
+  sn_taunt:      {hero:"sentinel",tier:"S", kind:"dmg-vuln",       dmg:2, vuln:2,        sym:"⛑", name:"Taunt"},
+  sn_anchor:     {hero:"sentinel",tier:"S", kind:"charge",         amount:2,             sym:"⫯", name:"Iron Anchor"},
+  sn_wallplate:  {hero:"sentinel",tier:"E", kind:"shield",         amount:6,             sym:"⛨", name:"Wall Plate"},
+  sn_intercept:  {hero:"sentinel",tier:"E", kind:"shield-all",     amount:2,             sym:"⛨", name:"Intercept"},
+  sn_smash:      {hero:"sentinel",tier:"E", kind:"dmg-vuln",       dmg:4, vuln:3,        sym:"⚒", name:"Stone Smash"},
+  sn_keep:       {hero:"sentinel",tier:"L", kind:"shield-all",     amount:4,             sym:"⚑", name:"Last Keep"},
+
+  /* 💀 NECROMANCER — wither, drain, AoE decay */
+  nc_wand:       {hero:"necromancer",tier:"S", kind:"dmg",          dmg:3,                sym:"⚔", name:"Bone Wand"},
+  nc_shroud:     {hero:"necromancer",tier:"S", kind:"dmg-adj",      dmg:2, splash:1,      sym:"⛨", name:"Grave Shroud"},
+  nc_cowl:       {hero:"necromancer",tier:"S", kind:"charge",       amount:2,             sym:"⛑", name:"Bone Cowl"},
+  nc_curse:      {hero:"necromancer",tier:"S", kind:"dmg-vuln",     dmg:2, vuln:2,        sym:"⫯", name:"Withered Step"},
+  nc_wither:     {hero:"necromancer",tier:"E", kind:"dmg-vuln",     dmg:3, vuln:4,        sym:"⚑", name:"Wither"},
+  nc_corpse:     {hero:"necromancer",tier:"E", kind:"dmg-self-heal",dmg:3, heal:3,        sym:"💀", name:"Corpse Feast"},
+  nc_decay:      {hero:"necromancer",tier:"E", kind:"dmg-adj",      dmg:3, splash:2,      sym:"❦", name:"Mass Decay"},
+  nc_reaper:     {hero:"necromancer",tier:"L", kind:"dmg",          dmg:6,                sym:"☠", name:"Reaper's Scythe"}
 };
 // Per-player deck built at finishDeploy from drafted heroes' suites (3 × 10 = 30 cards).
 function buildDeckFor(player){
@@ -731,7 +736,7 @@ const VEC={N:[-1,0],S:[1,0],E:[0,1],W:[0,-1]};
 const OPP={N:"S",S:"N",E:"W",W:"E"};
 
 let board, players, sel, busy, uid, heroes, units, roundNum, acted, activeId, over;
-let initiativeToken, liveToken, prevBracketSpeed, prevBracketWasCrossTie;
+let initiativeToken;
 let phase, draft, pickIdx, placeSeq, placeIdx, unplaced, selectedDeployUnit;
 
 /* ---------- helpers ---------- */
@@ -742,7 +747,7 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.rando
 
 function newUnit(owner,cls,r,c,facing){
   const d=CLASSES[cls];
-  const u={id:++uid,owner,cls,r,c,facing,hp:d.hp,maxHp:d.hp,atk:d.atk,move:d.move,range:d.range,speed:d.speed,
+  const u={id:++uid,owner,cls,r,c,facing,hp:d.hp,maxHp:d.hp,atk:d.atk,move:d.move,range:d.range,init:d.init,
     flank:!!d.flank,heal:!!d.heal,hero:!!d.hero,sym:d.sym,name:d.name,
     hasMoved:false,hasActed:false,
     shield:0,bonusAtkRound:0,bonusMoveTurn:0,vuln:0};
@@ -789,7 +794,7 @@ function buildDraftRoster(){
     const el=document.createElement("div");
     el.className="rcard"; el.dataset.cls=cls;
     el.innerHTML=`<div class="rsym">${c.sym}</div><div class="rname">${c.name}</div>`+
-      `<div class="rstats">HP ${c.hp} · ATK ${c.atk} · MV ${c.move} · RNG ${c.range} · SPD ${c.speed}</div>`+
+      `<div class="rstats">HP ${c.hp} · ATK ${c.atk} · MV ${c.move} · RNG ${c.range} · INIT ${c.init}</div>`+
       `<div class="rtags">${tags}</div>`;
     el.onclick=()=>onDraftPick(cls);
     root.appendChild(el);
@@ -816,7 +821,7 @@ function renderDraft(){
   // team slots
   const slotsA=document.getElementById("draftA"), slotsB=document.getElementById("draftB");
   slotsA.innerHTML=""; slotsB.innerHTML="";
-  for(let i=0;i<3;i++){
+  for(let i=0;i<TEAM_SIZE;i++){
     const sa=document.createElement("div"); sa.className="d-slot"+(draft.A[i]?"":" empty");
     sa.textContent=draft.A[i]?`${CLASSES[draft.A[i]].sym}  ${CLASSES[draft.A[i]].name}`:"—"; slotsA.appendChild(sa);
     const sb=document.createElement("div"); sb.className="d-slot"+(draft.B[i]?"":" empty");
@@ -959,23 +964,32 @@ function finishDeploy(){
     players[o].deck=shuffle(buildDeckFor(o));
   }
   for(let i=0;i<3;i++){players.A.hand.push(players.A.deck.pop()); players.B.hand.push(players.B.deck.pop());}
-  const maxSpd=Math.max(...units.map(u=>u.speed));
-  const sidesAtMax=new Set(units.filter(u=>u.speed===maxSpd).map(u=>u.owner));
-  let firstActor;
-  if(sidesAtMax.size===1){ firstActor=[...sidesAtMax][0]; liveToken=firstActor==="A"?"B":"A"; }
-  else { firstActor=Math.random()<0.5?"A":"B"; liveToken=firstActor; }
-  initiativeToken=liveToken;
+  // Pick a random side to draw first in the initiative deck for round 1.
+  initiativeToken = Math.random()<0.5 ? "A" : "B";
   startRound();
   render();
   promptOrAi();
 }
 
-/* ---------- round / initiative ---------- */
-function flipToken(){ liveToken = liveToken==="A" ? "B" : "A"; }
+/* ---------- round / initiative (deck-based) ---------- */
+// Each round, every living unit puts `init` cards into its side's Initiative deck. Decks shuffle
+// independently. Sides alternate drawing one card; whoever drew last switches to the other side.
+// If a side's deck runs out, the other side keeps drawing until empty. Then the round ends.
+let initDeckA=[], initDeckB=[], initSide="A";
+function buildInitDecks(){
+  initDeckA=[]; initDeckB=[];
+  for(const u of units){
+    if(u.hp<=0) continue;
+    const deck = u.owner==="A" ? initDeckA : initDeckB;
+    const n = u.init || 2;
+    for(let i=0;i<n;i++) deck.push(u.id);
+  }
+  shuffle(initDeckA); shuffle(initDeckB);
+}
 function startRound(){
   roundNum++;
   for(const u of units){ u.hasMoved=false; u.hasActed=false; u.bonusAtkRound=0; u.bonusMoveTurn=0; u.vuln=0; }
-  // Druid — Nature's Renewal: +1 HP at start of round
+  // Druid passive — Nature's Renewal
   for(const u of units){
     if(u.hp>0 && u.cls==="druid"){
       const before=u.hp; u.hp=Math.min(u.maxHp, u.hp+1);
@@ -983,63 +997,40 @@ function startRound(){
     }
   }
   acted=new Set();
-  liveToken=initiativeToken;
-  prevBracketSpeed=null;
-  prevBracketWasCrossTie=false;
+  buildInitDecks();
+  initSide = initiativeToken;
+  // alternate the starting side each round
+  initiativeToken = initiativeToken==="A" ? "B" : "A";
   advance();
 }
-function pendingUnits(){ return units.filter(u=>u.hp>0 && !acted.has(u.id)); }
-function bracketOrder(bracket, tokenForBracket){
-  const sA=bracket.filter(u=>u.owner==="A").sort((a,b)=>a.id-b.id);
-  const sB=bracket.filter(u=>u.owner==="B").sort((a,b)=>a.id-b.id);
-  const cross=sA.length>0 && sB.length>0;
-  if(cross){
-    const first=tokenForBracket==="A"?sA:sB;
-    const second=tokenForBracket==="A"?sB:sA;
-    return {order:[...first,...second], cross:true};
-  }
-  return {order:[...sA,...sB], cross:false};
-}
 function advance(){
-  const pending=pendingUnits();
-  if(!pending.length){
-    if(prevBracketWasCrossTie) flipToken();
-    initiativeToken=liveToken;
-    activeId=null;
-    if(!over) startRound();
+  // draw an init card; skip side if its deck is empty; start new round if both are empty
+  while(true){
+    let deck = initSide==="A" ? initDeckA : initDeckB;
+    if(deck.length===0){
+      const otherDeck = initSide==="A" ? initDeckB : initDeckA;
+      if(otherDeck.length===0){
+        // both sides exhausted → new round
+        activeId=null;
+        if(!over) startRound();
+        return;
+      }
+      initSide = initSide==="A" ? "B" : "A";
+      continue;
+    }
+    const unitId = deck.shift();
+    const u = units.find(x=>x.id===unitId);
+    if(!u || u.hp<=0) continue; // skip dead units' tokens
+    activeId = u.id;
+    u.hasMoved=false; u.hasActed=false; u.bonusMoveTurn=0;
+    sel=null;
     return;
   }
-  const topSpd=Math.max(...pending.map(u=>u.speed));
-  const isNewBracket=(prevBracketSpeed===null||topSpd<prevBracketSpeed);
-  if(isNewBracket){
-    if(prevBracketSpeed!==null && prevBracketWasCrossTie) flipToken();
-  }
-  const bracket=pending.filter(u=>u.speed===topSpd);
-  const {order,cross}=bracketOrder(bracket, liveToken);
-  if(isNewBracket){ prevBracketWasCrossTie=cross; }
-  prevBracketSpeed=topSpd;
-  activeId=order[0].id;
-  sel=null;
 }
-// Forecast remaining order for the initiative ribbon, given current live state.
-function forecastRemaining(){
-  const result=[];
-  let pendingIds=new Set(pendingUnits().map(u=>u.id));
-  let simToken=liveToken;
-  let simPrevSpd=prevBracketSpeed;
-  let simPrevCross=prevBracketWasCrossTie;
-  while(pendingIds.size){
-    const pend=units.filter(u=>pendingIds.has(u.id));
-    const topSpd=Math.max(...pend.map(u=>u.speed));
-    const isNew=(simPrevSpd===null||topSpd<simPrevSpd);
-    if(isNew && simPrevSpd!==null && simPrevCross){ simToken = simToken==="A"?"B":"A"; }
-    const bracket=pend.filter(u=>u.speed===topSpd);
-    const {order,cross}=bracketOrder(bracket, simToken);
-    for(const u of order){ result.push(u); pendingIds.delete(u.id); }
-    if(isNew){ simPrevCross=cross; }
-    simPrevSpd=topSpd;
-  }
-  return result;
+function pendingUnits(){
+  // units whose init token is still in either deck (excluding dead)
+  const ids = new Set([...initDeckA, ...initDeckB]);
+  return units.filter(u=>u.hp>0 && ids.has(u.id));
 }
 function endActiveTurn(){
   const u=activeUnit();
@@ -1049,6 +1040,8 @@ function endActiveTurn(){
     const p=players[u.owner];
     if(p.deck.length) p.hand.push(p.deck.pop());
   }
+  // alternate sides for the next draw
+  initSide = initSide==="A" ? "B" : "A";
   activeId=null; sel=null;
   if(over) return;
   advance(); render(); promptOrAi();
@@ -1069,6 +1062,20 @@ function promptOrAi(){
 function eachUnit(fn){ for(const u of units) if(u.hp>0) fn(u); }
 function heroesAlive(o){ return heroes[o].filter(h=>h.hp>0); }
 function effMove(u){ return u.move + (u.bonusMoveTurn||0); }
+function adjacentTo(unit, classKey, ownerSide){
+  // True if a living unit of the given class and owner side is orthogonally adjacent to `unit`.
+  for(const k in VEC){
+    const [dr,dc]=VEC[k]; const nr=unit.r+dr, nc=unit.c+dc;
+    if(!inB(nr,nc)) continue;
+    const a=board[nr][nc].unit;
+    if(a && a.hp>0 && a.cls===classKey && a.owner===ownerSide) return true;
+  }
+  return false;
+}
+function anyLivingAlly(owner, classKey){
+  for(const u of units){ if(u.owner===owner && u.cls===classKey && u.hp>0) return true; }
+  return false;
+}
 function effAtk(u){
   let a = u.atk + (u.bonusAtkRound||0);
   // Berserker — Bloodlust: +1 ATK at or below half HP
@@ -1122,7 +1129,17 @@ function killCheck(defender){
     }
   }
 }
-function applyDamage(defender,raw){
+function applyDamage(defender,raw,attackerSide){
+  // Defender-side passives that apply to ALL incoming damage (attacks and cards):
+  // Necromancer Death Touch — +1 if defender is adjacent to a Necromancer on attacker's side
+  if(attackerSide && adjacentTo(defender,"necromancer",attackerSide)) raw += 1;
+  // Paladin Bulwark — −1 (min 1)
+  if(defender.cls==="paladin") raw = Math.max(1, raw - 1);
+  // Sentinel Aegis — −1 to friendlies while Sentinel alive (min 1)
+  if(defender.cls!=="sentinel" && anyLivingAlly(defender.owner,"sentinel")) raw = Math.max(1, raw - 1);
+  return applyDamageRaw(defender,raw);
+}
+function applyDamageRaw(defender,raw){
   let dmg=raw;
   if(defender.shield>0){
     const absorbed=Math.min(defender.shield,dmg);
@@ -1143,12 +1160,10 @@ function attack(attacker,defender){
   if(attacker.cls==="ranger" && manh(attacker,defender)===attacker.range) raw += 1;
   const vulnBonus = defender.vuln || 0;
   if(vulnBonus){ raw += vulnBonus; defender.vuln = 0; }
-  // Paladin — Bulwark: damage taken reduced by 1 (min 1)
-  if(defender.cls==="paladin") raw = Math.max(1, raw - 1);
-  // Scout — Evasive: -1 dmg from melee attackers (min 1)
+  // Scout — Evasive: -1 dmg from melee attackers (min 1). Attack-only.
   if(defender.cls==="scout" && attacker.range===1) raw = Math.max(1, raw - 1);
   attacker.facing=dirFromTo(attacker,defender);
-  const {taken}=applyDamage(defender,raw);
+  const {taken}=applyDamage(defender,raw,attacker.owner);
   attacker.hasActed=true;
   const shielded=raw-taken;
   const vulnTag = vulnBonus ? ` <i>+${vulnBonus} vuln</i>` : "";
@@ -1180,7 +1195,7 @@ function playCard(owner,handIdx,target){
     say(`${card.name}: ${u.name} +${u.hp-before} HP.`);
   } else if(card.kind==="dmg"){
     const u=board[target.r][target.c].unit;
-    const {taken}=applyDamage(u,card.dmg);
+    const {taken}=applyDamage(u,card.dmg,owner);
     say(`${card.name}: ${u.name} takes ${taken}.`); killCheck(u);
   } else if(card.kind==="shield"){
     const u=board[target.r][target.c].unit;
@@ -1199,13 +1214,13 @@ function playCard(owner,handIdx,target){
     u.bonusMoveTurn+=card.amount; say(`${card.name}: ${u.name} +${card.amount} move this turn.`);
   } else if(card.kind==="dmg-adj"){
     const u=board[target.r][target.c].unit;
-    const main=applyDamage(u,card.dmg);
+    const main=applyDamage(u,card.dmg,owner);
     const splashed=[];
     for(const k in VEC){
       const [dr,dc]=VEC[k]; const nr=u.r+dr, nc=u.c+dc;
       if(!inB(nr,nc)) continue;
       const adj=board[nr][nc].unit;
-      if(adj && adj.owner!==owner){ applyDamage(adj,card.splash); splashed.push(adj); }
+      if(adj && adj.owner!==owner){ applyDamage(adj,card.splash,owner); splashed.push(adj); }
     }
     const tag = splashed.length ? ` (+${card.splash} splash to ${splashed.length})` : "";
     say(`${card.name}: ${u.name} takes ${main.taken}${tag}.`);
@@ -1219,35 +1234,35 @@ function playCard(owner,handIdx,target){
     say(`${who} cast ${card.name} — all allies +${card.amount} HP (${total} restored).`);
   } else if(card.kind==="dmg-vuln"){
     const u=board[target.r][target.c].unit;
-    const {taken}=applyDamage(u,card.dmg);
+    const {taken}=applyDamage(u,card.dmg,owner);
     if(u.hp>0) u.vuln=(u.vuln||0)+card.vuln;
     say(`${card.name}: ${u.name} takes ${taken}, +${card.vuln} vulnerable.`);
     killCheck(u);
   } else if(card.kind==="dmg-self-buff"){
     const u=board[target.r][target.c].unit;
     const caster=activeUnit();
-    const {taken}=applyDamage(u,card.dmg);
+    const {taken}=applyDamage(u,card.dmg,owner);
     if(caster) caster.bonusAtkRound+=card.buff;
     say(`${card.name}: ${u.name} takes ${taken}; ${caster?caster.name:"caster"} +${card.buff} ATK this round.`);
     killCheck(u);
   } else if(card.kind==="dmg-self-charge"){
     const u=board[target.r][target.c].unit;
     const caster=activeUnit();
-    const {taken}=applyDamage(u,card.dmg);
+    const {taken}=applyDamage(u,card.dmg,owner);
     if(caster) caster.bonusMoveTurn+=card.charge;
     say(`${card.name}: ${u.name} takes ${taken}; ${caster?caster.name:"caster"} +${card.charge} move this turn.`);
     killCheck(u);
   } else if(card.kind==="dmg-self-heal"){
     const u=board[target.r][target.c].unit;
     const caster=activeUnit();
-    const {taken}=applyDamage(u,card.dmg);
+    const {taken}=applyDamage(u,card.dmg,owner);
     let restored=0;
     if(caster){ const before=caster.hp; caster.hp=Math.min(caster.maxHp,caster.hp+card.heal); restored=caster.hp-before; }
     say(`${card.name}: ${u.name} takes ${taken}; ${caster?caster.name:"caster"} drains ${restored} HP.`);
     killCheck(u);
   } else if(card.kind==="dmg-team-buff"){
     const u=board[target.r][target.c].unit;
-    const {taken}=applyDamage(u,card.dmg);
+    const {taken}=applyDamage(u,card.dmg,owner);
     eachUnit(au=>{ if(au.owner===owner) au.bonusAtkRound+=card.buff; });
     say(`${card.name}: ${u.name} takes ${taken}; all allies +${card.buff} ATK this round.`);
     killCheck(u);
@@ -1538,9 +1553,10 @@ function buildCodex(){
   for(const cls of ROSTER){
     const g=groups[cls]; if(!g.cards.length) continue;
     html+=`<div class="suite"><div class="suite-h">${g.sym} ${g.name} suite — ${g.cards.length} cards</div>`;
+    g.cards.sort((a,b)=>("SEL".indexOf(a.tier))-("SEL".indexOf(b.tier))); // S, E, L order
     for(const c of g.cards){
-      const css="cdx-card cat-"+c.cat+(c.spell?" spell":"");
-      const tag=c.spell?`${c.cat}·Spell`:c.cat;
+      const css="cdx-card tier-"+c.tier;
+      const tag = c.tier==="L" ? "Legendary" : c.tier==="E" ? "Epic" : "Standard";
       html+=`<div class="${css}"><span class="cdx-cat">${tag}</span><span class="cdx-name">${c.name}</span><span>${c.sym}</span><span class="cdx-eff">${cardEffText(c)}</span></div>`;
     }
     html+=`</div>`;
@@ -1570,7 +1586,7 @@ function endGame(winner){
     document.getElementById("vUnlock").innerHTML =
       `<div class="v-glyph">${c.sym}</div>
        <div class="v-name">${c.name.toUpperCase()}</div>
-       <div class="v-stats">HP ${c.hp} · ATK ${c.atk} · MV ${c.move} · RNG ${c.range} · SPD ${c.speed}</div>`;
+       <div class="v-stats">HP ${c.hp} · ATK ${c.atk} · MV ${c.move} · RNG ${c.range} · INIT ${c.init}</div>`;
     document.getElementById("victory").classList.add("open");
     return;
   }
@@ -1622,7 +1638,7 @@ function renderHeroes(){
     heroes[side].forEach(h=>{
       const el=document.createElement("div"); el.className="hero "+side+(h.hp<=0?" dead":"");
       const pct=100*Math.max(0,h.hp)/h.maxHp;
-      el.innerHTML=`<div class="htop"><span class="hsym">${h.sym}</span><span class="hname">${h.name}</span><span class="hspd">spd ${h.speed}</span></div>
+      el.innerHTML=`<div class="htop"><span class="hsym">${h.sym}</span><span class="hname">${h.name}</span><span class="hspd">i${h.init}</span></div>
         <div class="hpwrap"><div class="hpbar" style="width:${pct}%"></div></div>
         <div class="hnum">HP ${Math.max(0,h.hp)}/${h.maxHp}</div>`;
       row.appendChild(el);
@@ -1632,15 +1648,21 @@ function renderHeroes(){
 function renderInit(){
   const el=document.getElementById("init"); el.innerHTML="";
   const lbl=document.createElement("span"); lbl.className="lbl"; lbl.textContent="R"+roundNum; el.appendChild(lbl);
-  const tok=document.createElement("span"); tok.className="ichip "+liveToken;
+  const tok=document.createElement("span"); tok.className="ichip "+initSide;
   tok.innerHTML=`◆<span class="spd">init</span>`; el.appendChild(tok);
-  const rem=forecastRemaining();
-  const actedList=units.filter(u=>u.hp>0 && acted.has(u.id));
-  const order=[...rem, ...actedList];
-  for(const u of order){
+  // Count remaining init tokens per unit
+  const counts={};
+  for(const id of initDeckA) counts[id]=(counts[id]||0)+1;
+  for(const id of initDeckB) counts[id]=(counts[id]||0)+1;
+  // Show alive units with remaining-init counter; active highlighted
+  const sorted = units.filter(u=>u.hp>0).slice().sort((a,b)=>a.owner.localeCompare(b.owner));
+  for(const u of sorted){
+    const rem = counts[u.id] || 0;
+    const isActive = u.id===activeId;
+    const done = rem===0 && !isActive;
     const c=document.createElement("span");
-    c.className="ichip "+u.owner+(u.id===activeId?" active":"")+(acted.has(u.id)?" acted":"");
-    c.innerHTML=`${u.sym}<span class="spd">${u.speed}</span>`;
+    c.className="ichip "+u.owner+(isActive?" active":"")+(done?" acted":"");
+    c.innerHTML=`${u.sym}<span class="spd">${isActive?"now":rem}</span>`;
     el.appendChild(c);
   }
 }
@@ -1707,8 +1729,8 @@ function render(){
     const discardPick = inCycle && sel.picks.includes(i);
     // In cycle mode every card is clickable for discard, so don't dim with .cant.
     const cant = !inCycle && !playable;
-    el.className="card cat-"+card.cat+(card.spell?" spell":"")+(cant?" cant":"")+(sourceDead?" dead-src":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"")+(discardPick?" discard-pick":"");
-    const tag=card.spell?"SPL":card.cat.slice(0,3).toUpperCase();
+    el.className="card tier-"+card.tier+(cant?" cant":"")+(sourceDead?" dead-src":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"")+(discardPick?" discard-pick":"");
+    const tag = card.tier==="L" ? "LEG" : card.tier==="E" ? "EPIC" : "STD";
     const heroGlyph=CLASSES[card.hero]?CLASSES[card.hero].sym:"";
     el.innerHTML=`<span class="cat">${tag}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${heroGlyph}</span>`;
     el.onclick=()=>onCard(i); h.appendChild(el); });
@@ -1790,10 +1812,6 @@ function executeCycle(){
 
 document.getElementById("endBtn").onclick=()=>{ if(over||busy) return; const u=activeUnit(); if(u&&u.owner==="A") endActiveTurn(); };
 document.getElementById("cycleBtn").onclick=()=>toggleCycle();
-document.getElementById("newBtn").onclick=()=>{
-  if(campaign.currentMission){ campaign.currentMission=null; openMissions(); }
-  else showTitle();
-};
 loadProgress();
 showTitle();
 </script>
