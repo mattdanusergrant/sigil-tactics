@@ -290,7 +290,7 @@
   <h3>Rules</h3>
   <ul>
     <li><b>Win:</b> defeat all 3 enemy heroes.</li>
-    <li><b>Initiative:</b> each round, units act in Speed order (high → low). A unit can move + attack (or skip either).</li>
+    <li><b>Initiative:</b> each round, units act in Speed order (high → low). A unit may move and take one action (attack, heal, or play a card) — in either order — then ends its turn.</li>
     <li><b>Facing:</b> attacks from the SIDE deal ×1.5, REAR ×2 (Assassin: ×2 / ×2.5).</li>
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
     <li><b>Cards:</b> start with 2 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
@@ -1166,6 +1166,15 @@ function canPlayCardNow(){
   // Card is the unit's action this turn — playable before or after moving, but not after an attack/heal.
   const u=activeUnit(); return u && u.owner==="A" && !u.hasActed;
 }
+function maybeAutoEnd(u){
+  // End the turn automatically only if the unit has nothing useful left to do — already moved,
+  // dead, or no reachable tiles. Otherwise leave the turn live (move tiles stay highlighted from
+  // the prior render) so the player can reposition or hit END TURN.
+  if(over) return;
+  if(!u || u.hp<=0 || u.hasMoved || !reachable(u).length){ endActiveTurn(); return; }
+  const s=document.getElementById("status");
+  s.innerHTML = s.innerHTML + ` &nbsp;<i>Still has move — tap a green tile or END TURN.</i>`;
+}
 
 /* ---------- player interaction ---------- */
 function onTile(r,c){
@@ -1186,15 +1195,15 @@ function onTile(r,c){
   const u=activeUnit(); if(!u||u.owner!=="A") return;
   const cell=board[r][c];
   if(sel&&sel.t==="card"){
-    if(cell._hl){ playCard("A",sel.i,{r,c}); sel=null; render(); endActiveTurn(); }
+    if(cell._hl){ playCard("A",sel.i,{r,c}); sel=null; render(); maybeAutoEnd(u); }
     else { sel=null; render(); }
     return;
   }
   // unit-turn actions: move and/or act on the active unit only
   const tgt=cell.unit;
   if(cell._hl==="move"){ moveUnit(u,r,c); render(); return; }
-  if(cell._hl==="atk"){ attack(u,tgt); render(); if(over) return; endActiveTurn(); return; }
-  if(cell._hl==="heal"){ healAct(u,tgt); render(); endActiveTurn(); return; }
+  if(cell._hl==="atk"){ attack(u,tgt); render(); if(over) return; maybeAutoEnd(u); return; }
+  if(cell._hl==="heal"){ healAct(u,tgt); render(); maybeAutoEnd(u); return; }
 }
 function anyAlly(o){ let any=false; eachUnit(u=>{if(u.owner===o)any=true;}); return any; }
 function onCard(i){

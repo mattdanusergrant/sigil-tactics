@@ -143,11 +143,13 @@ Activation order is **strictly by Speed**, ties broken by the Initiative token.
 
 ## A unit's turn
 
-When a unit is the active one, its owner does **one** of:
+When a unit is the active one, its owner gets up to **one move and one action**, and may take them in **either order**:
 
-- **Act normally** — move (up to `move`) and/or perform one action (attack any enemy in range; Mage may instead heal an adjacent ally).
-- **Play one card** from hand — counts as the unit's *action* for the turn. The unit may move first (or not), then play a card instead of attacking/healing. A card cannot follow an attack/heal — one action per turn. There is no resource cost; the trade-off is opportunity cost.
+- **Move** — up to the unit's `move` value of tiles, once per turn.
+- **Action** — one of: attack any enemy in range; heal an adjacent ally (heal-tagged units only); or play a card from hand.
 - **Pass** — end the turn with no effect (the END TURN button).
+
+After an action, the turn auto-ends only if the unit also moved already, died, or has no reachable tiles. Otherwise the turn stays live and the player can reposition before ending it. This enables hit-and-run tactics: attack first, then back off.
 
 Movement updates facing toward the destination; attacks update facing toward the target. A Mage may attack instead of healing.
 
