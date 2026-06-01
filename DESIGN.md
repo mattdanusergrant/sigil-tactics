@@ -2,7 +2,35 @@
 
 Mobile-web tactical card-battler. Two sides, three heroes each, on a small grid. Play proceeds in **rounds**; within a round, every living unit gets one turn in **Speed order**. Cards add sidekicks, spells, and battlefield effects. Win by eliminating all three enemy heroes.
 
-Current build: **v0.14** (`index.html`).
+Current build: **v0.15** (`index.html`).
+
+## Modes
+
+- **Campaign** (PvE) — the primary mode. Start with Knight, Ranger, Mage. Beat each of 6 boss heroes to add them to your roster (Paladin → Druid → Scout → Berserker → Warlock → Assassin, locked in that order). Progress persists in `localStorage` under key `sigil-progress`.
+- **Skirmish** — single match against the random-AI; full 9-hero pool is available to both sides.
+
+Mode is chosen from the title screen at app open. The "New" button on the play HUD returns to the title (skirmish) or the mission list (campaign).
+
+### Campaign mission table
+
+| # | Title | Boss unlock | AI priority pool |
+|---|---|---|---|
+| 1 | The Sworn Oath | 🛡️ Paladin | Paladin, Knight, Mage, Ranger |
+| 2 | The Wild Heart | 🌿 Druid | Druid, Mage, Ranger, Paladin |
+| 3 | The Quick Shadow | 👁️ Scout | Scout, Ranger, Knight, Druid |
+| 4 | The Wild Rage | 🪓 Berserker | Berserker, Knight, Mage, Paladin |
+| 5 | The Pact of Shadows | 🩸 Warlock | Warlock, Mage, Druid, Ranger |
+| 6 | The Silent Blade | 🗡️ Assassin | Assassin, Scout, Ranger, Berserker |
+
+Missions are linear: mission *N* unlocks once mission *N-1* is complete. Replaying a completed mission re-unlocks the boss (no-op if already unlocked) and is otherwise harmless.
+
+### Campaign draft behavior
+
+The snake-draft phase runs as in skirmish, but with two filters:
+- The player's pickable roster is restricted to **unlocked heroes**.
+- The AI walks the mission's `aiPool` list in order, picking the first hero not already drafted. If every entry on the list is taken (e.g., the player snake-picked something the AI wanted), the AI falls back to any random unpicked active hero.
+
+This guarantees the boss always shows up on the AI's side in their unlock mission (since the player can't yet pick them), and gives missions a thematic enemy composition without sacrificing the draft phase's tension.
 
 ---
 

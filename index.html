@@ -135,6 +135,40 @@
   #codex .cdx-card.cat-Artifact{border-left-color:var(--gold);}
   #codex .cdx-card.cat-Action{border-left-color:#c7c9d1;}
   #codex .cdx-card.spell{border-left-color:#b878ff;}
+  #title, #missions, #missionIntro, #victory{position:fixed; inset:0; background:rgba(8,9,12,.97); display:none; align-items:center; justify-content:center; z-index:35; overflow-y:auto; padding:20px 12px;}
+  #title.open, #missions.open, #missionIntro.open, #victory.open{display:flex;}
+  #title .tbox, #missions .mbox, #missionIntro .ibox, #victory .vbox{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 18px; max-width:420px; width:100%; text-align:center; position:relative;}
+  #title h1{margin:0 0 4px; font-size:36px; letter-spacing:3px; color:var(--gold);}
+  #title .tag{font-size:11px; color:var(--dim); margin-bottom:22px;}
+  .tbtn{display:block; width:100%; background:var(--gold); color:#0c0d11; border:none; border-radius:8px; padding:12px; font-weight:800; letter-spacing:2px; font-size:14px; cursor:pointer; margin-bottom:8px;}
+  .tbtn.ghost{background:transparent; color:var(--gold); border:1px solid var(--gold);}
+  .tbtn:hover{filter:brightness(1.1);}
+  .treset{background:transparent; border:none; color:var(--dim); font-size:10px; cursor:pointer; text-decoration:underline; margin-top:14px;}
+  #title .tprog{font-size:11px; color:var(--dim); margin-top:18px;}
+  #missions h2, #missionIntro h2, #victory h2{margin:0 0 4px; color:var(--gold); letter-spacing:3px;}
+  #missions .m-sub{font-size:11px; color:var(--dim); margin-bottom:14px;}
+  #missions .x, #missionIntro .x{position:absolute; top:8px; right:10px; background:transparent; border:none; color:var(--dim); font-size:22px; cursor:pointer; line-height:1;}
+  #missionList{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+  .mrow{display:grid; grid-template-columns:36px 1fr 80px; gap:8px; align-items:center; padding:8px 10px; background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:8px; cursor:pointer;}
+  .mrow:hover:not(.locked){background:rgba(212,165,116,.10);}
+  .mrow.locked{opacity:.4; cursor:not-allowed;}
+  .mrow.done{border-color:#7fb04a;}
+  .mrow .mgly{font-size:24px;}
+  .mrow .mtitle{font-size:12px; color:#fff; font-weight:700; text-align:left;}
+  .mrow .msub{font-size:10px; color:var(--dim); text-align:left;}
+  .mrow .mstat{font-size:9px; color:var(--dim); letter-spacing:1px; text-align:right;}
+  .mrow.done .mstat{color:#7fb04a;}
+  .m-prog{font-size:11px; color:var(--dim); border-top:1px solid var(--line); padding-top:10px;}
+  #missionIntro .i-boss{font-size:60px; line-height:1; margin:8px 0;}
+  #missionIntro .i-text{font-size:12px; color:#d6d8de; line-height:1.55; text-align:left; margin:10px 0;}
+  #missionIntro .i-team-row{font-size:11px; color:var(--dim); text-align:left; margin-bottom:4px;}
+  #missionIntro .i-team-row span{color:#fff; font-size:14px;}
+  #victory .v-text{font-size:12px; color:#d6d8de; margin:8px 0 14px; line-height:1.5;}
+  #victory .v-unlock{background:rgba(212,165,116,.10); border:1px solid var(--gold); border-radius:8px; padding:14px; margin-bottom:14px;}
+  #victory .v-glyph{font-size:48px; line-height:1; margin-bottom:6px;}
+  #victory .v-name{font-size:16px; color:var(--gold); letter-spacing:2px; font-weight:800;}
+  #victory .v-stats{font-size:10px; color:var(--dim); margin-top:4px;}
+
   #draft{position:fixed; inset:0; background:rgba(8,9,12,.96); display:none; align-items:flex-start; justify-content:center; z-index:30; overflow-y:auto; padding:18px 10px;}
   #draft.open{display:flex;}
   #draft .dbox{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 14px; max-width:460px; width:100%;}
@@ -203,18 +237,24 @@
   <div class="legend">9-hero roster · 90-card pool · your deck = your 3 drafted heroes' 30 cards &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.14 · 9 hero suites · deck = your draft · tap for rules</div>
+    <div class="sub">v0.15 · campaign mode · 6 hero unlocks · tap for rules</div>
   </button>
 </div>
 
 <div id="codex"><div class="cbox">
   <button class="x" onclick="closeCodex()">×</button>
   <h2>SIGIL TACTICS</h2>
-  <div class="cdx-sub">v0.14 — 9-hero roster · 9 × 10-card suites = 90-card pool · your deck = drafted heroes' suites</div>
+  <div class="cdx-sub">v0.15 — campaign mode · 9-hero roster · 90-card pool · deck = drafted heroes' suites</div>
+
+  <h3>Modes</h3>
+  <ul>
+    <li><b>Campaign:</b> start with Knight, Ranger, Mage. Defeat each of 6 boss heroes (Paladin, Druid, Scout, Berserker, Warlock, Assassin) to add them to your roster. Progress is saved between sessions.</li>
+    <li><b>Skirmish:</b> single match using the full 9-hero roster, random AI draft.</li>
+  </ul>
 
   <h3>Match flow</h3>
   <ul>
-    <li><b>Draft (1-2-2-1 snake):</b> P1 picks 1, P2 picks 2, P1 picks 2, P2 picks 1. Each side ends with 3 heroes.</li>
+    <li><b>Draft (1-2-2-1 snake):</b> P1 picks 1, P2 picks 2, P1 picks 2, P2 picks 1. Each side ends with 3 heroes. In campaign mode, the player picks only from unlocked heroes and the AI picks from a mission-specific priority list (boss + themed allies).</li>
     <li><b>Deploy:</b> alternating face-down placement in reverse-of-draft order (P2 places first to offset P1's first-pick advantage). You see <i>where</i> the opponent placed but not <i>which</i> hero is in each tile — units flip face-up when play begins.</li>
     <li><b>Play:</b> standard initiative-order combat.</li>
   </ul>
@@ -293,7 +333,41 @@
   </div>
 </div>
 
-<div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" onclick="location.reload()">Play again</button></div></div>
+<div id="title"><div class="tbox">
+  <h1>SIGIL TACTICS</h1>
+  <div class="tag">tactical drafting · grid combat · card opportunity-cost</div>
+  <button class="tbtn" onclick="enterCampaign()">CAMPAIGN</button>
+  <button class="tbtn ghost" onclick="enterSkirmish()">SKIRMISH</button>
+  <div class="tprog" id="titleProgress">—</div>
+  <button class="treset" onclick="if(confirm('Reset campaign progress?'))resetProgress()">reset progress</button>
+</div></div>
+
+<div id="missions"><div class="mbox">
+  <button class="x" onclick="exitToTitle()">×</button>
+  <h2>CAMPAIGN</h2>
+  <div class="m-sub">defeat each hero to add them to your roster</div>
+  <div id="missionList"></div>
+  <div class="m-prog" id="missionProg">—</div>
+</div></div>
+
+<div id="missionIntro"><div class="ibox">
+  <button class="x" onclick="cancelMission()">×</button>
+  <h2 id="intTitle"></h2>
+  <div class="i-boss" id="intBoss"></div>
+  <p class="i-text" id="intText"></p>
+  <div class="i-team-row">Enemy team: <span id="intTeam"></span></div>
+  <div class="i-team-row">Your pool: <span id="intYourPool"></span></div>
+  <button class="tbtn" onclick="beginMission()">BEGIN</button>
+</div></div>
+
+<div id="victory"><div class="vbox">
+  <h2>VICTORY</h2>
+  <div class="v-text" id="vText">—</div>
+  <div class="v-unlock" id="vUnlock"></div>
+  <button class="tbtn" onclick="returnToMissions()">CONTINUE</button>
+</div></div>
+
+<div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" id="overBtn">Continue</button></div></div>
 
 <script>
 "use strict";
@@ -319,6 +393,131 @@ const CLASSES={
 };
 const ROSTER=Object.keys(CLASSES).filter(k=>!CLASSES[k].hidden);
 const DRAFT_SEQUENCE=["A","B","B","A","A","B"]; // 1-2-2-1 snake, 3v3
+
+/* ---------- PvE campaign ---------- */
+const STARTERS=["knight","ranger","mage"];
+const MISSIONS=[
+  {id:1, boss:"paladin",   aiPool:["paladin","knight","mage","ranger"],
+    title:"The Sworn Oath",
+    intro:"A knight of the old order guards the mountain pass. To win their loyalty, you must defeat them in honorable combat."},
+  {id:2, boss:"druid",     aiPool:["druid","mage","ranger","paladin"],
+    title:"The Wild Heart",
+    intro:"Deep in the grove, a druid binds nature against trespassers. Earn their trust through battle."},
+  {id:3, boss:"scout",     aiPool:["scout","ranger","knight","druid"],
+    title:"The Quick Shadow",
+    intro:"A swift scout has been shadowing your party for days. Catch them and they'll join you."},
+  {id:4, boss:"berserker", aiPool:["berserker","knight","mage","paladin"],
+    title:"The Wild Rage",
+    intro:"A berserker challenges your captain to single combat. Outlast their fury."},
+  {id:5, boss:"warlock",   aiPool:["warlock","mage","druid","ranger"],
+    title:"The Pact of Shadows",
+    intro:"A warlock bargains with old powers. Break their will, gain a mighty caster."},
+  {id:6, boss:"assassin",  aiPool:["assassin","scout","ranger","berserker"],
+    title:"The Silent Blade",
+    intro:"A silent killer waits in the dunes. Best the swiftest blade in the realm."}
+];
+let mode="title"; // "title" | "campaign-menu" | "skirmish" | "campaign-play"
+let campaign={
+  unlocked:new Set(STARTERS),
+  completed:new Set(),
+  currentMission:null
+};
+function saveProgress(){
+  try{ localStorage.setItem("sigil-progress", JSON.stringify({
+    unlocked:[...campaign.unlocked], completed:[...campaign.completed]
+  })); }catch(e){}
+}
+function loadProgress(){
+  try{
+    const s=JSON.parse(localStorage.getItem("sigil-progress"));
+    if(s){
+      campaign.unlocked=new Set(s.unlocked||STARTERS);
+      campaign.completed=new Set(s.completed||[]);
+    }
+  }catch(e){}
+}
+function resetProgress(){
+  campaign.unlocked=new Set(STARTERS);
+  campaign.completed=new Set();
+  saveProgress();
+  renderTitle(); renderMissions();
+}
+
+function showTitle(){
+  mode="title";
+  document.getElementById("title").classList.add("open");
+  document.getElementById("missions").classList.remove("open");
+  document.getElementById("missionIntro").classList.remove("open");
+  document.getElementById("victory").classList.remove("open");
+  renderTitle();
+}
+function renderTitle(){
+  const u=campaign.unlocked.size, c=campaign.completed.size;
+  document.getElementById("titleProgress").textContent=`Roster ${u}/9 · Missions ${c}/6`;
+}
+function enterCampaign(){
+  document.getElementById("title").classList.remove("open");
+  openMissions();
+}
+function enterSkirmish(){
+  document.getElementById("title").classList.remove("open");
+  mode="skirmish";
+  newGame(null);
+}
+function exitToTitle(){ showTitle(); }
+function openMissions(){
+  mode="campaign-menu";
+  document.getElementById("missions").classList.add("open");
+  renderMissions();
+}
+function renderMissions(){
+  const list=document.getElementById("missionList"); list.innerHTML="";
+  for(const m of MISSIONS){
+    const prevDone = m.id===1 || campaign.completed.has(m.id-1);
+    const locked = !prevDone;
+    const done = campaign.completed.has(m.id);
+    const cls = "mrow"+(locked?" locked":"")+(done?" done":"");
+    const c = CLASSES[m.boss];
+    const row=document.createElement("div");
+    row.className=cls;
+    row.innerHTML=`<div class="mgly">${c.sym}</div>
+      <div><div class="mtitle">${m.id}. ${m.title}</div><div class="msub">Defeat ${c.name}</div></div>
+      <div class="mstat">${done?"COMPLETE":locked?"LOCKED":"AVAILABLE"}</div>`;
+    if(!locked && !done) row.onclick=()=>openMissionIntro(m);
+    else if(done) row.onclick=()=>openMissionIntro(m); // replay completed missions
+    list.appendChild(row);
+  }
+  const u=campaign.unlocked.size, c=campaign.completed.size;
+  document.getElementById("missionProg").textContent=`Roster ${u}/9 · Missions ${c}/6`;
+}
+function openMissionIntro(m){
+  campaign.currentMission=m;
+  document.getElementById("missions").classList.remove("open");
+  document.getElementById("missionIntro").classList.add("open");
+  const c=CLASSES[m.boss];
+  document.getElementById("intTitle").textContent=`${m.id}. ${m.title}`;
+  document.getElementById("intBoss").textContent=c.sym;
+  document.getElementById("intText").textContent=m.intro;
+  // enemy team preview: boss + likely allies (first 3 of aiPool)
+  const enemyPreview=m.aiPool.slice(0,3).map(cls=>CLASSES[cls].sym).join(" ");
+  document.getElementById("intTeam").textContent=enemyPreview+" (boss + likely allies)";
+  const yourPool=[...campaign.unlocked].map(cls=>CLASSES[cls].sym).join(" ");
+  document.getElementById("intYourPool").textContent=yourPool;
+}
+function cancelMission(){
+  campaign.currentMission=null;
+  document.getElementById("missionIntro").classList.remove("open");
+  openMissions();
+}
+function beginMission(){
+  document.getElementById("missionIntro").classList.remove("open");
+  mode="campaign-play";
+  newGame(campaign.currentMission.id);
+}
+function returnToMissions(){
+  document.getElementById("victory").classList.remove("open");
+  openMissions();
+}
 // v0.14 — 9 suites × 10 cards = 90-card pool. Your match deck = 30 cards built from your 3 drafted heroes.
 // No resource cost; each card consumes the active unit's turn. Values tuned so every card clears the
 // "worth a turn" bar (≥3 single-target dmg, ≥4 single-heal, ≥6 total expected for AoE/all-ally).
@@ -462,7 +661,8 @@ function newUnit(owner,cls,r,c,facing){
 function place(u){ board[u.r][u.c].unit=u; }
 function activeUnit(){ return units.find(u=>u.id===activeId)||null; }
 
-function newGame(){
+function newGame(missionId){
+  campaign.currentMission = missionId ? MISSIONS.find(m=>m.id===missionId) : null;
   board=[]; for(let r=0;r<R;r++){board.push([]); for(let c=0;c<C;c++) board[r].push({unit:null,terrain:null});}
   uid=0; sel=null; busy=false; over=false; units=[]; acted=new Set(); activeId=null; roundNum=0;
   heroes={A:[],B:[]};
@@ -499,13 +699,17 @@ function buildDraftRoster(){
 function renderDraft(){
   const taken=new Set(); for(const cls of draft.A) taken.add(cls+":A"); for(const cls of draft.B) taken.add(cls+":B");
   const takenAll=draftedSet();
+  const inCampaign=!!campaign.currentMission;
   for(const el of document.querySelectorAll("#draftRoster .rcard")){
     const cls=el.dataset.cls;
     el.className="rcard";
+    const lockedInCampaign = inCampaign && !campaign.unlocked.has(cls);
     if(takenAll.has(cls)){
       const by=draft.A.includes(cls)?"A":"B";
       el.classList.add("taken","by-"+by);
       el.dataset.by="P"+(by==="A"?1:2);
+    } else if(lockedInCampaign){
+      el.classList.add("cant"); el.dataset.by="🔒";
     } else if(phase!=="draft" || currentPicker()!=="A" || busy){
       el.classList.add("cant");
     }
@@ -532,6 +736,7 @@ function onDraftPick(cls){
   if(phase!=="draft" || busy) return;
   if(currentPicker()!=="A") return;
   if(draftedSet().has(cls)) return;
+  if(campaign.currentMission && !campaign.unlocked.has(cls)) return;
   doPick("A",cls);
 }
 function doPick(player,cls){
@@ -549,9 +754,18 @@ function advanceDraft(){
 }
 function aiDraftPick(){
   const taken=draftedSet();
-  const pool=ROSTER.filter(c=>!taken.has(c));
-  // very simple: prefer high HP first pick, otherwise random
-  const cls=pool[Math.floor(Math.random()*pool.length)];
+  let cls=null;
+  if(campaign.currentMission){
+    // walk the mission's priority list, picking the first untaken hero
+    for(const c of campaign.currentMission.aiPool){
+      if(!taken.has(c)){ cls=c; break; }
+    }
+    // fallback: any untaken active hero
+    if(!cls){ const pool=ROSTER.filter(c=>!taken.has(c)); cls=pool[Math.floor(Math.random()*pool.length)]; }
+  } else {
+    const pool=ROSTER.filter(c=>!taken.has(c));
+    cls=pool[Math.floor(Math.random()*pool.length)];
+  }
   doPick("B",cls);
 }
 function finishDraft(){
@@ -1061,10 +1275,37 @@ document.addEventListener("click",e=>{ const cx=document.getElementById("codex")
 function say(html){ document.getElementById("status").innerHTML=html; }
 function endGame(winner){
   over=true; busy=true; activeId=null;
+  // Campaign victory: unlock the boss and show the campaign victory screen instead of the generic over modal.
+  if(winner==="A" && campaign.currentMission){
+    const m=campaign.currentMission;
+    const wasNew=!campaign.unlocked.has(m.boss);
+    campaign.unlocked.add(m.boss);
+    campaign.completed.add(m.id);
+    saveProgress();
+    const c=CLASSES[m.boss];
+    document.getElementById("vText").textContent = wasNew
+      ? `You defeated ${c.name}. They now follow your banner.`
+      : `Mission cleared again. ${c.name} stays at your side.`;
+    document.getElementById("vUnlock").innerHTML =
+      `<div class="v-glyph">${c.sym}</div>
+       <div class="v-name">${c.name.toUpperCase()}</div>
+       <div class="v-stats">HP ${c.hp} · ATK ${c.atk} · MV ${c.move} · RNG ${c.range} · SPD ${c.speed}</div>`;
+    document.getElementById("victory").classList.add("open");
+    return;
+  }
+  // Generic over modal for skirmish + campaign defeat.
   document.getElementById("overT").textContent = winner==="A"?"Victory":"Defeat";
   document.getElementById("overP").textContent = winner==="A"
     ? "All enemy heroes have fallen." : "All your heroes have fallen.";
   document.getElementById("over").style.display="flex";
+  const btn=document.getElementById("overBtn");
+  if(campaign.currentMission){
+    btn.textContent="Back to missions";
+    btn.onclick=()=>{ document.getElementById("over").style.display="none"; openMissions(); };
+  } else {
+    btn.textContent="Play again";
+    btn.onclick=()=>{ document.getElementById("over").style.display="none"; showTitle(); };
+  }
 }
 function clearHl(){ for(let r=0;r<R;r++)for(let c=0;c<C;c++) board[r][c]._hl=null; }
 function computeHl(){
@@ -1199,8 +1440,12 @@ function render(){
 }
 
 document.getElementById("endBtn").onclick=()=>{ if(over||busy) return; const u=activeUnit(); if(u&&u.owner==="A") endActiveTurn(); };
-document.getElementById("newBtn").onclick=()=>newGame();
-newGame();
+document.getElementById("newBtn").onclick=()=>{
+  if(campaign.currentMission){ campaign.currentMission=null; openMissions(); }
+  else showTitle();
+};
+loadProgress();
+showTitle();
 </script>
 </body>
 </html>
