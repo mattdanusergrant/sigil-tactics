@@ -287,8 +287,8 @@
 
   <h3>Match flow</h3>
   <ul>
-    <li><b>Draft (skirmish only):</b> 1-2-2-1 snake — P1 picks 1, P2 picks 2, P1 picks 2, P2 picks 1. Each side ends with 3 heroes from the 9-hero active roster.</li>
-    <li><b>Team select (campaign only):</b> in the mission intro, tap to pick 3 heroes from your unlocked pool. AI's team is the boss plus themed allies from a mission-specific priority list. No draft phase.</li>
+    <li><b>Draft (skirmish only):</b> 1-2-2-2-2-1 snake — alternating snake draft, 10 picks total. Each side ends with 5 heroes from the 11-hero active roster.</li>
+    <li><b>Team select (campaign only):</b> in the mission intro, tap to pick 5 heroes from your unlocked pool. AI's team is the boss plus themed allies from a mission-specific priority list. No draft phase.</li>
     <li><b>Deploy:</b> alternating face-down placement in reverse-of-draft order (P2 places first to offset P1's first-pick advantage). You see <i>where</i> the opponent placed but not <i>which</i> hero is in each tile — units flip face-up when play begins.</li>
     <li><b>Play:</b> standard initiative-order combat.</li>
   </ul>
@@ -301,7 +301,7 @@
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
     <li><b>Cards:</b> start with 3 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
     <li><b>Cycle:</b> once per turn, a unit may <i>forfeit its move</i> and discard 2 cards to draw 1 — useful for digging past dead-source cards.</li>
-    <li><b>Cast by source hero:</b> every card belongs to one of your 3 heroes. It can <i>only</i> be played on that hero's turn — and only if that hero is still alive. Killing an enemy hero locks out their 10 cards.</li>
+    <li><b>Cast by source hero:</b> every card belongs to one of your 5 drafted heroes. It can <i>only</i> be played on that hero's turn — and only if that hero is still alive. Killing an enemy hero locks out their 8 cards (the entire suite they brought to the deck).</li>
     <li><b>Range:</b> damage cards target enemies within the casting hero's range (the same range they use for normal attacks). Ally-target cards (heal/shield/charge/buff) reach any of your allies.</li>
     <li><b>Opportunity cost:</b> playing a card counts as the unit's <i>action</i> for the turn. You may still move first either way; you cannot play a card after attacking or healing.</li>
     <li><b>Shield (⛨N):</b> absorbs damage before HP. Persists across rounds.</li>
@@ -403,7 +403,7 @@
   <div class="i-boss" id="intBoss"></div>
   <p class="i-text" id="intText"></p>
   <div class="i-team-row">Enemy team: <span id="intTeam"></span></div>
-  <div class="i-pick-h">Choose 3 heroes for your party:</div>
+  <div class="i-pick-h">Choose 5 heroes for your party:</div>
   <div class="i-pick" id="intPick"></div>
   <div class="i-pick-count" id="intCount">0/3 selected</div>
   <button class="tbtn" id="beginBtn" onclick="beginMission()" disabled>BEGIN</button>
@@ -589,9 +589,8 @@ function renderTeamPicker(){
     campaign.teamSelection=unlocked.slice();
     return renderTeamPicker();
   }
-  document.getElementById("intCount").textContent=`${campaign.teamSelection.length}/3 selected`;
-  document.getElementById("beginBtn").disabled = campaign.teamSelection.length!==TEAM_SIZE;
   document.getElementById("intCount").textContent = `${campaign.teamSelection.length}/${TEAM_SIZE} selected`;
+  document.getElementById("beginBtn").disabled = campaign.teamSelection.length!==TEAM_SIZE;
 }
 function toggleTeamPick(cls){
   const i=campaign.teamSelection.indexOf(cls);
