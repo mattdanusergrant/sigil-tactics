@@ -106,6 +106,8 @@
   .card .cc{position:absolute; top:2px; left:4px; font-size:11px; font-weight:800; color:#56c5ff;}
   .card.sel{border-color:var(--hi); box-shadow:0 0 0 2px var(--hi);}
   .card.cant{opacity:.4;}
+  .card.dead-src{filter:grayscale(1) brightness(.55); position:relative;}
+  .card.dead-src::after{content:"✕"; position:absolute; top:6px; right:6px; color:#e8584d; font-weight:800; font-size:14px;}
   .card .cat{position:absolute; top:2px; right:4px; font-size:8px; color:var(--dim); letter-spacing:.4px;}
   .card .ho{position:absolute; bottom:2px; left:4px; font-size:8px; font-weight:800;}
   .card.cat-Weapon{box-shadow:inset 0 -3px 0 #c14a3a;}
@@ -264,14 +266,14 @@
   <div class="legend">9-hero roster · 90-card pool · your deck = your 3 drafted heroes' 30 cards &nbsp;|&nbsp; SIDE ×1.5 / REAR ×2 · ⛨ shield · +A atk-buff</div>
   <button class="title" id="titleBtn" onclick="openCodex()">
     <h1>SIGIL TACTICS</h1>
-    <div class="sub">v0.17 · compound effects · vuln · pyromancer mage · tap for rules</div>
+    <div class="sub">v0.18 · cards cast by source hero · die = lose deck slice · tap for rules</div>
   </button>
 </div>
 
 <div id="codex"><div class="cbox">
   <button class="x" onclick="closeCodex()">×</button>
   <h2>SIGIL TACTICS</h2>
-  <div class="cdx-sub">v0.17 — no pure buffs · compound cards (dmg+vuln, heal+shield, etc.) · pyromancer mage</div>
+  <div class="cdx-sub">v0.18 — cards cast from a source hero · source must be alive AND active · enemy targets use source range</div>
 
   <h3>Modes</h3>
   <ul>
@@ -294,7 +296,9 @@
     <li><b>Facing:</b> attacks from the SIDE deal ×1.5, REAR ×2 (Assassin: ×2 / ×2.5).</li>
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
     <li><b>Cards:</b> start with 3 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
-    <li><b>Opportunity cost:</b> there is no aether. Playing a card counts as the unit's <i>action</i> for the turn — so the choice is "attack/heal with this unit, or play this card." You may still move first either way. You cannot play a card after attacking or healing.</li>
+    <li><b>Cast by source hero:</b> every card belongs to one of your 3 heroes. It can <i>only</i> be played on that hero's turn — and only if that hero is still alive. Killing an enemy hero locks out their 10 cards.</li>
+    <li><b>Range:</b> damage cards target enemies within the casting hero's range (the same range they use for normal attacks). Ally-target cards (heal/shield/charge/buff) reach any of your allies.</li>
+    <li><b>Opportunity cost:</b> playing a card counts as the unit's <i>action</i> for the turn. You may still move first either way; you cannot play a card after attacking or healing.</li>
     <li><b>Shield (⛨N):</b> absorbs damage before HP. Persists across rounds.</li>
     <li><b>ATK buff (+NA):</b> bonus damage that clears at round start.</li>
     <li><b>Move buff:</b> extra movement on the buffed unit's next turn only.</li>
@@ -1225,8 +1229,18 @@ function playCard(owner,handIdx,target){
   }
 }
 function canPlayCardNow(){
-  // Card is the unit's action this turn — playable before or after moving, but not after an attack/heal.
+  // True if the active unit could play *some* card right now (their turn, hasn't acted).
+  // Per-card playability also requires card.hero === active unit's class — see canPlayCard().
   const u=activeUnit(); return u && u.owner==="A" && !u.hasActed;
+}
+function canPlayCard(card){
+  const u=activeUnit();
+  if(!u || u.owner!=="A" || u.hasActed) return false;
+  return u.cls === card.hero;
+}
+function cardEnemyTargets(u){
+  // Enemies the source unit can hit with a card — uses the source's range.
+  const list=[]; eachUnit(t=>{ if(t.owner!==u.owner && manh(u,t)<=u.range) list.push(t); }); return list;
 }
 function maybeAutoEnd(u){
   // End the turn automatically only if the unit has nothing useful left to do — already moved,
@@ -1270,11 +1284,18 @@ function onTile(r,c){
 function anyAlly(o){ let any=false; eachUnit(u=>{if(u.owner===o)any=true;}); return any; }
 function onCard(i){
   if(busy||over) return;
-  if(!canPlayCardNow()){ say("Cards may only be played at the start of one of your units' turns."); render(); return; }
   const key=players.A.hand[i]; const card=CARDS[key];
+  const u=activeUnit();
+  if(!u || u.owner!=="A" || u.hasActed){ say("Cards play as a unit's action — wait for one of your units' turns."); render(); return; }
+  if(u.cls !== card.hero){
+    const h=CLASSES[card.hero];
+    say(`${card.name} is cast by ${h.sym} ${h.name} — not the active unit.`);
+    return;
+  }
   const k=card.kind;
+  const dmgKind = k==="dmg"||k==="dmg-adj"||k==="dmg-vuln"||k==="dmg-self-buff"||k==="dmg-self-charge"||k==="dmg-self-heal"||k==="dmg-team-buff";
   if((k==="heal"||k==="heal-all") && !anyDamagedAlly("A")){ say("No wounded ally to heal."); return; }
-  if((k==="dmg"||k==="dmg-adj"||k==="dmg-vuln"||k==="dmg-self-buff"||k==="dmg-self-charge"||k==="dmg-self-heal"||k==="dmg-team-buff") && !anyEnemy("A")){ say("No enemy in play."); return; }
+  if(dmgKind && cardEnemyTargets(u).length===0){ say(`No enemy within ${u.name}'s range (${u.range}).`); return; }
   if((k==="shield"||k==="shield-all"||k==="charge"||k==="heal-shield"||k==="heal-buff"||k==="heal-all-buff") && !anyAlly("A")){ say("No ally to target."); return; }
   sel=(sel&&sel.t==="card"&&sel.i===i)?null:{t:"card",i}; render();
 }
@@ -1316,6 +1337,7 @@ function aiPickCardForUnit(u){
   const B=players.B; let best=null;
   B.hand.forEach((key,i)=>{
     const card=CARDS[key];
+    if(card.hero !== u.cls) return; // source hero must be the active unit
     let score=0, target=null;
     if(card.kind==="heal"){
       const t=aiHealTarget("B"); if(!t) return;
@@ -1323,7 +1345,7 @@ function aiPickCardForUnit(u){
       if(heal<=0) return;
       score=heal+(t.hero?3:0); target={r:t.r,c:t.c};
     } else if(card.kind==="dmg"){
-      const t=aiDmgTarget("B",card.dmg); if(!t) return;
+      const t=aiDmgTarget("B",card.dmg,u); if(!t) return;
       score=card.dmg*1.5+(t.hp<=card.dmg?6:0)+(t.hero?3:0); target={r:t.r,c:t.c};
     } else if(card.kind==="shield"){
       let bestT=null,bs=-1;
@@ -1343,20 +1365,17 @@ function aiPickCardForUnit(u){
       if(!allies.length) return; score=allies.length*card.amount;
       target={r:allies[0].r,c:allies[0].c};
     } else if(card.kind==="dmg-adj"){
-      // score = main damage + estimated splash from clustering
       let bestT=null,bs=-1;
-      eachUnit(au=>{
-        if(au.owner==="A"){
-          let splashTargets=0;
-          for(const k in VEC){ const [dr,dc]=VEC[k]; const nr=au.r+dr,nc=au.c+dc;
-            if(!inB(nr,nc)) continue;
-            const adj=board[nr][nc].unit;
-            if(adj && adj.owner==="A") splashTargets++;
-          }
-          const s=card.dmg*1.5 + splashTargets*card.splash + (au.hp<=card.dmg?6:0) + (au.hero?3:0);
-          if(s>bs){bs=s;bestT=au;}
+      for(const au of cardEnemyTargets(u)){
+        let splashTargets=0;
+        for(const k in VEC){ const [dr,dc]=VEC[k]; const nr=au.r+dr,nc=au.c+dc;
+          if(!inB(nr,nc)) continue;
+          const adj=board[nr][nc].unit;
+          if(adj && adj.owner==="A") splashTargets++;
         }
-      });
+        const s=card.dmg*1.5 + splashTargets*card.splash + (au.hp<=card.dmg?6:0) + (au.hero?3:0);
+        if(s>bs){bs=s;bestT=au;}
+      }
       if(!bestT) return; score=bs; target={r:bestT.r,c:bestT.c};
     } else if(card.kind==="heal-all"){
       let wounded=0; eachUnit(au=>{ if(au.owner==="B" && au.hp<au.maxHp){ wounded+=Math.min(card.amount, au.maxHp-au.hp); } });
@@ -1364,7 +1383,7 @@ function aiPickCardForUnit(u){
       let any=null; eachUnit(au=>{ if(au.owner==="B" && !any) any=au; });
       if(!any) return; target={r:any.r,c:any.c};
     } else if(card.kind==="dmg-vuln"||card.kind==="dmg-self-buff"||card.kind==="dmg-self-charge"||card.kind==="dmg-self-heal"||card.kind==="dmg-team-buff"){
-      const t=aiDmgTarget("B",card.dmg); if(!t) return;
+      const t=aiDmgTarget("B",card.dmg,u); if(!t) return;
       let bonus=0;
       if(card.kind==="dmg-vuln") bonus=card.vuln*0.6;
       if(card.kind==="dmg-self-buff") bonus=card.buff;
@@ -1401,8 +1420,12 @@ function nearestHeroOrUnit(u){
 function aiHealTarget(o){
   let best=null,bs=-1; eachUnit(u=>{ if(u.owner===o&&u.hp<u.maxHp){ let s=(u.maxHp-u.hp)+(u.hero?5:0); if(s>bs){bs=s;best=u;} } }); return best;
 }
-function aiDmgTarget(o,dmg){
-  let best=null,bs=-1; eachUnit(u=>{ if(u.owner!==o){ let s=1+(u.hp<=dmg?8:0)+(u.hero?4:0)-u.hp*0.2; if(s>bs){bs=s;best=u;} } }); return best;
+function aiDmgTarget(o,dmg,source){
+  let best=null,bs=-1; eachUnit(u=>{
+    if(u.owner===o) return;
+    if(source && manh(source,u)>source.range) return;
+    const s=1+(u.hp<=dmg?8:0)+(u.hero?4:0)-u.hp*0.2; if(s>bs){bs=s;best=u;}
+  }); return best;
 }
 function bestStep(u,goal){ const tiles=reachable(u); if(!tiles.length) return null;
   tiles.sort((a,b)=>(Math.abs(a.r-goal.r)+Math.abs(a.c-goal.c))-(Math.abs(b.r-goal.r)+Math.abs(b.c-goal.c)));
@@ -1506,7 +1529,7 @@ function computeHl(){
     if(k==="heal"){
       eachUnit(au=>{ if(au.owner==="A"&&au.hp<au.maxHp) board[au.r][au.c]._hl="heal"; });
     } else if(k==="dmg"||k==="dmg-adj"||k==="dmg-vuln"||k==="dmg-self-buff"||k==="dmg-self-charge"||k==="dmg-self-heal"||k==="dmg-team-buff"){
-      eachUnit(au=>{ if(au.owner!=="A") board[au.r][au.c]._hl="spell"; });
+      for(const e of cardEnemyTargets(u)) board[e.r][e.c]._hl="spell";
     } else if(k==="shield"||k==="charge"||k==="heal-shield"||k==="heal-buff"){
       eachUnit(au=>{ if(au.owner==="A") board[au.r][au.c]._hl="heal"; });
     } else if(k==="shield-all"||k==="heal-all"||k==="heal-all-buff"){
@@ -1601,9 +1624,12 @@ function render(){
   document.getElementById("deckInfo").textContent=`Hand ${players.A.hand.length} · Deck ${players.A.deck.length}`;
   const h=document.getElementById("hand"); h.innerHTML="";
   const cardable=canPlayCardNow();
+  const heroAlive = cls => heroes.A.some(h=>h.cls===cls && h.hp>0);
   players.A.hand.forEach((key,i)=>{ const card=CARDS[key]; const el=document.createElement("div");
-    const cant=!cardable||busy||over;
-    el.className="card cat-"+card.cat+(card.spell?" spell":"")+(cant?" cant":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
+    const playable = cardable && canPlayCard(card) && !busy && !over;
+    const sourceDead = !heroAlive(card.hero);
+    const cant = !playable;
+    el.className="card cat-"+card.cat+(card.spell?" spell":"")+(cant?" cant":"")+(sourceDead?" dead-src":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"");
     const tag=card.spell?"SPL":card.cat.slice(0,3).toUpperCase();
     const heroGlyph=CLASSES[card.hero]?CLASSES[card.hero].sym:"";
     el.innerHTML=`<span class="cat">${tag}</span><span class="cs">${card.sym}</span><span class="cn">${card.name}</span><span class="ho">${heroGlyph}</span>`;
@@ -1632,10 +1658,11 @@ function render(){
     else if(k==="heal-buff") hint="tap an ally — heals + buffs their ATK";
     else if(k==="shield-all") hint="tap any ally — effect applies to all";
     const tag=card.spell?"Spell · "+card.cat:card.cat;
+    const src=CLASSES[card.hero];
     document.getElementById("cdGlyph").textContent=card.sym;
     document.getElementById("cdName").textContent=`${card.name} — ${tag}`;
     document.getElementById("cdEff").textContent=cardEffText(card);
-    document.getElementById("cdHint").textContent=hint?`Playing this consumes the active unit's turn. ${hint}.`:"";
+    document.getElementById("cdHint").innerHTML = `Cast by ${src.sym} ${src.name} (range ${src.range}). ${hint}.`;
     cd.classList.add("show");
     say(`Play <b>${card.name}</b> — ${hint}.`);
   } else {
