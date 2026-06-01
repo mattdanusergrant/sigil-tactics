@@ -932,7 +932,8 @@ function aiPlaceOne(){
 }
 function onDeployAuto(){
   if(phase!=="deploy" || placeSeq[placeIdx]!=="A" || busy) return;
-  // place every remaining A unit in default formation; placeSeq A-slots are skipped automatically
+  // place every remaining A unit in default formation; advancePlace() will skip the now-empty A slots
+  // without consuming B's slots in the snake order.
   while(unplaced.A.length){
     const cls=unplaced.A[0]; const c=CLASSES[cls];
     const free=freeDeployTiles("A"); if(!free.length) break;
@@ -940,7 +941,6 @@ function onDeployAuto(){
     free.sort((x,y)=> Math.abs(targetRow-x.r)-Math.abs(targetRow-y.r) || Math.abs((C-1)/2-x.c)-Math.abs((C-1)/2-y.c));
     const t=free[0];
     placeDeployedUnit("A",cls,t.r,t.c);
-    placeIdx++;
   }
   advancePlace();
 }
