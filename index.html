@@ -317,17 +317,17 @@
 
   <h3>Hero roster (11)</h3>
   <table class="cdx-tbl"><tr><th>Hero</th><th>HP</th><th>ATK</th><th>Mv</th><th>Rng</th><th>Init</th><th>Passive</th></tr>
-    <tr><td>🏰 Sentinel</td><td>12</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Aegis — friendly heroes take −1 dmg (min 1)</td></tr>
-    <tr><td>🛡️ Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Bulwark — damage taken −1 (min 1)</td></tr>
-    <tr><td>⚔️ Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>Rallying Presence — adjacent allies +1 ATK</td></tr>
-    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>2</td><td>Soul Drain — heal 2 HP per kill</td></tr>
-    <tr><td>🌿 Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Nature's Renewal — +1 HP per round</td></tr>
-    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Arcane Burn — attacks leave +1 vuln</td></tr>
-    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>2</td><td>Bloodlust — +1 ATK at ≤½ HP</td></tr>
+    <tr><td>🏰 Sentinel</td><td>12</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Anchor — Sentinel & adjacent allies are push/pull immune</td></tr>
+    <tr><td>🛡️ Paladin</td><td>10</td><td>1</td><td>1</td><td>1</td><td>1</td><td>Guardian — heal cards restore +1 HP on most-wounded ally</td></tr>
+    <tr><td>⚔️ Knight</td><td>10</td><td>1</td><td>1</td><td>1</td><td>2</td><td>Steadfast — cannot be pushed or pulled</td></tr>
+    <tr><td>🩸 Warlock</td><td>6</td><td>1</td><td>1</td><td>3</td><td>2</td><td>Soul Drain — heal 2 HP whenever any enemy dies</td></tr>
+    <tr><td>🌿 Druid</td><td>8</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Symbiosis — heal cards also heal Druid 1 HP</td></tr>
+    <tr><td>🔮 Mage</td><td>6</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Resonance — your AoE cards do +1 splash / +1 kb</td></tr>
+    <tr><td>🪓 Berserker</td><td>8</td><td>2</td><td>1</td><td>1</td><td>2</td><td>Bloodthirst — heals 1 HP whenever he damages an enemy</td></tr>
     <tr><td>💀 Necromancer</td><td>6</td><td>1</td><td>1</td><td>2</td><td>2</td><td>Death Touch — enemies adjacent take +1 dmg</td></tr>
-    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>3</td><td>Sniper — +1 dmg at max range</td></tr>
-    <tr><td>👁️ Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>3</td><td>Evasive — −1 dmg from melee (min 1)</td></tr>
-    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>3</td><td>Backstab Mastery — rear arc ×3</td></tr>
+    <tr><td>🏹 Ranger</td><td>8</td><td>1</td><td>1</td><td>2</td><td>3</td><td>Spotter — your dmg/push/pull cards gain +1 range</td></tr>
+    <tr><td>👁️ Scout</td><td>4</td><td>1</td><td>2</td><td>2</td><td>3</td><td>Pathfinder — your dash cards gain +1 range</td></tr>
+    <tr><td>🗡️ Assassin</td><td>6</td><td>2</td><td>2</td><td>1</td><td>3</td><td>Shadow Step — after Assassin moves, her next attack is rear-arc</td></tr>
   </table>
 
   <h3>Deck composition</h3>
@@ -434,17 +434,17 @@ const R=4,C=5;
 // Hero roster. HP must come from {4,6,8,10,12,20} (polyhedral dice).
 // `init` is how many cards this unit contributes to its side's per-round Initiative deck.
 const CLASSES={
-  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, init:2, hero:true,            passive:"Rallying Presence: allies adjacent to Knight get +1 ATK."},
-  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, init:3, hero:true,            passive:"Sniper: +1 damage when attacking from max range (2 tiles)."},
-  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, init:2, hero:true,            passive:"Arcane Burn: each Mage attack leaves the target +1 vulnerable."},
-  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, init:2, hero:true,            passive:"Bloodlust: +1 ATK while at or below half HP."},
-  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, init:1, hero:true, heal:true, passive:"Bulwark: all damage taken is reduced by 1 (minimum 1)."},
-  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, init:3, hero:true, flank:true, passive:"Backstab Mastery: rear-arc multiplier ×3."},
-  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, init:2, hero:true,            passive:"Soul Drain: heals 2 HP each time Warlock kills an enemy with an attack."},
-  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, init:2, hero:true, heal:true, passive:"Nature's Renewal: regenerates 1 HP at the start of every round."},
-  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, init:3, hero:true,            passive:"Evasive: takes 1 less damage from melee attackers (minimum 1)."},
-  sentinel:   {name:"Sentinel",   sym:"🏰", hp:12, atk:1, move:1, range:1, init:1, hero:true,            passive:"Aegis: while alive, all friendly heroes take 1 less damage (minimum 1)."},
-  necromancer:{name:"Necromancer",sym:"💀", hp:6,  atk:1, move:1, range:2, init:2, hero:true,            passive:"Death Touch: enemies adjacent to Necromancer take +1 damage from all sources."},
+  knight:     {name:"Knight",     sym:"⚔️", hp:10, atk:1, move:1, range:1, init:2, hero:true,            passive:"Steadfast: cannot be pushed or pulled by any effect."},
+  ranger:     {name:"Ranger",     sym:"🏹", hp:8,  atk:1, move:1, range:2, init:3, hero:true,            passive:"Spotter: your damage / push / pull cards have +1 range while Ranger is alive."},
+  mage:       {name:"Mage",       sym:"🔮", hp:6,  atk:1, move:1, range:2, init:2, hero:true,            passive:"Resonance: your AoE cards (dmg-adj, push-adj) gain +1 splash / +1 kb while Mage is alive."},
+  berserker:  {name:"Berserker",  sym:"🪓", hp:8,  atk:2, move:1, range:1, init:2, hero:true,            passive:"Bloodthirst: Berserker heals 1 HP whenever he damages an enemy — basic attack, damage card, or assist strike."},
+  paladin:    {name:"Paladin",    sym:"🛡️", hp:10, atk:1, move:1, range:1, init:1, hero:true, heal:true, passive:"Guardian: after you cast a heal card, Paladin restores 1 extra HP to your most-wounded ally."},
+  assassin:   {name:"Assassin",   sym:"🗡️", hp:6,  atk:2, move:2, range:1, init:3, hero:true, flank:true, passive:"Shadow Step: any time Assassin moves, her next attack this match counts as rear-arc (×3) regardless of facing."},
+  warlock:    {name:"Warlock",    sym:"🩸", hp:6,  atk:1, move:1, range:3, init:2, hero:true,            passive:"Soul Drain: whenever any enemy dies anywhere on the board, Warlock heals 2 HP."},
+  druid:      {name:"Druid",      sym:"🌿", hp:8,  atk:1, move:1, range:2, init:2, hero:true, heal:true, passive:"Symbiosis: after you cast a heal card, Druid heals 1 HP."},
+  scout:      {name:"Scout",      sym:"👁️", hp:4,  atk:1, move:2, range:2, init:3, hero:true,            passive:"Pathfinder: your dash cards have +1 range while Scout is alive."},
+  sentinel:   {name:"Sentinel",   sym:"🏰", hp:12, atk:1, move:1, range:1, init:1, hero:true,            passive:"Anchor: Sentinel and orthogonally adjacent allies cannot be pushed or pulled."},
+  necromancer:{name:"Necromancer",sym:"💀", hp:6,  atk:1, move:1, range:2, init:2, hero:true,            passive:"Death Touch: enemies orthogonally adjacent to Necromancer take +1 damage from all sources."},
   // hidden — kept in data, excluded from roster
   crusader:   {name:"Crusader",   sym:"✝️", hp:10, atk:1, move:1, range:1, init:2, hero:true, hidden:true, passive:"—"}
 };
@@ -1024,13 +1024,6 @@ function buildInitDecks(){
 function startRound(){
   roundNum++;
   for(const u of units){ u.hasMoved=false; u.hasActed=false; u.bonusAtkRound=0; u.bonusMoveTurn=0; u.vuln=0; }
-  // Druid passive — Nature's Renewal
-  for(const u of units){
-    if(u.hp>0 && u.cls==="druid"){
-      const before=u.hp; u.hp=Math.min(u.maxHp, u.hp+1);
-      if(u.hp>before) say(`Nature's Renewal: ${u.name} +1 HP.`);
-    }
-  }
   acted=new Set();
   buildInitDecks();
   initSide = initiativeToken;
@@ -1111,20 +1104,7 @@ function anyLivingAlly(owner, classKey){
   for(const u of units){ if(u.owner===owner && u.cls===classKey && u.hp>0) return true; }
   return false;
 }
-function effAtk(u){
-  let a = u.atk + (u.bonusAtkRound||0);
-  // Berserker — Bloodlust: +1 ATK at or below half HP
-  if(u.cls==="berserker" && u.hp>0 && u.hp <= u.maxHp/2) a += 1;
-  // Knight — Rallying Presence: ally adjacent to a Knight gets +1 ATK
-  if(u.cls!=="knight"){
-    for(const k in VEC){ const [dr,dc]=VEC[k]; const nr=u.r+dr, nc=u.c+dc;
-      if(!inB(nr,nc)) continue;
-      const adj=board[nr][nc].unit;
-      if(adj && adj.owner===u.owner && adj.cls==="knight" && adj.hp>0){ a += 1; break; }
-    }
-  }
-  return a;
-}
+function effAtk(u){ return u.atk + (u.bonusAtkRound||0); }
 function reachable(u){
   const dist={}, q=[{r:u.r,c:u.c}], res=[]; dist[u.r+","+u.c]=0;
   const lim=effMove(u);
@@ -1154,10 +1134,27 @@ function moveUnit(u,r,c){
   board[u.r][u.c].unit=null;
   u.facing=dirFromTo({r:u.r,c:u.c},{r,c});
   u.r=r; u.c=c; board[r][c].unit=u; u.hasMoved=true;
+  // Assassin — Shadow Step: any movement primes a one-shot rear-arc attack.
+  if(u.cls==="assassin") u.pounceReady=true;
+}
+// Knight is push/pull immune. Sentinel and any orthogonally-adjacent ally of Sentinel are immune.
+function isDisplacementImmune(unit){
+  if(unit.cls==="knight") return true;
+  if(unit.cls==="sentinel") return true;
+  if(adjacentTo(unit, "sentinel", unit.owner)) return true;
+  return false;
 }
 function killCheck(defender){
   if(defender.hp<=0){
-    board[defender.r][defender.c].unit=null;
+    if(board[defender.r][defender.c].unit===defender) board[defender.r][defender.c].unit=null;
+    // Warlock — Soul Drain: any Warlock on the opposing side heals 2 HP when an enemy dies.
+    const enemySide = defender.owner==="A"?"B":"A";
+    for(const u of units){
+      if(u.cls==="warlock" && u.owner===enemySide && u.hp>0){
+        const before=u.hp; u.hp=Math.min(u.maxHp, u.hp+2);
+        if(u.hp>before) say(`${u.name} drains soul — +${u.hp-before} HP.`);
+      }
+    }
     if(defender.hero){
       const side=defender.owner;
       if(heroesAlive(side).length===0) endGame(side==="A"?"B":"A");
@@ -1165,13 +1162,9 @@ function killCheck(defender){
   }
 }
 function applyDamage(defender,raw,attackerSide){
-  // Defender-side passives that apply to ALL incoming damage (attacks and cards):
-  // Necromancer Death Touch — +1 if defender is adjacent to a Necromancer on attacker's side
+  // Necromancer — Death Touch: +1 dmg if defender is orthogonally adjacent to a Necromancer
+  // on the attacker's side. The only persistent passive in the new pool.
   if(attackerSide && adjacentTo(defender,"necromancer",attackerSide)) raw += 1;
-  // Paladin Bulwark — −1 (min 1)
-  if(defender.cls==="paladin") raw = Math.max(1, raw - 1);
-  // Sentinel Aegis — −1 to friendlies while Sentinel alive (min 1)
-  if(defender.cls!=="sentinel" && anyLivingAlly(defender.owner,"sentinel")) raw = Math.max(1, raw - 1);
   return applyDamageRaw(defender,raw);
 }
 function applyDamageRaw(defender,raw){
@@ -1187,29 +1180,23 @@ function attack(attacker,defender){
   const arc=arcOf(attacker,defender);
   let mult=arc==="front"?1:arc==="side"?1.5:2;
   if(attacker.flank){ if(arc==="side")mult=2; if(arc==="rear")mult=2.5; }
-  // Assassin — Backstab Mastery: rear-arc ×3
-  if(attacker.cls==="assassin" && arc==="rear") mult = 3;
+  // Assassin — Shadow Step: any movement this match primes pounceReady; her next attack
+  // resolves as rear-arc regardless of facing. One-shot — clears after the attack.
+  let pounceUsed=false;
+  if(attacker.cls==="assassin" && attacker.pounceReady){ mult = 3; pounceUsed=true; }
   const high=board[attacker.r][attacker.c].terrain==="high"?1:0;
   let raw=Math.round((effAtk(attacker)+high)*mult);
-  // Ranger — Sniper: +1 dmg at max range
-  if(attacker.cls==="ranger" && manh(attacker,defender)===attacker.range) raw += 1;
-  const vulnBonus = defender.vuln || 0;
-  if(vulnBonus){ raw += vulnBonus; defender.vuln = 0; }
-  // Scout — Evasive: -1 dmg from melee attackers (min 1). Attack-only.
-  if(defender.cls==="scout" && attacker.range===1) raw = Math.max(1, raw - 1);
   attacker.facing=dirFromTo(attacker,defender);
   const {taken}=applyDamage(defender,raw,attacker.owner);
   attacker.hasActed=true;
+  if(pounceUsed) attacker.pounceReady=false;
   const shielded=raw-taken;
-  const vulnTag = vulnBonus ? ` <i>+${vulnBonus} vuln</i>` : "";
-  say(`${attacker.name} hit ${defender.name} <b>(${arc.toUpperCase()} ×${mult})</b>${vulnTag} for ${taken}${shielded?` <i>(${shielded} absorbed)</i>`:""}.`);
-  // Mage — Arcane Burn: leaves the target +1 vulnerable if still alive
-  if(attacker.cls==="mage" && defender.hp>0) defender.vuln = (defender.vuln||0) + 1;
-  // Warlock — Soul Drain: heal 2 HP when killing an enemy with an attack
-  if(attacker.cls==="warlock" && defender.hp<=0 && attacker.hp>0){
-    const before=attacker.hp;
-    attacker.hp=Math.min(attacker.maxHp, attacker.hp+2);
-    if(attacker.hp>before) say(`${attacker.name} drains soul — +${attacker.hp-before} HP.`);
+  const pounceTag = pounceUsed ? ` <i>SHADOW STEP</i>` : "";
+  say(`${attacker.name} hit ${defender.name} <b>(${arc.toUpperCase()} ×${mult})</b>${pounceTag} for ${taken}${shielded?` <i>(${shielded} absorbed)</i>`:""}.`);
+  // Berserker — Bloodthirst: heal 1 HP on any damaging attack.
+  if(attacker.cls==="berserker" && taken>0 && attacker.hp>0){
+    const before=attacker.hp; attacker.hp=Math.min(attacker.maxHp, attacker.hp+1);
+    if(attacker.hp>before) say(`${attacker.name} drinks deep — +1 HP.`);
   }
   killCheck(defender);
 }
@@ -1225,6 +1212,8 @@ function summon(o,cls,r,c){ const u=newUnit(o,cls,r,c,o==="A"?"N":"S"); place(u)
 // If movement is blocked by an edge or another unit, the target takes `kb` knockback damage
 // per remaining step (capped once — single damage event), and we stop.
 function shoveUnit(target, axisFromR, axisFromC, distance, kb, owner){
+  // Knight Steadfast / Sentinel Anchor — push/pull immunity.
+  if(isDisplacementImmune(target)) return {moved:0, blocked:false, kbTaken:0, dead:false, immune:true};
   let dirR = Math.sign(target.r - axisFromR);
   let dirC = Math.sign(target.c - axisFromC);
   if(dirR!==0 && dirC!==0){
@@ -1238,6 +1227,7 @@ function shoveUnit(target, axisFromR, axisFromC, distance, kb, owner){
     board[target.r][target.c].unit=null;
     target.r=nr; target.c=nc;
     board[nr][nc].unit=target;
+    if(target.cls==="assassin") target.pounceReady=true; // Shadow Step triggers on any movement
     // pushed units keep their facing — they're being shoved, not turning
     moved++;
   }
@@ -1252,6 +1242,8 @@ function shoveUnit(target, axisFromR, axisFromC, distance, kb, owner){
 }
 function pushTarget(target, caster, distance, kb, owner){ return shoveUnit(target, caster.r, caster.c, distance, kb, owner); }
 function pullTarget(target, caster, distance, kb, owner){
+  // Knight Steadfast / Sentinel Anchor — push/pull immunity.
+  if(isDisplacementImmune(target)) return {moved:0, blocked:false, kbTaken:0, dead:false, immune:true};
   // pulled toward caster — direction is from target toward caster, but the caller's tile counts as a wall
   // (we can't land on the caster). Re-implement with a per-step toward-caster vector.
   let moved=0, blocked=false;
@@ -1268,6 +1260,7 @@ function pullTarget(target, caster, distance, kb, owner){
     board[target.r][target.c].unit=null;
     target.r=nr; target.c=nc;
     board[nr][nc].unit=target;
+    if(target.cls==="assassin") target.pounceReady=true;
     target.facing = dirFromTo({r:target.r,c:target.c}, caster);     // face the caster
     moved++;
   }
@@ -1288,6 +1281,7 @@ function dashCaster(caster, target){
   caster.facing = dirFromTo({r:caster.r,c:caster.c}, target);
   caster.r=target.r; caster.c=target.c;
   board[target.r][target.c].unit=caster;
+  if(caster.cls==="assassin") caster.pounceReady=true;
   return true;
 }
 function swapWithAlly(caster, ally){
@@ -1297,10 +1291,33 @@ function swapWithAlly(caster, ally){
   caster.r=ar; caster.c=ac; board[ar][ac].unit=caster;
   ally.r=cr; ally.c=cc;     board[cr][cc].unit=ally;
   caster.facing = dirFromTo({r:cr,c:cc},{r:ar,c:ac});
+  if(caster.cls==="assassin") caster.pounceReady=true;
+  if(ally.cls==="assassin")  ally.pounceReady=true;
   return true;
 }
 function ownerUnitFor(owner, heroClass){
   return heroes[owner].find(h => h.cls===heroClass && h.hp>0) || null;
+}
+// Paladin Guardian + Druid Symbiosis — extra heals after a heal-kind card resolves.
+function healAfterEffect(side){
+  const pal = ownerUnitFor(side, "paladin");
+  if(pal){
+    // most-wounded ally on this side, ties broken by hero
+    let best=null, bestDef=-1;
+    eachUnit(u=>{ if(u.owner===side && u.hp<u.maxHp){
+      const def=(u.maxHp-u.hp)+(u.hero?0.1:0);
+      if(def>bestDef){ bestDef=def; best=u; }
+    }});
+    if(best){
+      const before=best.hp; best.hp=Math.min(best.maxHp, best.hp+1);
+      if(best.hp>before) say(`Guardian: ${pal.name} restores +1 HP on ${best.name}.`);
+    }
+  }
+  const dr = ownerUnitFor(side, "druid");
+  if(dr){
+    const before=dr.hp; dr.hp=Math.min(dr.maxHp, dr.hp+1);
+    if(dr.hp>before) say(`Symbiosis: ${dr.name} +1 HP.`);
+  }
 }
 function weakestAdjacentEnemy(u){
   let best=null;
@@ -1334,6 +1351,11 @@ function fireOwnerBonus(card, ownerSide){
     const e = weakestAdjacentEnemy(ou); if(!e) return;
     const res = applyDamage(e, b.amount||1, ownerSide);
     say(`${ownerLabel} assists — strikes ${e.name} for ${res.taken}.`);
+    // Berserker — Bloodthirst: any damaging strike by Berserker heals him 1 HP.
+    if(ou.cls==="berserker" && res.taken>0 && ou.hp>0){
+      const bef=ou.hp; ou.hp=Math.min(ou.maxHp, ou.hp+1);
+      if(ou.hp>bef) say(`${ou.name} drinks deep — +1 HP.`);
+    }
     killCheck(e);
   } else if(b.kind==="ownerDrain"){
     const e = weakestAdjacentEnemy(ou); if(!e) return;
@@ -1356,14 +1378,16 @@ function playCard(owner,handIdx,target){
   } else if(card.kind==="dmg-adj"){
     const u=board[target.r][target.c].unit;
     const main=applyDamage(u,card.dmg,owner);
+    // Mage — Resonance: +1 splash damage while a Mage is alive on caster's side.
+    const splashDmg = (card.splash||0) + (anyLivingAlly(owner,"mage") ? 1 : 0);
     const splashed=[];
     for(const k in VEC){
       const [dr,dc]=VEC[k]; const nr=u.r+dr, nc=u.c+dc;
       if(!inB(nr,nc)) continue;
       const adj=board[nr][nc].unit;
-      if(adj && adj.owner!==owner){ applyDamage(adj,card.splash,owner); splashed.push(adj); }
+      if(adj && adj.owner!==owner){ applyDamage(adj,splashDmg,owner); splashed.push(adj); }
     }
-    const tag = splashed.length ? ` (+${card.splash} splash to ${splashed.length})` : "";
+    const tag = splashed.length ? ` (+${splashDmg} splash to ${splashed.length})` : "";
     say(`${card.name}: ${u.name} takes ${main.taken}${tag}.`);
     killCheck(u); for(const a of splashed) killCheck(a);
   } else if(card.kind==="dmg-self-heal"){
@@ -1408,7 +1432,8 @@ function playCard(owner,handIdx,target){
   } else if(card.kind==="push-adj"){
     if(caster){
       let moved=0, impacts=0;
-      // snapshot adjacent enemies first — positions shift as we resolve
+      // Mage — Resonance: +1 kb on AoE push while a Mage is alive on caster's side.
+      const kbAmt = (card.kb||0) + (anyLivingAlly(owner,"mage") ? 1 : 0);
       const targets=[];
       for(const k in VEC){
         const [dr,dc]=VEC[k]; const nr=caster.r+dr, nc=caster.c+dc;
@@ -1418,7 +1443,7 @@ function playCard(owner,handIdx,target){
       }
       for(const e of targets){
         if(e.hp<=0) continue;
-        const r=pushTarget(e, caster, card.push||1, card.kb||0, owner);
+        const r=pushTarget(e, caster, card.push||1, kbAmt, owner);
         moved+=r.moved; if(r.blocked) impacts++;
         killCheck(e);
       }
@@ -1437,12 +1462,21 @@ function playCard(owner,handIdx,target){
     const u=board[target.r][target.c].unit;
     const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount);
     say(`${card.name}: ${u.name} +${u.hp-before} HP.`);
+    healAfterEffect(owner);
   } else if(card.kind==="heal-all"){
     let total=0;
     eachUnit(u=>{
       if(u.owner===owner){ const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount); total+=u.hp-before; }
     });
     say(`${who} cast ${card.name} — all allies +${card.amount} HP (${total} restored).`);
+    healAfterEffect(owner);
+  }
+  // Berserker — Bloodthirst: heal 1 HP if the active caster is Berserker and the card is a
+  // damage card. Stacks with ownerStrike's own heal if Berserker is also the owner.
+  if(caster && caster.cls==="berserker" && caster.hp>0
+     && (card.kind==="dmg"||card.kind==="dmg-adj"||card.kind==="dmg-self-heal"||card.kind==="dmg-push"||card.kind==="dmg-pull")){
+    const before=caster.hp; caster.hp=Math.min(caster.maxHp, caster.hp+1);
+    if(caster.hp>before) say(`${caster.name} drinks deep — +1 HP.`);
   }
   // Owner-assist bonus (skip for sigils — they have no owner).
   fireOwnerBonus(card, owner);
@@ -1467,9 +1501,13 @@ function canPlayCard(card){
   // The owner must still be alive to provide the assist.
   return heroes.A.some(h=>h.cls===card.hero && h.hp>0);
 }
+function cardCastRange(u){
+  // Ranger — Spotter: +1 range on damage / push / pull cards while a Ranger lives on caster's side.
+  return u.range + (anyLivingAlly(u.owner, "ranger") ? 1 : 0);
+}
 function cardEnemyTargets(u){
-  // Enemies the source unit can hit with a card — uses the source's range.
-  const list=[]; eachUnit(t=>{ if(t.owner!==u.owner && manh(u,t)<=u.range) list.push(t); }); return list;
+  const range = cardCastRange(u);
+  const list=[]; eachUnit(t=>{ if(t.owner!==u.owner && manh(u,t)<=range) list.push(t); }); return list;
 }
 function maybeAutoEnd(u){
   // End the turn automatically only if the unit has nothing useful left to do — already moved,
@@ -1533,7 +1571,7 @@ function onCard(i){
   const needsEnemyInRange = (k==="dmg"||k==="dmg-adj"||k==="dmg-self-heal"||k==="dmg-push"||k==="dmg-pull"||k==="push"||k==="pull");
   if(k==="heal" && !anyDamagedAlly("A")){ say("No wounded ally to heal."); return; }
   if(k==="heal-all" && !anyAlly("A")){ say("No ally to heal."); return; }
-  if(needsEnemyInRange && cardEnemyTargets(u).length===0){ say(`No enemy within ${u.name}'s range (${u.range}).`); return; }
+  if(needsEnemyInRange && cardEnemyTargets(u).length===0){ say(`No enemy within ${u.name}'s range (${cardCastRange(u)}).`); return; }
   if(k==="push-adj"){
     let hasAdj=false;
     for(const key in VEC){ const [dr,dc]=VEC[key]; const nr=u.r+dr, nc=u.c+dc;
@@ -1550,10 +1588,12 @@ function onCard(i){
   sel=(sel&&sel.t==="card"&&sel.i===i)?null:{t:"card",i}; render();
 }
 function dashTilesFor(u, range){
+  // Scout — Pathfinder: dash cards get +1 range while a Scout is alive on caster's side.
+  const effRange = range + (anyLivingAlly(u.owner, "scout") ? 1 : 0);
   const out=[];
   for(let r=0;r<R;r++)for(let c=0;c<C;c++){
     if(board[r][c].unit) continue;
-    if(Math.abs(r-u.r)+Math.abs(c-u.c) > range) continue;
+    if(Math.abs(r-u.r)+Math.abs(c-u.c) > effRange) continue;
     if(r===u.r && c===u.c) continue;
     out.push({r,c});
   }

@@ -49,15 +49,17 @@ Each side fields **3 heroes** drafted from a **9-hero active roster**. Three add
 
 | Glyph | Hero | HP | ATK | Move | Range | Speed | Passive |
 |---|---|---|---|---|---|---|---|
-| 🛡️ | Paladin   | 10 | 1 | 1 | 1 | 1 | **Bulwark** — all damage taken −1 (min 1) |
-| ⚔️ | Knight    | 10 | 1 | 1 | 1 | 2 | **Rallying Presence** — allies adjacent to Knight get +1 ATK |
-| 🩸 | Warlock   | 6  | 1 | 1 | 3 | 3 | **Soul Drain** — heal 2 HP each time Warlock kills with an attack |
-| 🌿 | Druid     | 8  | 1 | 1 | 2 | 4 | **Nature's Renewal** — +1 HP at the start of every round |
-| 🔮 | Mage      | 6  | 1 | 1 | 2 | 5 | **Arcane Burn** — every Mage attack leaves +1 vuln on target |
-| 🪓 | Berserker | 8  | 2 | 1 | 1 | 6 | **Bloodlust** — +1 ATK while at or below half HP |
-| 🏹 | Ranger    | 8  | 1 | 1 | 2 | 7 | **Sniper** — +1 dmg when attacking from max range (2 tiles) |
-| 👁️ | Scout     | 4  | 1 | 2 | 2 | 8 | **Evasive** — takes −1 dmg from melee attackers (min 1) |
-| 🗡️ | Assassin  | 6  | 2 | 2 | 1 | 9 | **Backstab Mastery** — rear-arc multiplier ×3 (was ×2.5 from flank tag) |
+| 🏰 | Sentinel  | 12 | 1 | 1 | 1 | 1 | **Anchor** — Sentinel and orthogonally adjacent allies cannot be pushed or pulled |
+| 🛡️ | Paladin   | 10 | 1 | 1 | 1 | 1 | **Guardian** — after you play a heal card, Paladin restores +1 HP on your most-wounded ally |
+| ⚔️ | Knight    | 10 | 1 | 1 | 1 | 2 | **Steadfast** — cannot be pushed or pulled by any effect |
+| 🩸 | Warlock   | 6  | 1 | 1 | 3 | 2 | **Soul Drain** — heals 2 HP whenever any enemy dies anywhere on the board |
+| 🌿 | Druid     | 8  | 1 | 1 | 2 | 2 | **Symbiosis** — after you play a heal card, Druid heals 1 HP |
+| 🔮 | Mage      | 6  | 1 | 1 | 2 | 2 | **Resonance** — your AoE cards (`dmg-adj`, `push-adj`) gain +1 splash / +1 kb |
+| 🪓 | Berserker | 8  | 2 | 1 | 1 | 2 | **Bloodthirst** — heals 1 HP whenever he damages an enemy (attack, damage card, or assist strike) |
+| 💀 | Necromancer | 6 | 1 | 1 | 2 | 2 | **Death Touch** — enemies orthogonally adjacent take +1 damage from all sources |
+| 🏹 | Ranger    | 8  | 1 | 1 | 2 | 3 | **Spotter** — your damage / push / pull cards have +1 range while Ranger is alive |
+| 👁️ | Scout     | 4  | 1 | 2 | 2 | 3 | **Pathfinder** — your dash cards have +1 range while Scout is alive |
+| 🗡️ | Assassin  | 6  | 2 | 2 | 1 | 3 | **Shadow Step** — any time Assassin moves, her next attack counts as rear-arc (×3) regardless of facing |
 
 Active-roster speeds form a contiguous `{1, 2, 3, 4, 5, 6, 7, 8, 9}` — all unique. Combined with the snake draft (no class duplicates within a match), initiative ties between heroes never occur. Hidden-roster speeds (Sentinel 1, Necromancer 4, Crusader 8) currently collide with active speeds; if any of those are un-hidden later, the active roster will need to be re-numbered accordingly.
 
