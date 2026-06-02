@@ -477,11 +477,12 @@ let campaign={
   unlocked:new Set(STARTERS),
   completed:new Set(),
   currentMission:null,
-  teamSelection:[]
+  teamSelection:[],
+  savedTeam:[] // persists across missions: the player's preferred 5-hero party
 };
 function saveProgress(){
   try{ localStorage.setItem("sigil-progress", JSON.stringify({
-    unlocked:[...campaign.unlocked], completed:[...campaign.completed]
+    unlocked:[...campaign.unlocked], completed:[...campaign.completed], savedTeam:campaign.savedTeam
   })); }catch(e){}
 }
 function loadProgress(){
@@ -490,12 +491,14 @@ function loadProgress(){
     if(s){
       campaign.unlocked=new Set(s.unlocked||STARTERS);
       campaign.completed=new Set(s.completed||[]);
+      campaign.savedTeam=Array.isArray(s.savedTeam)?s.savedTeam.slice():[];
     }
   }catch(e){}
 }
 function resetProgress(){
   campaign.unlocked=new Set(STARTERS);
   campaign.completed=new Set();
+  campaign.savedTeam=[];
   saveProgress();
   renderTitle(); renderMissions();
 }
@@ -567,7 +570,10 @@ function computeMissionAITeam(m, playerPicks){
 }
 function openMissionIntro(m){
   campaign.currentMission=m;
-  campaign.teamSelection=[];
+  // Pre-fill from the player's saved team, dropping any heroes no longer unlocked.
+  // If that yields exactly TEAM_SIZE picks, BEGIN is one tap away; otherwise the
+  // existing auto-fill / manual flow takes over inside renderTeamPicker().
+  campaign.teamSelection = campaign.savedTeam.filter(cls => campaign.unlocked.has(cls)).slice(0, TEAM_SIZE);
   document.getElementById("missions").classList.remove("open");
   document.getElementById("missionIntro").classList.add("open");
   const c=CLASSES[m.boss];
@@ -610,6 +616,9 @@ function cancelMission(){
   openMissions();
 }
 function beginMission(){
+  // Remember this team for next mission — one-tap startup on the next intro.
+  campaign.savedTeam = campaign.teamSelection.slice();
+  saveProgress();
   document.getElementById("missionIntro").classList.remove("open");
   mode="campaign-play";
   newGame(campaign.currentMission.id);
