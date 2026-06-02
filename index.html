@@ -305,9 +305,9 @@
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
     <li><b>Cards:</b> start with 5 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
     <li><b>Cycle:</b> once per turn, a unit may <i>forfeit its move</i> and discard 2 cards to draw 1 — useful for digging past dead-source cards.</li>
-    <li><b>Cast by source hero:</b> hero cards belong to one of your 5 drafted heroes. They can <i>only</i> be played on that hero's turn — and only if that hero is still alive. Killing an enemy hero locks out their 6 cards (the entire suite they brought to the deck).</li>
-    <li><b>Sigils:</b> 10 generic action cards (✦) shipped in every deck. A sigil can be played on <i>any</i> of your units' turns, regardless of which hero is active. Damage sigils use the casting unit's range.</li>
-    <li><b>Range:</b> damage cards target enemies within the casting hero's range (the same range they use for normal attacks). Ally-target cards (heal/shield/charge/buff) reach any of your allies.</li>
+    <li><b>Assist casting:</b> <i>any</i> of your units may cast <i>any</i> card. Hero cards are owned by one of your drafted heroes — when a different unit casts one, the owner is assisting from off-field. The owner must still be <i>alive</i> to assist; killing an enemy hero locks out their 6 cards.</li>
+    <li><b>Sigils:</b> 10 generic action cards (✦) shipped in every deck. Any unit may cast them. <b>A sigil consumes both your move and your attack this turn</b>, and is removed from the game on use.</li>
+    <li><b>Range:</b> damage cards target enemies within the <i>casting unit's</i> range. Ally-target cards (heal/shield/charge/buff) reach any of your allies.</li>
     <li><b>Opportunity cost:</b> playing a card counts as the unit's <i>action</i> for the turn. You may still move first either way; you cannot play a card after attacking or healing.</li>
     <li><b>Shield (⛨N):</b> absorbs damage before HP. Persists across rounds.</li>
     <li><b>ATK buff (+NA):</b> bonus damage that clears at round start.</li>
@@ -332,8 +332,8 @@
 
   <h3>Deck composition</h3>
   <ul class="kinds">
-    <li><b>Hero cards (6 per hero):</b> 3 Standard, 2 Epic, 1 Legendary. Each card is tied to its hero — playable only on that hero's turn while they're alive.</li>
-    <li><b>Sigils (10):</b> generic action cards that any of your units can cast on their own turn.</li>
+    <li><b>Hero cards (6 per hero):</b> 3 Standard, 2 Epic, 1 Legendary. Owned by their hero but castable by any of your units (the owner assists from off-field — they must be alive).</li>
+    <li><b>Sigils (10):</b> generic action cards any unit can cast. Cost: your entire turn (move <i>and</i> attack). Removed from the game on use.</li>
     <li><b>Your deck:</b> 40 cards built at deploy time — 5 drafted heroes × 6 cards + 10 sigils. Shuffled before round 1.</li>
   </ul>
 
@@ -1281,6 +1281,12 @@ function playCard(owner,handIdx,target){
     });
     say(`${who} cast ${card.name} — all allies +${card.amount} HP (${total} restored), +${card.buff} ATK this round.`);
   }
+  // SIGILS consume both move and attack for the active unit, and are removed from game on use
+  // (there is no discard pile — sigils never re-enter the deck or hand).
+  if(card.hero === "sigil"){
+    const caster=activeUnit();
+    if(caster && caster.owner===owner){ caster.hasMoved=true; caster.hasActed=true; }
+  }
 }
 function canPlayCardNow(){
   // True if the active unit could play *some* card right now (their turn, hasn't acted).
@@ -1290,8 +1296,10 @@ function canPlayCardNow(){
 function canPlayCard(card){
   const u=activeUnit();
   if(!u || u.owner!=="A" || u.hasActed) return false;
-  if(card.hero === "sigil") return true; // sigils have no source-hero constraint
-  return u.cls === card.hero;
+  if(card.hero === "sigil") return true;
+  // Any unit may cast any hero card — the card's owner "assists" the caster.
+  // The owner must still be alive to provide the assist.
+  return heroes.A.some(h=>h.cls===card.hero && h.hp>0);
 }
 function cardEnemyTargets(u){
   // Enemies the source unit can hit with a card — uses the source's range.
@@ -1344,10 +1352,13 @@ function onCard(i){
   const key=players.A.hand[i]; const card=CARDS[key];
   const u=activeUnit();
   if(!u || u.owner!=="A" || u.hasActed){ say("Cards play as a unit's action — wait for one of your units' turns."); render(); return; }
-  if(card.hero !== "sigil" && u.cls !== card.hero){
-    const h=CLASSES[card.hero];
-    say(`${card.name} is cast by ${h.sym} ${h.name} — not the active unit.`);
-    return;
+  if(card.hero !== "sigil"){
+    const ownerAlive = heroes.A.some(h=>h.cls===card.hero && h.hp>0);
+    if(!ownerAlive){
+      const h=CLASSES[card.hero];
+      say(`${card.name}: ${h.sym} ${h.name} has fallen and cannot assist.`);
+      return;
+    }
   }
   const k=card.kind;
   const dmgKind = k==="dmg"||k==="dmg-adj"||k==="dmg-vuln"||k==="dmg-self-buff"||k==="dmg-self-charge"||k==="dmg-self-heal"||k==="dmg-team-buff";
@@ -1426,7 +1437,7 @@ function aiPickCardForUnit(u){
   const B=players.B; let best=null;
   B.hand.forEach((key,i)=>{
     const card=CARDS[key];
-    if(card.hero !== "sigil" && card.hero !== u.cls) return; // source hero must be the active unit (sigils excepted)
+    if(card.hero !== "sigil" && !heroes.B.some(h=>h.cls===card.hero && h.hp>0)) return; // card owner must be alive to assist
     let score=0, target=null;
     if(card.kind==="heal"){
       const t=aiHealTarget("B"); if(!t) return;
@@ -1562,7 +1573,7 @@ function buildCodex(){
     html+=`</div>`;
   }
   if(sigilCards.length){
-    html+=`<div class="suite"><div class="suite-h">✦ Sigils — ${sigilCards.length} cards (in every deck; castable on any of your units' turns)</div>`;
+    html+=`<div class="suite"><div class="suite-h">✦ Sigils — ${sigilCards.length} cards (in every deck; any unit may cast; consumes move + attack; removed from game on use)</div>`;
     for(const c of sigilCards){
       html+=`<div class="cdx-card tier-G"><span class="cdx-cat">Sigil</span><span class="cdx-name">${c.name}</span><span>${c.sym}</span><span class="cdx-eff">${cardEffText(c)}</span></div>`;
     }
@@ -1775,8 +1786,8 @@ function render(){
     document.getElementById("cdName").textContent=`${card.name} — ${tag}`;
     document.getElementById("cdEff").textContent=cardEffText(card);
     const castLine = card.hero==="sigil"
-      ? `Sigil — any of your units can cast it on their turn (range = caster's range).`
-      : `Cast by ${src.sym} ${src.name} (range ${src.range}).`;
+      ? `Sigil — any of your units may cast it. Consumes this unit's move <i>and</i> attack; removed from game.`
+      : `Owned by ${src.sym} ${src.name} (must be alive to assist). Any of your units may cast — uses the caster's range.`;
     document.getElementById("cdHint").innerHTML = `${castLine} ${hint}.`;
     cd.classList.add("show");
     say(`Play <b>${card.name}</b> — ${hint}.`);
