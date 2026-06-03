@@ -45,7 +45,6 @@
     display:flex; align-items:center; justify-content:center; user-select:none; transition:background .1s;}
   .tile.terrain{background:#2c4a35; box-shadow:inset 0 0 0 1px #3a7d44;}
   .tile.terrain::after{content:"▲"; position:absolute; bottom:2px; right:4px; font-size:9px; color:#6fcf8a; opacity:.8;}
-  .tile.hl-deploy{outline:2px dashed var(--deploy); outline-offset:-2px; cursor:pointer;}
   .tile.hl-move{outline:2px solid var(--move); outline-offset:-2px; cursor:pointer;}
   .tile.hl-move::before{content:""; position:absolute; width:30%; height:30%; border-radius:50%; background:var(--move); opacity:.45;}
   .tile.hl-atk{outline:2px solid var(--atk); outline-offset:-2px; cursor:pointer;}
@@ -227,20 +226,6 @@
   #draft .rcard .rstats{font-size:9px; color:var(--dim); line-height:1.3;}
   #draft .rcard .rtags{font-size:9px; color:#b878ff; margin-top:2px; min-height:11px;}
 
-  #deployBar{display:none; position:fixed; left:0; right:0; top:0; background:#1a1c22; border-bottom:1px solid var(--gold); padding:8px 12px; z-index:8; flex-direction:column; gap:6px;}
-  #deployBar.show{display:flex;}
-  #deployBar #deployMsg{font-size:12px; color:#fff; text-align:center;}
-  #deployBar #deployMsg .d-tag{display:inline-block; background:var(--gold); color:#0c0d11; padding:1px 6px; border-radius:3px; font-size:10px; letter-spacing:1px; font-weight:800; margin-right:6px; vertical-align:1px;}
-  #deployBar .dep-row{display:flex; gap:8px; align-items:center; justify-content:center;}
-  #deployBar #deployTray{display:flex; gap:6px;}
-  #deployBar .tray-unit{background:#0c0d11; border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer; color:#fff;}
-  #deployBar .tray-unit .ts{font-size:20px; line-height:1;}
-  #deployBar .tray-unit:hover:not(:disabled){background:#23262e;}
-  #deployBar .tray-unit.sel{border-color:var(--gold); background:rgba(212,165,116,.22);}
-  #deployBar .tray-unit.cant{opacity:.45; cursor:not-allowed;}
-  body.deploy #app{margin-top:84px;}
-  .unit.facedown{background:repeating-linear-gradient(45deg,#3a1a16 0,#3a1a16 4px,#2a1410 4px,#2a1410 8px); border:2px dashed #6a3a35;}
-  .unit.facedown .sym{font-size:24px; color:#e8584d; font-weight:800;}
 
   #over{position:fixed; inset:0; background:rgba(8,9,12,.85); display:none; align-items:center; justify-content:center; z-index:9;}
   #over .box{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; text-align:center; max-width:300px;}
@@ -293,7 +278,7 @@
   <ul>
     <li><b>Draft (skirmish only):</b> 1-2-2-2-2-1 snake — alternating snake draft, 10 picks total. Each side ends with 5 heroes from the 11-hero active roster.</li>
     <li><b>Team select (campaign only):</b> in the mission intro, tap to pick 5 heroes from your unlocked pool. AI's team is the boss plus themed allies from a mission-specific priority list. No draft phase.</li>
-    <li><b>Deploy:</b> alternating face-down placement in reverse-of-draft order (P2 places first to offset P1's first-pick advantage). You see <i>where</i> the opponent placed but not <i>which</i> hero is in each tile — units flip face-up when play begins.</li>
+    <li><b>Auto-deploy:</b> after the draft, both teams are placed automatically — ranged heroes to the back row, melee to the front. Reposition on your first turn (UNDO MOVE if you misclick).</li>
     <li><b>Play:</b> standard initiative-order combat.</li>
   </ul>
 
@@ -379,14 +364,6 @@
     <li>9 active classes, no duplicates</li>
   </ul>
 </div></div>
-
-<div id="deployBar">
-  <div id="deployMsg">—</div>
-  <div class="dep-row">
-    <div id="deployTray"></div>
-    <button class="btn ghost" id="deployAuto">Auto</button>
-  </div>
-</div>
 
 <div id="title"><div class="tbox">
   <h1>SIGIL TACTICS</h1>
@@ -772,10 +749,9 @@ let board, players, sel, busy, uid, heroes, units, roundNum, acted, activeId, ov
 // Shape: {unitId, prevR, prevC, prevFacing} or null.
 let lastMove=null;
 let initiativeToken;
-let phase, draft, pickIdx, placeSeq, placeIdx, unplaced, selectedDeployUnit;
+let phase, draft, pickIdx, unplaced;
 
 /* ---------- helpers ---------- */
-function deployRows(o){ return o==="A"?[2,3]:[0,1]; }
 function inB(r,c){ return r>=0&&r<R&&c>=0&&c<C; }
 function manh(a,b){ return Math.abs(a.r-b.r)+Math.abs(a.c-b.c); }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
@@ -802,7 +778,7 @@ function newGame(missionId){
     B:{deck:[],hand:[],human:false}
   };
   document.getElementById("over").style.display="none";
-  draft={A:[],B:[]}; pickIdx=0; placeSeq=null; placeIdx=0; unplaced=null; selectedDeployUnit=null;
+  draft={A:[],B:[]}; pickIdx=0; unplaced=null;
   if(campaign.currentMission){
     // Campaign mode: skip draft entirely. Teams come from the intro picker and the mission's AI pool.
     draft.A=campaign.teamSelection.slice();
@@ -864,7 +840,7 @@ function renderDraft(){
   }
   // status
   const stat=document.getElementById("draftStatus");
-  if(pickIdx>=DRAFT_SEQUENCE.length){ stat.innerHTML=`<span class="d-tag">DRAFT</span> complete — deploying…`; }
+  if(pickIdx>=DRAFT_SEQUENCE.length){ stat.innerHTML=`<span class="d-tag">DRAFT</span> complete — starting…`; }
   else {
     const who=currentPicker(); const remainingPicks=DRAFT_SEQUENCE.slice(pickIdx).filter(p=>p===who).length;
     stat.innerHTML=`<span class="d-tag">DRAFT</span> ${who==="A"?"YOUR":"AI"} pick — ${remainingPicks} left in this phase`;
@@ -909,91 +885,48 @@ function aiDraftPick(){
 }
 function finishDraft(){
   closeDraftUI();
-  phase="deploy";
-  placeSeq=DRAFT_SEQUENCE.slice().reverse(); // reverse-of-draft snake: P2 places first
-  placeIdx=0;
+  // No deploy phase — auto-place both teams with a simple range-based heuristic and jump
+  // straight into play. The player can reposition on their first turn (UNDO MOVE if needed).
+  phase="deploy"; // brief — placeDeployedUnit + finishDeploy still key off this transition
   unplaced={A:draft.A.slice(), B:draft.B.slice()};
-  selectedDeployUnit=null;
-  document.body.classList.add("deploy");
-  document.getElementById("deployBar").classList.add("show");
-  document.getElementById("deployAuto").onclick=onDeployAuto;
-  advancePlace();
+  autoPlaceAllFor("A");
+  autoPlaceAllFor("B");
+  finishDeploy();
 }
 
-/* ---------- deploy phase (alternating, face-down) ---------- */
+/* ---------- deploy helpers (auto-placement only — no interactive deploy phase) ---------- */
 function deployRowsFor(o){ return o==="A"?[2,3]:[0,1]; }
 function deployFacing(o){ return o==="A"?"N":"S"; }
 function freeDeployTiles(o){
   const tiles=[]; for(const r of deployRowsFor(o)) for(let c=0;c<C;c++) if(!board[r][c].unit) tiles.push({r,c});
   return tiles;
 }
-function advancePlace(){
-  // skip any placeSeq slots whose owner has nothing left to place
-  while(placeIdx<placeSeq.length && unplaced[placeSeq[placeIdx]].length===0) placeIdx++;
-  if(placeIdx>=placeSeq.length) return finishDeploy();
-  const who=placeSeq[placeIdx];
-  selectedDeployUnit=null;
-  if(who==="B"){
-    busy=true; render();
-    setTimeout(()=>{ busy=false; aiPlaceOne(); },500);
-  } else {
-    render();
-  }
-}
-function onDeployTray(cls){
-  if(busy||phase!=="deploy") return;
-  if(placeSeq[placeIdx]!=="A") return;
-  if(!unplaced.A.includes(cls)) return;
-  selectedDeployUnit=(selectedDeployUnit===cls)?null:cls;
-  render();
-}
 function placeDeployedUnit(owner,cls,r,c){
   const u=newUnit(owner,cls,r,c,deployFacing(owner));
   place(u); heroes[owner].push(u);
   unplaced[owner]=unplaced[owner].filter(x=>x!==cls);
 }
-function aiPlaceOne(){
-  // pick best unit + tile by simple heuristic: ranged units to the back row
-  const cands=unplaced.B.map(cls=>({cls,c:CLASSES[cls]}));
-  cands.sort((a,b)=>(b.c.range-a.c.range)||(b.c.hp-a.c.hp));
-  const cls=cands[0].cls; const c=CLASSES[cls];
-  const targetRow = c.range>=2 ? 0 : 1;
-  const free=freeDeployTiles("B");
-  free.sort((x,y)=> Math.abs(targetRow-x.r)-Math.abs(targetRow-y.r) || Math.abs((C-1)/2-x.c)-Math.abs((C-1)/2-y.c));
-  const t=free[0];
-  placeDeployedUnit("B",cls,t.r,t.c);
-  placeIdx++;
-  render();
-  setTimeout(advancePlace,300);
-}
-function onDeployAuto(){
-  if(phase!=="deploy" || placeSeq[placeIdx]!=="A" || busy) return;
-  // place every remaining A unit in default formation; advancePlace() will skip the now-empty A slots
-  // without consuming B's slots in the snake order.
-  while(unplaced.A.length){
-    const cls=unplaced.A[0]; const c=CLASSES[cls];
-    const free=freeDeployTiles("A"); if(!free.length) break;
-    const targetRow = c.range>=2 ? 3 : 2;
+// Place every unit of `side` in a default formation: highest-range units to the back row,
+// melee to the front, biased toward the center column.
+function autoPlaceAllFor(side){
+  const backRow  = side==="A"?3:0;
+  const frontRow = side==="A"?2:1;
+  // Sort placement order so longest-range units go first (claim back-row center tiles).
+  const order = unplaced[side].slice().sort((a,b)=>{
+    const ca=CLASSES[a], cb=CLASSES[b];
+    return (cb.range-ca.range) || (cb.hp-ca.hp);
+  });
+  for(const cls of order){
+    const c=CLASSES[cls];
+    const free=freeDeployTiles(side); if(!free.length) break;
+    const targetRow = c.range>=2 ? backRow : frontRow;
     free.sort((x,y)=> Math.abs(targetRow-x.r)-Math.abs(targetRow-y.r) || Math.abs((C-1)/2-x.c)-Math.abs((C-1)/2-y.c));
     const t=free[0];
-    placeDeployedUnit("A",cls,t.r,t.c);
+    placeDeployedUnit(side,cls,t.r,t.c);
   }
-  advancePlace();
-}
-function deployStatusHTML(){
-  if(placeIdx>=placeSeq.length) return `<span class="d-tag">DEPLOY</span> complete`;
-  const who=placeSeq[placeIdx];
-  if(who==="B") return `<span class="d-tag">DEPLOY</span> AI placing… (face-down)`;
-  if(selectedDeployUnit){
-    const c=CLASSES[selectedDeployUnit];
-    return `<span class="d-tag">DEPLOY</span> Place ${c.sym} ${c.name} — tap a highlighted tile`;
-  }
-  return `<span class="d-tag">DEPLOY</span> YOUR turn — pick a unit below`;
 }
 function finishDeploy(){
   phase="play";
-  document.body.classList.remove("deploy");
-  document.getElementById("deployBar").classList.remove("show");
   // Build each player's deck from their drafted heroes' suites
   for(const o of ["A","B"]){
     players[o].deck=shuffle(buildDeckFor(o));
@@ -1523,18 +1456,6 @@ function maybeAutoEnd(u){
 function onTile(r,c){
   if(busy||over) return;
   if(sel && sel.t==="cycle") return; // board taps disabled during card-cycle selection
-  if(phase==="deploy"){
-    if(placeSeq[placeIdx]!=="A") return;
-    if(!selectedDeployUnit){ say("Pick a unit from the tray first."); return; }
-    const cell=board[r][c];
-    if(cell._hl==="deploy"){
-      placeDeployedUnit("A",selectedDeployUnit,r,c);
-      selectedDeployUnit=null;
-      placeIdx++;
-      advancePlace();
-    }
-    return;
-  }
   if(phase!=="play") return;
   const u=activeUnit(); if(!u||u.owner!=="A") return;
   const cell=board[r][c];
@@ -1882,10 +1803,6 @@ function clearHl(){ for(let r=0;r<R;r++)for(let c=0;c<C;c++) board[r][c]._hl=nul
 function computeHl(){
   clearHl();
   if(over) return;
-  if(phase==="deploy" && placeSeq && placeSeq[placeIdx]==="A" && !busy && selectedDeployUnit){
-    for(const t of freeDeployTiles("A")) board[t.r][t.c]._hl="deploy";
-    return;
-  }
   if(phase!=="play"||busy) return;
   const u=activeUnit(); if(!u||u.owner!=="A") return;
   if(sel&&sel.t==="card"){
@@ -1938,7 +1855,6 @@ function render(){
   for(let r=0;r<R;r++)for(let c=0;c<C;c++){
     const cell=board[r][c]; const t=document.createElement("div");
     t.className="tile"+(cell.terrain?" terrain":"");
-    if(cell._hl==="deploy")t.classList.add("hl-deploy");
     if(cell._hl==="move")t.classList.add("hl-move");
     if(cell._hl==="atk")t.classList.add("hl-atk");
     if(cell._hl==="heal")t.classList.add("hl-heal");
@@ -1946,10 +1862,7 @@ function render(){
     const u=cell.unit;
     if(u&&u.id===activeId)t.classList.add("active");
     if(u){
-      const hidden = (phase==="deploy" && u.owner==="B");
-      if(hidden){
-        t.innerHTML=`<div class="unit ${u.owner} facedown"><span class="sym">?</span></div>`;
-      } else {
+      {
         const arrow={N:"▲",S:"▼",E:"▶",W:"◀"}[u.facing]; const done=acted.has(u.id);
         const buffs=(u.shield?`⛨${u.shield}`:"")+(u.bonusAtkRound?` +${u.bonusAtkRound}A`:"")+(u.vuln?` ☠${u.vuln}`:"");
         const pct=100*Math.max(0,u.hp)/u.maxHp;
@@ -1972,22 +1885,6 @@ function render(){
   if(!playing) document.getElementById("cardDetail").classList.remove("show");
   document.getElementById("init").style.display=playing?"":"none";
   document.querySelector(".barrow").style.display=playing?"":"none";
-  if(phase==="deploy"){
-    document.getElementById("deployMsg").innerHTML=deployStatusHTML();
-    const tray=document.getElementById("deployTray"); tray.innerHTML="";
-    const aturn=placeSeq[placeIdx]==="A" && !busy;
-    for(const cls of unplaced.A){
-      const c=CLASSES[cls];
-      const b=document.createElement("button");
-      b.className="tray-unit"+(selectedDeployUnit===cls?" sel":"")+(aturn?"":" cant");
-      b.innerHTML=`<span class="ts">${c.sym}</span>`;
-      b.title=c.name;
-      b.disabled=!aturn;
-      b.onclick=()=>onDeployTray(cls);
-      tray.appendChild(b);
-    }
-    document.getElementById("deployAuto").style.display=aturn?"":"none";
-  }
   if(!playing){ return; }
   renderInit();
   document.getElementById("deckInfo").textContent=`Hand ${players.A.hand.length} · Deck ${players.A.deck.length}`;
