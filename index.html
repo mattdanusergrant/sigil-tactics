@@ -555,7 +555,10 @@ function renderMissions(){
   document.getElementById("missionProg").textContent=`Roster ${u}/9 · Missions ${c}/6`;
 }
 function computeMissionAITeam(m, playerPicks){
-  const team=[]; const taken=new Set(playerPicks);
+  // playerPicks is unused for uniqueness — both teams may share a class (and on the starter
+  // roster they must, because the player drafts 3 of 5 melee classes and the AI still needs 3).
+  // `taken` only enforces no-duplicates WITHIN the AI team.
+  const team=[]; const taken=new Set();
   const counts=()=>teamRoleCounts(team);
   const tryAdd=(cls)=>{
     if(taken.has(cls)) return false;
