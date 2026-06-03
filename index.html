@@ -187,6 +187,9 @@
   #missionIntro .ipick{background:#1a1c22; border:1px solid var(--line); border-radius:8px; padding:8px 4px; cursor:pointer; color:#fff; display:flex; flex-direction:column; align-items:center; gap:2px;}
   #missionIntro .ipick:hover{background:#23262e;}
   #missionIntro .ipick.sel{border-color:var(--gold); background:rgba(212,165,116,.18);}
+  #missionIntro .ipick.cant{opacity:.35; cursor:not-allowed;}
+  #missionIntro .ipick.cant:hover{background:#1a1c22;}
+  #missionIntro .ipick-h{grid-column:1/-1; font-size:11px; color:var(--gold); letter-spacing:.5px; text-transform:uppercase; margin:4px 0 2px;}
   #missionIntro .ipgly{font-size:22px; line-height:1;}
   #missionIntro .ipname{font-size:10px;}
   #missionIntro .i-pick-count{font-size:10px; color:var(--dim); text-align:right; margin-bottom:10px;}
@@ -278,7 +281,8 @@
   <ul>
     <li><b>Draft (skirmish only):</b> 1-2-2-2-2-1 snake — alternating snake draft, 10 picks total. Each side ends with 5 heroes from the 11-hero active roster.</li>
     <li><b>Team select (campaign only):</b> in the mission intro, tap to pick 5 heroes from your unlocked pool. AI's team is the boss plus themed allies from a mission-specific priority list. No draft phase.</li>
-    <li><b>Auto-deploy:</b> after the draft, both teams are placed automatically — ranged heroes to the back row, melee to the front. Reposition on your first turn (UNDO MOVE if you misclick).</li>
+    <li><b>Team:</b> every drafted party is <b>3 melee + 2 ranged</b>. The picker enforces it.</li>
+    <li><b>Auto-deploy:</b> both teams start in opposite corners (you bottom-left, opponent top-right). Your 3 melee fill the front row; your 2 ranged fill the corner back row. <i>Which</i> hero stands on each tile is randomized every match — same comp, fresh positioning. Reposition on turn 1; UNDO MOVE catches misclicks.</li>
     <li><b>Play:</b> standard initiative-order combat.</li>
   </ul>
 
@@ -388,7 +392,7 @@
   <div class="i-boss" id="intBoss"></div>
   <p class="i-text" id="intText"></p>
   <div class="i-team-row">Enemy team: <span id="intTeam"></span></div>
-  <div class="i-pick-h">Choose 5 heroes for your party:</div>
+  <div class="i-pick-h">Pick 3 melee + 2 ranged for your party:</div>
   <div class="i-pick" id="intPick"></div>
   <div class="i-pick-count" id="intCount">0/3 selected</div>
   <button class="tbtn" id="beginBtn" onclick="beginMission()" disabled>BEGIN</button>
@@ -428,6 +432,17 @@ const CLASSES={
 const ROSTER=Object.keys(CLASSES).filter(k=>!CLASSES[k].hidden);
 const DRAFT_SEQUENCE=["A","B","B","A","A","B","B","A","A","B"]; // 5v5 snake (1-2-2-2-2-1)
 const TEAM_SIZE=5;
+const TEAM_MELEE=3;   // every drafted team must have exactly this many melee (range 1) heroes
+const TEAM_RANGED=2;  // ...and this many ranged (range >= 2) heroes
+function isMeleeClass(cls){ return CLASSES[cls] && CLASSES[cls].range === 1; }
+function isRangedClass(cls){ return CLASSES[cls] && CLASSES[cls].range >= 2; }
+function teamRoleCounts(picks){
+  let m=0,r=0; for(const c of picks){ if(isMeleeClass(c)) m++; else if(isRangedClass(c)) r++; } return {m,r};
+}
+function teamIsValid(picks){
+  if(picks.length!==TEAM_SIZE) return false;
+  const {m,r}=teamRoleCounts(picks); return m===TEAM_MELEE && r===TEAM_RANGED;
+}
 
 /* ---------- PvE campaign ---------- */
 const STARTERS=["knight","ranger","mage","assassin","berserker"];
@@ -530,29 +545,30 @@ function renderMissions(){
   document.getElementById("missionProg").textContent=`Roster ${u}/9 · Missions ${c}/6`;
 }
 function computeMissionAITeam(m, playerPicks){
+  // Build a 3 melee + 2 ranged team. Boss is locked in first regardless of role; if the
+  // boss is melee we need 2 more melee + 2 ranged, and vice versa. Themed aiPool fills
+  // role-respectful, then fallback to the rest of the roster.
   const team=[]; const taken=new Set(playerPicks);
-  // boss always first
-  team.push(m.boss); taken.add(m.boss);
-  // then themed allies from aiPool in order
-  for(const cls of m.aiPool){
-    if(team.length>=TEAM_SIZE) break;
-    if(taken.has(cls)) continue;
-    team.push(cls); taken.add(cls);
-  }
-  // fallback to any active hero
-  for(const cls of ROSTER){
-    if(team.length>=TEAM_SIZE) break;
-    if(taken.has(cls)) continue;
-    team.push(cls); taken.add(cls);
-  }
+  const counts=()=>teamRoleCounts(team);
+  const tryAdd=(cls)=>{
+    if(taken.has(cls)) return false;
+    const {m:mc,r:rc}=counts();
+    if(isMeleeClass(cls)  && mc>=TEAM_MELEE)  return false;
+    if(isRangedClass(cls) && rc>=TEAM_RANGED) return false;
+    team.push(cls); taken.add(cls); return true;
+  };
+  tryAdd(m.boss); // boss always in
+  for(const cls of m.aiPool){ if(team.length>=TEAM_SIZE) break; tryAdd(cls); }
+  for(const cls of ROSTER){   if(team.length>=TEAM_SIZE) break; tryAdd(cls); }
   return team;
 }
 function openMissionIntro(m){
   campaign.currentMission=m;
-  // Pre-fill from the player's saved team, dropping any heroes no longer unlocked.
-  // If that yields exactly TEAM_SIZE picks, BEGIN is one tap away; otherwise the
-  // existing auto-fill / manual flow takes over inside renderTeamPicker().
-  campaign.teamSelection = campaign.savedTeam.filter(cls => campaign.unlocked.has(cls)).slice(0, TEAM_SIZE);
+  // Pre-fill from the player's saved team, dropping any heroes no longer unlocked. Discard
+  // entirely if the saved team isn't 3 melee + 2 ranged compliant (e.g. left over from before
+  // the role rule existed).
+  const candidate = campaign.savedTeam.filter(cls => campaign.unlocked.has(cls));
+  campaign.teamSelection = teamIsValid(candidate) ? candidate.slice() : [];
   document.getElementById("missions").classList.remove("open");
   document.getElementById("missionIntro").classList.add("open");
   const c=CLASSES[m.boss];
@@ -566,27 +582,43 @@ function openMissionIntro(m){
 function renderTeamPicker(){
   const root=document.getElementById("intPick"); root.innerHTML="";
   const unlocked=[...campaign.unlocked];
-  for(const cls of unlocked){
-    const c=CLASSES[cls];
-    const sel=campaign.teamSelection.includes(cls);
-    const btn=document.createElement("button");
-    btn.className="ipick"+(sel?" sel":"");
-    btn.innerHTML=`<span class="ipgly">${c.sym}</span><span class="ipname">${c.name}</span>`;
-    btn.onclick=()=>toggleTeamPick(cls);
-    root.appendChild(btn);
-  }
-  // Auto-fill if exactly 3 unlocked and nothing picked yet
-  if(unlocked.length===TEAM_SIZE && campaign.teamSelection.length===0){
+  // Auto-fill when the player's unlocked roster is exactly TEAM_SIZE and naturally satisfies
+  // the role split (true for the starting roster: 3 melee + 2 ranged).
+  if(unlocked.length===TEAM_SIZE && campaign.teamSelection.length===0 && teamIsValid(unlocked)){
     campaign.teamSelection=unlocked.slice();
-    return renderTeamPicker();
   }
-  document.getElementById("intCount").textContent = `${campaign.teamSelection.length}/${TEAM_SIZE} selected`;
-  document.getElementById("beginBtn").disabled = campaign.teamSelection.length!==TEAM_SIZE;
+  const {m,r}=teamRoleCounts(campaign.teamSelection);
+  // Group by role for clarity.
+  const melees = unlocked.filter(isMeleeClass);
+  const ranged = unlocked.filter(isRangedClass);
+  const section = (label, list, roleFull) => {
+    const h=document.createElement("div"); h.className="ipick-h"; h.textContent=label; root.appendChild(h);
+    for(const cls of list){
+      const c=CLASSES[cls];
+      const picked=campaign.teamSelection.includes(cls);
+      const disabled = !picked && roleFull;
+      const btn=document.createElement("button");
+      btn.className="ipick"+(picked?" sel":"")+(disabled?" cant":"");
+      btn.innerHTML=`<span class="ipgly">${c.sym}</span><span class="ipname">${c.name}</span>`;
+      btn.disabled=disabled;
+      btn.onclick=()=>toggleTeamPick(cls);
+      root.appendChild(btn);
+    }
+  };
+  section(`Melee — ${m}/${TEAM_MELEE} (front line)`, melees, m>=TEAM_MELEE);
+  section(`Ranged — ${r}/${TEAM_RANGED} (back corner)`, ranged, r>=TEAM_RANGED);
+  document.getElementById("intCount").textContent = `${campaign.teamSelection.length}/${TEAM_SIZE} (${m} melee · ${r} ranged)`;
+  document.getElementById("beginBtn").disabled = !teamIsValid(campaign.teamSelection);
 }
 function toggleTeamPick(cls){
   const i=campaign.teamSelection.indexOf(cls);
-  if(i>=0) campaign.teamSelection.splice(i,1);
-  else if(campaign.teamSelection.length<TEAM_SIZE) campaign.teamSelection.push(cls);
+  if(i>=0){ campaign.teamSelection.splice(i,1); }
+  else {
+    const {m,r}=teamRoleCounts(campaign.teamSelection);
+    if(isMeleeClass(cls)  && m>=TEAM_MELEE)  return; // role cap hit
+    if(isRangedClass(cls) && r>=TEAM_RANGED) return;
+    campaign.teamSelection.push(cls);
+  }
   renderTeamPicker();
 }
 function cancelMission(){
@@ -815,10 +847,14 @@ function renderDraft(){
   const taken=new Set(); for(const cls of draft.A) taken.add(cls+":A"); for(const cls of draft.B) taken.add(cls+":B");
   const takenAll=draftedSet();
   const inCampaign=!!campaign.currentMission;
+  const aCounts = teamRoleCounts(draft.A);
+  const aMeleeFull = aCounts.m>=TEAM_MELEE;
+  const aRangedFull = aCounts.r>=TEAM_RANGED;
   for(const el of document.querySelectorAll("#draftRoster .rcard")){
     const cls=el.dataset.cls;
     el.className="rcard";
     const lockedInCampaign = inCampaign && !campaign.unlocked.has(cls);
+    const roleFull = (isMeleeClass(cls) && aMeleeFull) || (isRangedClass(cls) && aRangedFull);
     if(takenAll.has(cls)){
       const by=draft.A.includes(cls)?"A":"B";
       el.classList.add("taken","by-"+by);
@@ -827,6 +863,8 @@ function renderDraft(){
       el.classList.add("cant"); el.dataset.by="🔒";
     } else if(phase!=="draft" || currentPicker()!=="A" || busy){
       el.classList.add("cant");
+    } else if(roleFull){
+      el.classList.add("cant"); el.dataset.by=isMeleeClass(cls)?"M✓":"R✓";
     }
   }
   // team slots
@@ -852,6 +890,9 @@ function onDraftPick(cls){
   if(currentPicker()!=="A") return;
   if(draftedSet().has(cls)) return;
   if(campaign.currentMission && !campaign.unlocked.has(cls)) return;
+  const {m,r}=teamRoleCounts(draft.A);
+  if(isMeleeClass(cls)  && m>=TEAM_MELEE)  return; // 3-melee cap
+  if(isRangedClass(cls) && r>=TEAM_RANGED) return; // 2-ranged cap
   doPick("A",cls);
 }
 function doPick(player,cls){
@@ -869,16 +910,16 @@ function advanceDraft(){
 }
 function aiDraftPick(){
   const taken=draftedSet();
+  const {m,r}=teamRoleCounts(draft.B);
+  const valid = cls => !taken.has(cls)
+    && !(isMeleeClass(cls)  && m>=TEAM_MELEE)
+    && !(isRangedClass(cls) && r>=TEAM_RANGED);
   let cls=null;
   if(campaign.currentMission){
-    // walk the mission's priority list, picking the first untaken hero
-    for(const c of campaign.currentMission.aiPool){
-      if(!taken.has(c)){ cls=c; break; }
-    }
-    // fallback: any untaken active hero
-    if(!cls){ const pool=ROSTER.filter(c=>!taken.has(c)); cls=pool[Math.floor(Math.random()*pool.length)]; }
+    for(const c of campaign.currentMission.aiPool){ if(valid(c)){ cls=c; break; } }
+    if(!cls){ const pool=ROSTER.filter(valid); cls=pool[Math.floor(Math.random()*pool.length)]; }
   } else {
-    const pool=ROSTER.filter(c=>!taken.has(c));
+    const pool=ROSTER.filter(valid);
     cls=pool[Math.floor(Math.random()*pool.length)];
   }
   doPick("B",cls);
@@ -894,35 +935,37 @@ function finishDraft(){
   finishDeploy();
 }
 
-/* ---------- deploy helpers (auto-placement only — no interactive deploy phase) ---------- */
-function deployRowsFor(o){ return o==="A"?[2,3]:[0,1]; }
+/* ---------- deploy helpers (corner-L formation, role-shuffled placement) ----------
+   A is bottom-left, B is top-right (their view: opponent in the top-right corner).
+   Each side fields 3 melee in front and 2 ranged in the corner back:
+
+       .  .  .  B  B     ← B back (ranged)
+       .  .  B  B  B     ← B front (melee)
+       A  A  A  .  .     ← A front (melee)
+       A  A  .  .  .     ← A back (ranged)
+
+   Melee heroes are shuffled across the 3 melee slots; ranged across the 2 ranged slots.
+   All A units face N (toward B); all B units face S (toward A).
+*/
+const FORMATION = {
+  A: { melee: [{r:2,c:0},{r:2,c:1},{r:2,c:2}], ranged: [{r:3,c:0},{r:3,c:1}] },
+  B: { melee: [{r:1,c:2},{r:1,c:3},{r:1,c:4}], ranged: [{r:0,c:3},{r:0,c:4}] }
+};
 function deployFacing(o){ return o==="A"?"N":"S"; }
-function freeDeployTiles(o){
-  const tiles=[]; for(const r of deployRowsFor(o)) for(let c=0;c<C;c++) if(!board[r][c].unit) tiles.push({r,c});
-  return tiles;
-}
 function placeDeployedUnit(owner,cls,r,c){
   const u=newUnit(owner,cls,r,c,deployFacing(owner));
   place(u); heroes[owner].push(u);
   unplaced[owner]=unplaced[owner].filter(x=>x!==cls);
 }
-// Place every unit of `side` in a default formation: highest-range units to the back row,
-// melee to the front, biased toward the center column.
 function autoPlaceAllFor(side){
-  const backRow  = side==="A"?3:0;
-  const frontRow = side==="A"?2:1;
-  // Sort placement order so longest-range units go first (claim back-row center tiles).
-  const order = unplaced[side].slice().sort((a,b)=>{
-    const ca=CLASSES[a], cb=CLASSES[b];
-    return (cb.range-ca.range) || (cb.hp-ca.hp);
-  });
-  for(const cls of order){
-    const c=CLASSES[cls];
-    const free=freeDeployTiles(side); if(!free.length) break;
-    const targetRow = c.range>=2 ? backRow : frontRow;
-    free.sort((x,y)=> Math.abs(targetRow-x.r)-Math.abs(targetRow-y.r) || Math.abs((C-1)/2-x.c)-Math.abs((C-1)/2-y.c));
-    const t=free[0];
-    placeDeployedUnit(side,cls,t.r,t.c);
+  const melees = shuffle(unplaced[side].filter(isMeleeClass));
+  const ranged = shuffle(unplaced[side].filter(isRangedClass));
+  const slots  = FORMATION[side];
+  for(let i=0;i<slots.melee.length && i<melees.length;i++){
+    const t=slots.melee[i]; placeDeployedUnit(side, melees[i], t.r, t.c);
+  }
+  for(let i=0;i<slots.ranged.length && i<ranged.length;i++){
+    const t=slots.ranged[i]; placeDeployedUnit(side, ranged[i], t.r, t.c);
   }
 }
 function finishDeploy(){
