@@ -294,7 +294,7 @@
   <h3>Rules</h3>
   <ul>
     <li><b>Win:</b> defeat all enemy heroes (5v5 — both sides field 5 drafted heroes).</li>
-    <li><b>Initiative deck:</b> each round, each side builds their own deck — every living unit contributes <i>Init</i> copies of itself (slow units: 1, normal: 2, fast: 3). Decks are shuffled. Sides alternate drawing one token at a time; whoever draws acts. Round ends when both decks are empty.</li>
+    <li><b>Initiative:</b> each round, every living unit contributes <i>Init</i> tokens to its side's deck (slow: 2, normal: 3, fast: 4). Both decks shuffle, then interleave starting with whoever has the initiative token this round — the full sequence is laid out face-up in the bar above the board. No hidden draws; you can see every upcoming activation. Round ends when the sequence is exhausted; initiative token flips for the next round.</li>
     <li><b>Facing:</b> attacks from the SIDE deal ×1.5, REAR ×2 (Assassin: ×2 / ×2.5).</li>
     <li><b>Terrain:</b> ▲ high ground gives +1 ATK while standing on it.</li>
     <li><b>Cards:</b> start with 3 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
@@ -980,59 +980,55 @@ function finishDeploy(){
   promptOrAi();
 }
 
-/* ---------- round / initiative (deck-based) ---------- */
-// Each round, every living unit puts `init` cards into its side's Initiative deck. Decks shuffle
-// independently. Sides alternate drawing one card; whoever drew last switches to the other side.
-// If a side's deck runs out, the other side keeps drawing until empty. Then the round ends.
-let initDeckA=[], initDeckB=[], initSide="A";
-function buildInitDecks(){
-  initDeckA=[]; initDeckB=[];
+/* ---------- round / initiative (pre-computed interleaved order, face-up) ----------
+   Both sides shuffle their init tokens at round start. Tokens are then interleaved into a
+   single deterministic sequence — initOrder — that we expose to the player so they can see
+   every upcoming activation. IRL the two decks would sit face-up beside each other; here
+   we just show the merged list.
+*/
+let initOrder=[], initPos=0;
+function buildInitOrder(startingSide){
+  // Per-side shuffled decks (token = unit id, count = unit.init)
+  let deckA=[], deckB=[];
   for(const u of units){
     if(u.hp<=0) continue;
-    const deck = u.owner==="A" ? initDeckA : initDeckB;
+    const deck = u.owner==="A" ? deckA : deckB;
     const n = u.init || 2;
     for(let i=0;i<n;i++) deck.push(u.id);
   }
-  shuffle(initDeckA); shuffle(initDeckB);
+  shuffle(deckA); shuffle(deckB);
+  // Interleave: alternate sides starting from startingSide; when one is exhausted, drain the other.
+  initOrder=[]; let side=startingSide;
+  while(deckA.length || deckB.length){
+    const cur = side==="A" ? deckA : deckB;
+    if(cur.length) initOrder.push(cur.shift());
+    side = side==="A" ? "B" : "A";
+  }
+  initPos = 0;
 }
 function startRound(){
   roundNum++;
   for(const u of units){ u.hasMoved=false; u.hasActed=false; u.bonusAtkRound=0; u.bonusMoveTurn=0; u.vuln=0; }
   acted=new Set();
-  buildInitDecks();
-  initSide = initiativeToken;
-  // alternate the starting side each round
-  initiativeToken = initiativeToken==="A" ? "B" : "A";
+  const startingSide = initiativeToken;       // who draws first this round
+  initiativeToken = startingSide==="A" ? "B" : "A"; // and flip for next round
+  buildInitOrder(startingSide);
   advance();
 }
 function advance(){
-  // draw an init card; skip side if its deck is empty; start new round if both are empty
-  while(true){
-    let deck = initSide==="A" ? initDeckA : initDeckB;
-    if(deck.length===0){
-      const otherDeck = initSide==="A" ? initDeckB : initDeckA;
-      if(otherDeck.length===0){
-        // both sides exhausted → new round
-        activeId=null;
-        if(!over) startRound();
-        return;
-      }
-      initSide = initSide==="A" ? "B" : "A";
-      continue;
-    }
-    const unitId = deck.shift();
-    const u = units.find(x=>x.id===unitId);
-    if(!u || u.hp<=0) continue; // skip dead units' tokens
+  // Pop the next live token. Dead-unit tokens are silently skipped.
+  while(initPos < initOrder.length){
+    const id = initOrder[initPos++];
+    const u = units.find(x=>x.id===id);
+    if(!u || u.hp<=0) continue;
     activeId = u.id;
     u.hasMoved=false; u.hasActed=false; u.bonusMoveTurn=0;
     sel=null;
     return;
   }
-}
-function pendingUnits(){
-  // units whose init token is still in either deck (excluding dead)
-  const ids = new Set([...initDeckA, ...initDeckB]);
-  return units.filter(u=>u.hp>0 && ids.has(u.id));
+  // Sequence exhausted → next round
+  activeId=null;
+  if(!over) startRound();
 }
 function endActiveTurn(){
   const u=activeUnit();
@@ -1042,8 +1038,7 @@ function endActiveTurn(){
     const p=players[u.owner];
     if(p.deck.length) p.hand.push(p.deck.pop());
   }
-  // alternate sides for the next draw
-  initSide = initSide==="A" ? "B" : "A";
+  // initOrder dictates the full round order — no per-turn side flip needed.
   activeId=null; sel=null; lastMove=null;
   if(over) return;
   advance(); render(); promptOrAi();
@@ -1869,23 +1864,19 @@ function computeHl(){
     if(u.heal) for(const a of healablyAdjacent(u)) board[a.r][a.c]._hl="heal"; }
 }
 function renderInit(){
+  // Public, face-up round order: every upcoming activation is shown in sequence. Past
+  // activations (including dead-unit skips) dim out; the current one highlights.
   const el=document.getElementById("init"); el.innerHTML="";
   const lbl=document.createElement("span"); lbl.className="lbl"; lbl.textContent="R"+roundNum; el.appendChild(lbl);
-  const tok=document.createElement("span"); tok.className="ichip "+initSide;
-  tok.innerHTML=`◆<span class="spd">init</span>`; el.appendChild(tok);
-  // Count remaining init tokens per unit
-  const counts={};
-  for(const id of initDeckA) counts[id]=(counts[id]||0)+1;
-  for(const id of initDeckB) counts[id]=(counts[id]||0)+1;
-  // Show alive units with remaining-init counter; active highlighted
-  const sorted = units.filter(u=>u.hp>0).slice().sort((a,b)=>a.owner.localeCompare(b.owner));
-  for(const u of sorted){
-    const rem = counts[u.id] || 0;
-    const isActive = u.id===activeId;
-    const done = rem===0 && !isActive;
+  for(let i=0;i<initOrder.length;i++){
+    const u = units.find(x=>x.id===initOrder[i]);
+    if(!u) continue;
+    const isActive = (i === initPos-1) && (u.id===activeId);
+    const isPast = i < initPos && !isActive;
+    const isDead = u.hp<=0;
     const c=document.createElement("span");
-    c.className="ichip "+u.owner+(isActive?" active":"")+(done?" acted":"");
-    c.innerHTML=`${u.sym}<span class="spd">${isActive?"now":rem}</span>`;
+    c.className="ichip "+u.owner+(isActive?" active":"")+(isPast||isDead?" acted":"");
+    c.innerHTML = `${u.sym}` + (isActive ? `<span class="spd">now</span>` : "");
     el.appendChild(c);
   }
 }
