@@ -101,15 +101,17 @@
 
   #hand{display:flex; flex-direction:column; gap:4px; padding:2px; max-height:300px; overflow-y:auto;}
   .card{background:#262a33; border:1px solid var(--line); border-radius:8px;
-    display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center;
+    display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start;
     padding:6px 8px 6px 10px; position:relative; cursor:pointer; user-select:none;}
-  .card .csym{font-size:18px; line-height:1;}
-  .card .ctext{display:flex; flex-direction:column; gap:1px; min-width:0;}
-  .card .ctop{display:flex; gap:6px; align-items:baseline;}
+  .card .csym{font-size:18px; line-height:1; padding-top:1px;}
+  .card .ctext{display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .card .ctop{display:flex; gap:6px; align-items:baseline; flex-wrap:wrap;}
   .card .cname{font-size:12.5px; font-weight:700; color:#fff;}
-  .card .ctag{font-size:8.5px; color:var(--dim); letter-spacing:.5px; font-weight:700;}
+  .card .cowner{font-size:10.5px; color:#d4a574; font-weight:600;}
+  .card .ctag{font-size:8.5px; color:var(--dim); letter-spacing:.5px; font-weight:700; margin-left:auto;}
   .card .ceff{font-size:10.5px; color:#c8cad2; line-height:1.35;}
-  .card .cowner{font-size:14px; opacity:.7; line-height:1;}
+  .card .cassist{font-size:10.5px; color:#c8cad2; line-height:1.35;}
+  .card .cassist b{color:#d4a574;}
   .card.sel{border-color:var(--hi); box-shadow:0 0 0 2px var(--hi);}
   .card.cant{opacity:.4;}
   .card.dead-src{filter:grayscale(1) brightness(.55);}
@@ -117,7 +119,7 @@
   .card.discard-pick{outline:2px solid #c14a3a; outline-offset:-2px; background:rgba(193,74,58,.18); opacity:1;}
   .card.discard-pick::before{content:"DISCARD"; position:absolute; top:3px; right:8px; font-size:8px; font-weight:800; letter-spacing:1px; color:#e8584d; background:#0c0d11; padding:1px 4px; border-radius:3px; z-index:2;}
   .btn.active{background:var(--gold); color:#0c0d11;}
-  .card.tier-S{border-left:3px solid #6a6e78;}
+  .card.tier-C{border-left:3px solid #6a6e78;}
   .card.tier-E{border-left:3px solid #b878ff;}
   .card.tier-E .csym{color:#d6bcff;}
   .card.tier-L{border-left:3px solid var(--gold); background:linear-gradient(165deg,#2a241a 0%,#1c1f24 65%);}
@@ -147,7 +149,9 @@
   #codex .cdx-card .cdx-cat{color:var(--dim); font-size:10px;}
   #codex .cdx-card .cdx-name{color:#fff;}
   #codex .cdx-card .cdx-eff{color:var(--dim); font-size:10px; grid-column:1/-1; padding-left:24px;}
-  #codex .cdx-card.tier-S{border-left-color:#6a6e78;}
+  #codex .cdx-card .cdx-assist{display:inline-block; margin-top:1px; color:#c8cad2;}
+  #codex .cdx-card .cdx-assist b{color:#d4a574;}
+  #codex .cdx-card.tier-C{border-left-color:#6a6e78;}
   #codex .cdx-card.tier-E{border-left-color:#b878ff;}
   #codex .cdx-card.tier-L{border-left-color:var(--gold);}
   #codex .cdx-card.tier-G{border-left-color:#3fc7c2;}
@@ -665,89 +669,89 @@ const CARDS={
   ============================================================================================ */
 
   /* ⚔️ KNIGHT — pushing frontline */
-  kn_greatsword:{hero:"knight",  tier:"S", kind:"dmg-push",  dmg:3, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Greatsword"},
-  kn_shove:     {hero:"knight",  tier:"S", kind:"push",      push:2, kb:1,        bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Bulwark Shove"},
-  kn_cleave:    {hero:"knight",  tier:"S", kind:"dmg-adj",   dmg:2, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Cleave"},
+  kn_greatsword:{hero:"knight",  tier:"C", kind:"dmg-push",  dmg:3, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Greatsword"},
+  kn_shove:     {hero:"knight",  tier:"C", kind:"push",      push:2, kb:1,        bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Bulwark Shove"},
+  kn_cleave:    {hero:"knight",  tier:"C", kind:"dmg-adj",   dmg:2, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Cleave"},
   kn_hammer:    {hero:"knight",  tier:"E", kind:"dmg",       dmg:4,               bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Hammer Down"},
   kn_ironwall:  {hero:"knight",  tier:"E", kind:"push-adj",  push:1, kb:1,        bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Iron Wall"},
   kn_champion:  {hero:"knight",  tier:"L", kind:"dmg-push",  dmg:4, push:1, kb:1, bonus:{kind:"ownerStep", amount:2}, sym:"☄", name:"Champion's Charge"},
 
   /* 🏹 RANGER — knockback ranged */
-  rn_quickshot: {hero:"ranger",  tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"›", name:"Quick Shot"},
-  rn_knockback: {hero:"ranger",  tier:"S", kind:"dmg-push",  dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"➶", name:"Knockback Arrow"},
-  rn_pinning:   {hero:"ranger",  tier:"S", kind:"dmg-pull",  dmg:2, pull:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⫯", name:"Pinning Shot"},
+  rn_quickshot: {hero:"ranger",  tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"›", name:"Quick Shot"},
+  rn_knockback: {hero:"ranger",  tier:"C", kind:"dmg-push",  dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"➶", name:"Knockback Arrow"},
+  rn_pinning:   {hero:"ranger",  tier:"C", kind:"dmg-pull",  dmg:2, pull:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⫯", name:"Pinning Shot"},
   rn_longbow:   {hero:"ranger",  tier:"E", kind:"dmg",       dmg:4,               bonus:{kind:"ownerStep", amount:1}, sym:"➶", name:"Longbow"},
   rn_volley:    {hero:"ranger",  tier:"E", kind:"dmg-adj",   dmg:2, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⋮", name:"Volley"},
   rn_pierce:    {hero:"ranger",  tier:"L", kind:"dmg-push",  dmg:4, push:1, kb:2, bonus:{kind:"ownerStrike",amount:1}, sym:"✸", name:"Piercing Arrow"},
 
   /* 🔮 MAGE — AoE + pulls (blink theme on bonus) */
-  mg_spark:     {hero:"mage",    tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Spark"},
-  mg_frostpull: {hero:"mage",    tier:"S", kind:"dmg-pull",  dmg:2, pull:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"❄", name:"Frost Pull"},
-  mg_arcane:    {hero:"mage",    tier:"S", kind:"dmg-adj",   dmg:2, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Arcane Blast"},
+  mg_spark:     {hero:"mage",    tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Spark"},
+  mg_frostpull: {hero:"mage",    tier:"C", kind:"dmg-pull",  dmg:2, pull:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"❄", name:"Frost Pull"},
+  mg_arcane:    {hero:"mage",    tier:"C", kind:"dmg-adj",   dmg:2, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Arcane Blast"},
   mg_fireball:  {hero:"mage",    tier:"E", kind:"dmg-adj",   dmg:3, splash:2,     bonus:{kind:"ownerStep", amount:1}, sym:"🔥", name:"Fireball"},
   mg_gravity:   {hero:"mage",    tier:"E", kind:"pull",      pull:2, kb:1,        bonus:{kind:"ownerStep", amount:2}, sym:"⚙", name:"Gravity Well"},
   mg_meteor:    {hero:"mage",    tier:"L", kind:"dmg-adj",   dmg:4, splash:2,     bonus:{kind:"ownerStep", amount:2}, sym:"☄", name:"Meteor"},
 
   /* 🪓 BERSERKER — heavy hits + push */
-  br_axe:       {hero:"berserker",tier:"S", kind:"dmg",      dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Battle Axe"},
-  br_smash:     {hero:"berserker",tier:"S", kind:"dmg-push", dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Smash"},
-  br_whirl:     {hero:"berserker",tier:"S", kind:"dmg-adj",  dmg:3, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Whirlwind"},
+  br_axe:       {hero:"berserker",tier:"C", kind:"dmg",      dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Battle Axe"},
+  br_smash:     {hero:"berserker",tier:"C", kind:"dmg-push", dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Smash"},
+  br_whirl:     {hero:"berserker",tier:"C", kind:"dmg-adj",  dmg:3, splash:1,     bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Whirlwind"},
   br_rend:      {hero:"berserker",tier:"E", kind:"dmg",      dmg:4,               bonus:{kind:"ownerStep", amount:1}, sym:"✸", name:"Rend"},
   br_bloodyrush:{hero:"berserker",tier:"E", kind:"dmg-push", dmg:3, push:1, kb:1, bonus:{kind:"ownerStrike",amount:1}, sym:"»", name:"Bloody Rush"},
   br_thirster:  {hero:"berserker",tier:"L", kind:"dmg",      dmg:6,               bonus:{kind:"ownerStrike",amount:2}, sym:"⚑", name:"Bloodthirster"},
 
   /* 🛡️ PALADIN — heal + defensive push */
-  pl_smite:     {hero:"paladin", tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerHeal", amount:1}, sym:"✸", name:"Smite"},
-  pl_holyword:  {hero:"paladin", tier:"S", kind:"heal",      amount:3,            bonus:{kind:"ownerHeal", amount:1}, sym:"✚", name:"Holy Word"},
-  pl_pushback:  {hero:"paladin", tier:"S", kind:"dmg-push",  dmg:1, push:1, kb:2, bonus:{kind:"ownerHeal", amount:1}, sym:"⛨", name:"Pushback"},
+  pl_smite:     {hero:"paladin", tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerHeal", amount:1}, sym:"✸", name:"Smite"},
+  pl_holyword:  {hero:"paladin", tier:"C", kind:"heal",      amount:3,            bonus:{kind:"ownerHeal", amount:1}, sym:"✚", name:"Holy Word"},
+  pl_pushback:  {hero:"paladin", tier:"C", kind:"dmg-push",  dmg:1, push:1, kb:2, bonus:{kind:"ownerHeal", amount:1}, sym:"⛨", name:"Pushback"},
   pl_loh:       {hero:"paladin", tier:"E", kind:"heal",      amount:5,            bonus:{kind:"ownerHeal", amount:1}, sym:"+", name:"Lay on Hands"},
   pl_consec:    {hero:"paladin", tier:"E", kind:"dmg-adj",   dmg:3, splash:1,     bonus:{kind:"ownerHeal", amount:1}, sym:"☄", name:"Consecration"},
   pl_wrath:     {hero:"paladin", tier:"L", kind:"dmg-adj",   dmg:4, splash:2,     bonus:{kind:"ownerHeal", amount:2}, sym:"☼", name:"Divine Wrath"},
 
   /* 🩸 WARLOCK — pulls + drain */
-  wl_hex:       {hero:"warlock", tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerDrain",amount:1}, sym:"⚔", name:"Hex"},
-  wl_tether:    {hero:"warlock", tier:"S", kind:"dmg-pull",  dmg:1, pull:2, kb:1, bonus:{kind:"ownerDrain",amount:1}, sym:"⫯", name:"Soul Tether"},
-  wl_athame:    {hero:"warlock", tier:"S", kind:"dmg-pull",  dmg:2, pull:1, kb:1, bonus:{kind:"ownerDrain",amount:1}, sym:"⚔", name:"Athame"},
+  wl_hex:       {hero:"warlock", tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerDrain",amount:1}, sym:"⚔", name:"Hex"},
+  wl_tether:    {hero:"warlock", tier:"C", kind:"dmg-pull",  dmg:1, pull:2, kb:1, bonus:{kind:"ownerDrain",amount:1}, sym:"⫯", name:"Soul Tether"},
+  wl_athame:    {hero:"warlock", tier:"C", kind:"dmg-pull",  dmg:2, pull:1, kb:1, bonus:{kind:"ownerDrain",amount:1}, sym:"⚔", name:"Athame"},
   wl_drain:     {hero:"warlock", tier:"E", kind:"dmg-self-heal", dmg:4, heal:2,   bonus:{kind:"ownerHeal", amount:1}, sym:"🩸", name:"Drain Soul"},
   wl_pulse:     {hero:"warlock", tier:"E", kind:"dmg-adj",   dmg:2, splash:1,     bonus:{kind:"ownerDrain",amount:2}, sym:"❦", name:"Pulse of Decay"},
   wl_blast:     {hero:"warlock", tier:"L", kind:"dmg",       dmg:6,               bonus:{kind:"ownerDrain",amount:2}, sym:"☠", name:"Eldritch Blast"},
 
   /* 🌿 DRUID — heals + plant pulls */
-  dr_thorns:    {hero:"druid",   tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerHeal", amount:1}, sym:"❦", name:"Thorns"},
-  dr_entangle:  {hero:"druid",   tier:"S", kind:"dmg-pull",  dmg:1, pull:1, kb:1, bonus:{kind:"ownerHeal", amount:1}, sym:"⋮", name:"Entangle"},
-  dr_mend:      {hero:"druid",   tier:"S", kind:"heal",      amount:3,            bonus:{kind:"ownerHeal", amount:1}, sym:"✚", name:"Mend"},
+  dr_thorns:    {hero:"druid",   tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerHeal", amount:1}, sym:"❦", name:"Thorns"},
+  dr_entangle:  {hero:"druid",   tier:"C", kind:"dmg-pull",  dmg:1, pull:1, kb:1, bonus:{kind:"ownerHeal", amount:1}, sym:"⋮", name:"Entangle"},
+  dr_mend:      {hero:"druid",   tier:"C", kind:"heal",      amount:3,            bonus:{kind:"ownerHeal", amount:1}, sym:"✚", name:"Mend"},
   dr_regrowth:  {hero:"druid",   tier:"E", kind:"heal",      amount:4,            bonus:{kind:"ownerHeal", amount:1}, sym:"✚", name:"Regrowth"},
   dr_sunbeam:   {hero:"druid",   tier:"E", kind:"dmg-adj",   dmg:3, splash:1,     bonus:{kind:"ownerHeal", amount:1}, sym:"☼", name:"Sunbeam"},
   dr_livingwood:{hero:"druid",   tier:"L", kind:"heal-all",  amount:3,            bonus:{kind:"ownerHeal", amount:2}, sym:"⚑", name:"Living Wood"},
 
   /* 👁️ SCOUT — dashes */
-  sc_shortbow:  {hero:"scout",   tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Shortbow"},
-  sc_dart:      {hero:"scout",   tier:"S", kind:"dmg-push",  dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"›", name:"Dart"},
-  sc_vanish:    {hero:"scout",   tier:"S", kind:"dash",      dash:2,              bonus:{kind:"ownerStep", amount:1}, sym:"≈", name:"Vanish"},
+  sc_shortbow:  {hero:"scout",   tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Shortbow"},
+  sc_dart:      {hero:"scout",   tier:"C", kind:"dmg-push",  dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"›", name:"Dart"},
+  sc_vanish:    {hero:"scout",   tier:"C", kind:"dash",      dash:2,              bonus:{kind:"ownerStep", amount:1}, sym:"≈", name:"Vanish"},
   sc_snipe:     {hero:"scout",   tier:"E", kind:"dmg",       dmg:4,               bonus:{kind:"ownerStep", amount:1}, sym:"✸", name:"Snipe"},
   sc_pathfinder:{hero:"scout",   tier:"E", kind:"dash",      dash:3,              bonus:{kind:"ownerStep", amount:1}, sym:"»", name:"Pathfinder"},
   sc_markprey:  {hero:"scout",   tier:"L", kind:"dmg",       dmg:5,               bonus:{kind:"ownerStep", amount:2}, sym:"◉", name:"Mark Prey"},
 
   /* 🗡️ ASSASSIN — single-target burst + swap */
-  as_dagger:    {hero:"assassin",tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Dagger"},
-  as_stab:      {hero:"assassin",tier:"S", kind:"dmg",       dmg:4,               bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Vicious Stab"},
-  as_shadowstep:{hero:"assassin",tier:"S", kind:"swap",                           bonus:{kind:"ownerStep", amount:1}, sym:"≈", name:"Shadow Step"},
+  as_dagger:    {hero:"assassin",tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Dagger"},
+  as_stab:      {hero:"assassin",tier:"C", kind:"dmg",       dmg:4,               bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Vicious Stab"},
+  as_shadowstep:{hero:"assassin",tier:"C", kind:"swap",                           bonus:{kind:"ownerStep", amount:1}, sym:"≈", name:"Shadow Step"},
   as_backstab:  {hero:"assassin",tier:"E", kind:"dmg",       dmg:5,               bonus:{kind:"ownerStep", amount:1}, sym:"✸", name:"Backstab"},
   as_deathmark: {hero:"assassin",tier:"E", kind:"dmg-pull",  dmg:3, pull:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚑", name:"Death Mark"},
   as_strike:    {hero:"assassin",tier:"L", kind:"dmg",       dmg:7,               bonus:{kind:"ownerStep", amount:2}, sym:"☠", name:"Shadow Strike"},
 
   /* 🏰 SENTINEL — AoE push, heavy tank */
-  sn_halberd:   {hero:"sentinel",tier:"S", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Halberd"},
-  sn_bash:      {hero:"sentinel",tier:"S", kind:"dmg-push",  dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Bash"},
-  sn_walloff:   {hero:"sentinel",tier:"S", kind:"push-adj",  push:1, kb:1,        bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Wall of Force"},
+  sn_halberd:   {hero:"sentinel",tier:"C", kind:"dmg",       dmg:3,               bonus:{kind:"ownerStep", amount:1}, sym:"⚔", name:"Halberd"},
+  sn_bash:      {hero:"sentinel",tier:"C", kind:"dmg-push",  dmg:2, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Bash"},
+  sn_walloff:   {hero:"sentinel",tier:"C", kind:"push-adj",  push:1, kb:1,        bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Wall of Force"},
   sn_stonesmash:{hero:"sentinel",tier:"E", kind:"dmg-push",  dmg:3, push:1, kb:1, bonus:{kind:"ownerStep", amount:1}, sym:"⚒", name:"Stone Smash"},
   sn_holdline:  {hero:"sentinel",tier:"E", kind:"push",      push:2, kb:2,        bonus:{kind:"ownerStep", amount:1}, sym:"⛨", name:"Hold the Line"},
   sn_lastkeep:  {hero:"sentinel",tier:"L", kind:"push-adj",  push:2, kb:2,        bonus:{kind:"ownerHeal", amount:2}, sym:"⚑", name:"Last Keep"},
 
   /* 💀 NECROMANCER — pull, drain, AoE */
-  nc_wand:      {hero:"necromancer",tier:"S", kind:"dmg",     dmg:3,              bonus:{kind:"ownerDrain",amount:1}, sym:"⚔", name:"Bone Wand"},
-  nc_grasp:     {hero:"necromancer",tier:"S", kind:"dmg-pull",dmg:1, pull:1, kb:1,bonus:{kind:"ownerDrain",amount:1}, sym:"⫯", name:"Withering Grasp"},
-  nc_shroud:    {hero:"necromancer",tier:"S", kind:"dmg-adj", dmg:2, splash:1,    bonus:{kind:"ownerDrain",amount:1}, sym:"⛨", name:"Grave Shroud"},
+  nc_wand:      {hero:"necromancer",tier:"C", kind:"dmg",     dmg:3,              bonus:{kind:"ownerDrain",amount:1}, sym:"⚔", name:"Bone Wand"},
+  nc_grasp:     {hero:"necromancer",tier:"C", kind:"dmg-pull",dmg:1, pull:1, kb:1,bonus:{kind:"ownerDrain",amount:1}, sym:"⫯", name:"Withering Grasp"},
+  nc_shroud:    {hero:"necromancer",tier:"C", kind:"dmg-adj", dmg:2, splash:1,    bonus:{kind:"ownerDrain",amount:1}, sym:"⛨", name:"Grave Shroud"},
   nc_corpse:    {hero:"necromancer",tier:"E", kind:"dmg-self-heal", dmg:3, heal:2,bonus:{kind:"ownerHeal", amount:1}, sym:"💀", name:"Corpse Feast"},
   nc_gravepull: {hero:"necromancer",tier:"E", kind:"pull",    pull:2, kb:2,       bonus:{kind:"ownerDrain",amount:1}, sym:"⫯", name:"Grave Pull"},
   nc_reaper:    {hero:"necromancer",tier:"L", kind:"dmg-pull",dmg:4, pull:1, kb:1,bonus:{kind:"ownerDrain",amount:2}, sym:"☠", name:"Reaper's Scythe"},
@@ -1738,33 +1742,44 @@ function bestStep(u,goal){ const tiles=reachable(u); if(!tiles.length) return nu
 }
 
 /* ---------- codex ---------- */
+function cardMainText(c){
+  switch(c.kind){
+    case "dmg": return `${c.dmg} dmg to enemy`;
+    case "dmg-adj": return `${c.dmg} dmg to enemy + ${c.splash} splash to adjacent enemies`;
+    case "dmg-self-heal": return `${c.dmg} dmg to enemy; caster heals ${c.heal} HP`;
+    case "dmg-push": return `${c.dmg} dmg + push ${c.push||1}${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
+    case "dmg-pull": return `${c.dmg} dmg + pull ${c.pull||1} toward caster${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
+    case "push": return `push enemy ${c.push||1} tiles away${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
+    case "pull": return `pull enemy ${c.pull||1} tiles toward caster${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
+    case "push-adj": return `push every enemy adjacent to caster ${c.push||1} tiles${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
+    case "dash": return `caster teleports to any empty tile within ${c.dash||1} (ignores blockers)`;
+    case "swap": return `caster swaps places with a target ally`;
+    case "heal": return `heal ally +${c.amount}`;
+    case "heal-all": return `heal all allies +${c.amount}`;
+  }
+  return c.kind;
+}
+// Returns {ownerName, action} for the owner-assist bonus, or null if the card has no assist.
+function cardAssistInfo(c){
+  if(!c.bonus || c.hero==="sigil") return null;
+  const owner = CLASSES[c.hero]; if(!owner) return null;
+  const b=c.bonus, amt=b.amount||1;
+  const action = b.kind==="ownerStep"   ? `steps ${amt} toward nearest enemy`
+               : b.kind==="ownerHeal"   ? `heals ${amt} HP`
+               : b.kind==="ownerStrike" ? `strikes adjacent enemy for ${amt}`
+               : b.kind==="ownerDrain"  ? `drains ${amt} from adjacent enemy`
+               : "";
+  return action ? {ownerName: owner.name, action} : null;
+}
+function cardAssistHTML(c){
+  const info = cardAssistInfo(c); if(!info) return "";
+  return `<b>${info.ownerName}</b> ${info.action}.`;
+}
+// Codex / backward-compat: main effect + assist on one line (HTML)
 function cardEffText(c){
-  const main = (()=>{
-    switch(c.kind){
-      case "dmg": return `${c.dmg} dmg to enemy`;
-      case "dmg-adj": return `${c.dmg} dmg to enemy + ${c.splash} splash to adjacent enemies`;
-      case "dmg-self-heal": return `${c.dmg} dmg to enemy; caster heals ${c.heal} HP`;
-      case "dmg-push": return `${c.dmg} dmg + push ${c.push||1}${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
-      case "dmg-pull": return `${c.dmg} dmg + pull ${c.pull||1} toward caster${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
-      case "push": return `push enemy ${c.push||1} tiles away${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
-      case "pull": return `pull enemy ${c.pull||1} tiles toward caster${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
-      case "push-adj": return `push every enemy adjacent to caster ${c.push||1} tiles${c.kb?` (${c.kb} impact dmg if blocked)`:""}`;
-      case "dash": return `caster teleports to any empty tile within ${c.dash||1} (ignores blockers)`;
-      case "swap": return `caster swaps places with a target ally`;
-      case "heal": return `heal ally +${c.amount}`;
-      case "heal-all": return `heal all allies +${c.amount}`;
-    }
-    return c.kind;
-  })();
-  if(!c.bonus) return main;
-  const b=c.bonus, owner=CLASSES[c.hero];
-  const ownerName = owner ? owner.name : "owner";
-  const bonusText = b.kind==="ownerStep"   ? `${ownerName} steps ${b.amount||1} toward nearest enemy`
-                  : b.kind==="ownerHeal"   ? `${ownerName} heals ${b.amount||1} HP`
-                  : b.kind==="ownerStrike" ? `${ownerName} strikes adjacent enemy for ${b.amount||1}`
-                  : b.kind==="ownerDrain"  ? `${ownerName} drains ${b.amount||1} from adjacent enemy`
-                  : "";
-  return bonusText ? `${main}. Assist: ${bonusText}.` : main;
+  const main = cardMainText(c);
+  const assist = cardAssistHTML(c);
+  return assist ? `${main}<br><span class="cdx-assist">${assist}</span>` : main;
 }
 function buildCodex(){
   const root=document.getElementById("cdxCards"); if(!root||root.dataset.built) return;
@@ -1776,7 +1791,7 @@ function buildCodex(){
   for(const cls of ROSTER){
     const g=groups[cls]; if(!g.cards.length) continue;
     html+=`<div class="suite"><div class="suite-h">${g.sym} ${g.name} suite — ${g.cards.length} cards</div>`;
-    g.cards.sort((a,b)=>("SEL".indexOf(a.tier))-("SEL".indexOf(b.tier))); // S, E, L order
+    g.cards.sort((a,b)=>("CEL".indexOf(a.tier))-("CEL".indexOf(b.tier))); // Common, Epic, Legendary
     for(const c of g.cards){
       const css="cdx-card tier-"+c.tier;
       const tag = c.tier==="L" ? "Legendary" : c.tier==="E" ? "Epic" : "Common";
@@ -1931,13 +1946,17 @@ function render(){
     const cant = !inCycle && !playable;
     el.className="card tier-"+card.tier+(cant?" cant":"")+(sourceDead?" dead-src":"")+((sel&&sel.t==="card"&&sel.i===i)?" sel":"")+(discardPick?" discard-pick":"");
     const tag = card.tier==="L" ? "LEG" : card.tier==="E" ? "EPIC" : card.tier==="G" ? "SIGIL" : "COM";
-    const heroGlyph = card.hero==="sigil" ? "✦" : (CLASSES[card.hero]?CLASSES[card.hero].sym:"");
-    el.innerHTML=`<span class="csym">${card.sym}</span>`+
+    const ownerCls = CLASSES[card.hero];
+    const ownerLabel = card.hero==="sigil" ? `<span class="cowner">✦ Sigil</span>` :
+                       ownerCls ? `<span class="cowner">${ownerCls.sym} ${ownerCls.name}</span>` : "";
+    const assistHTML = cardAssistHTML(card);
+    el.innerHTML =
+      `<span class="csym">${card.sym}</span>`+
       `<span class="ctext">`+
-        `<span class="ctop"><span class="cname">${card.name}</span><span class="ctag">${tag}</span></span>`+
-        `<span class="ceff">${cardEffText(card)}</span>`+
-      `</span>`+
-      `<span class="cowner">${heroGlyph}</span>`;
+        `<span class="ctop"><span class="cname">${card.name}</span>${ownerLabel}<span class="ctag">${tag}</span></span>`+
+        `<span class="ceff">${cardMainText(card)}</span>`+
+        (assistHTML ? `<span class="cassist">${assistHTML}</span>` : "") +
+      `</span>`;
     el.onclick=()=>onCard(i); h.appendChild(el); });
   const ebtn=document.getElementById("endBtn"); const u=activeUnit();
   ebtn.disabled = over || busy || !u || u.owner!=="A";
@@ -1970,7 +1989,7 @@ function render(){
     const src=CLASSES[card.hero];
     document.getElementById("cdGlyph").textContent=card.sym;
     document.getElementById("cdName").textContent=`${card.name} — ${tag}`;
-    document.getElementById("cdEff").textContent=cardEffText(card);
+    document.getElementById("cdEff").innerHTML=cardEffText(card);
     const castLine = card.hero==="sigil"
       ? `Sigil — any of your units may cast it. Consumes this unit's move <i>and</i> attack; removed from game.`
       : `Owned by ${src.sym} ${src.name} (must be alive to assist). Any of your units may cast — uses the caster's range.`;
