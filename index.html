@@ -315,7 +315,7 @@
     <li><b>Cards:</b> start with 3 in hand, no max. <b>Draw 1 at the end of every turn</b> (yours or the AI's). Each card is one-shot.</li>
     <li><b>Instant only:</b> no buffs, no counters, no lingering effects. Every card resolves entirely this turn — damage, healing, pushes, pulls, dashes, or swaps.</li>
     <li><b>Assist casting:</b> <i>any</i> of your units may cast <i>any</i> card. The card's owner (the hero from whose suite the card came) provides an instant <i>assist</i> — typically a free step, heal, or strike. The owner must be alive and on the board for the assist to fire.</li>
-    <li><b>Sigils:</b> 10 generic action cards (✦) shipped in every deck. Any unit may cast them. <b>Sigils are FREE — they consume neither action nor movement</b>, so you can chain multiple sigils + a hero card + your move all in one turn. Effects are intentionally small; save them for big combo turns. Removed from the game on use; no owner, no assist.</li>
+    <li><b>Sigils:</b> 10 generic action cards (✦) shipped in every deck. Any unit may cast them. <b>Sigils are FREE — they consume neither action nor movement</b>, so you can chain multiple sigils + a hero card + your move all in one turn. They lock once the unit has spent both its move and action (the turn auto-ends then). Effects are intentionally small; save them for big combo turns. Removed from the game on use; no owner, no assist.</li>
     <li><b>Push / pull:</b> direction is the straight line between caster and target. If the slide is blocked by an edge or another unit, the target takes <i>impact damage</i> equal to the card's kb value.</li>
     <li><b>Dash:</b> caster teleports to any empty tile within the card's range (ignores blockers along the way).</li>
     <li><b>Range:</b> damage / push / pull cards target enemies within the <i>casting unit's</i> attack range. Heal and swap cards reach any of your allies.</li>
@@ -1582,15 +1582,22 @@ function playCard(owner,handIdx,target){
 }
 function canPlayCardNow(){
   // True if the active unit could play *some* card right now. Sigils don't require the
-  // action, so this is just "is it my turn and is the active unit on the field".
+  // action, but once the unit has spent BOTH move and action it's truly done — sigils block
+  // too so the turn can auto-end cleanly.
   if(pendingOwnerMove) return false;
-  const u=activeUnit(); return !!(u && u.owner==="A" && u.deployed);
+  const u=activeUnit();
+  if(!u || u.owner!=="A" || !u.deployed) return false;
+  if(u.hasMoved && u.hasActed) return false;
+  return true;
 }
 function canPlayCard(card){
   if(pendingOwnerMove) return false;
   const u=activeUnit();
   if(!u || u.owner!=="A" || !u.deployed) return false;
-  // Sigils are free — playable even after the unit has used its action.
+  // Once the unit has used BOTH move and action, even sigils are off — there's nothing left
+  // to combo with, so the turn ends.
+  if(u.hasMoved && u.hasActed) return false;
+  // Sigils otherwise are free.
   if(card.hero === "sigil") return true;
   // Hero cards consume the action slot.
   if(u.hasActed) return false;
@@ -1607,14 +1614,16 @@ function cardEnemyTargets(u){
   const list=[]; eachUnit(t=>{ if(t.owner!==u.owner && manh(u,t)<=range) list.push(t); }); return list;
 }
 function maybeAutoEnd(u){
-  // End the turn automatically only if the unit has nothing useful left to do — already moved,
-  // dead, or no reachable tiles. Otherwise leave the turn live (move tiles stay highlighted from
-  // the prior render) so the player can reposition or hit END TURN.
+  // End the turn automatically when nothing useful is left. With sigils gated to "at least
+  // one slot remaining", a unit with both move + action spent has no plays left, so we close
+  // the turn for the player. Otherwise the turn stays live — the top bar shows Moves/Actions
+  // remaining, so no extra hint needed in the status line.
   if(over) return;
   if(pendingOwnerMove) return; // wait for player to resolve the owner-step assist
-  if(!u || u.hp<=0 || u.hasMoved || !reachable(u).length){ endActiveTurn(); return; }
-  const s=document.getElementById("status");
-  s.innerHTML = s.innerHTML + ` &nbsp;<i>Still has move — tap a green tile or END TURN.</i>`;
+  if(!u || u.hp<=0){ endActiveTurn(); return; }
+  if(u.hasMoved && u.hasActed){ endActiveTurn(); return; }
+  // Edge case: can't move and can't act → done.
+  if(!reachable(u).length && u.hasActed){ endActiveTurn(); return; }
 }
 
 /* ---------- player interaction ---------- */
@@ -1642,7 +1651,7 @@ function onTile(r,c){
   const tgt=cell.unit;
   if(cell._hl==="move"){
     lastMove={unitId:u.id, prevR:u.r, prevC:u.c, prevFacing:u.facing};
-    moveUnit(u,r,c); render(); return;
+    moveUnit(u,r,c); render(); maybeAutoEnd(u); return;
   }
   if(cell._hl==="atk"){ lastMove=null; attack(u,tgt); render(); if(over) return; maybeAutoEnd(u); return; }
   if(cell._hl==="heal"){ lastMove=null; healAct(u,tgt); render(); maybeAutoEnd(u); return; }
@@ -1653,6 +1662,7 @@ function onCard(i){
   const key=players.A.hand[i]; const card=CARDS[key];
   const u=activeUnit();
   if(!u || u.owner!=="A"){ say("Wait for one of your units' turns to play cards."); render(); return; }
+  if(u.hasMoved && u.hasActed){ say(`${u.name} has used both move and action — turn complete.`); render(); return; }
   // Hero cards need the action; sigils are free.
   if(u.hasActed && card.hero!=="sigil"){ say(`${u.name} already used their action this turn — only sigils remain.`); render(); return; }
   if(card.hero !== "sigil"){
