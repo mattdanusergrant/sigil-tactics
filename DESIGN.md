@@ -149,7 +149,6 @@ When a unit is the active one, its owner gets up to **one move and one action**,
 
 - **Move** — up to the unit's `move` value of tiles, once per turn.
 - **Action** — one of: attack any enemy in range; heal an adjacent ally (heal-tagged units only); or play a card from hand.
-- **Cycle** — forfeit the move slot and discard 2 cards from hand to draw 1 card. Once per turn (naturally enforced by the move-forfeit cost). Action still happens normally afterward. Used to dig past dead-source cards (locked by a fallen hero) or to look for a better card next turn.
 - **Pass** — end the turn with no effect (the END TURN button).
 
 After an action, the turn auto-ends only if the unit also moved already, died, or has no reachable tiles. Otherwise the turn stays live and the player can reposition before ending it. This enables hit-and-run tactics: attack first, then back off.
