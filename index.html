@@ -53,6 +53,19 @@
   .tile.hl-spell{outline:2px solid var(--spell); outline-offset:-2px; cursor:pointer;}
   .tile.hl-step{outline:2px solid var(--gold); outline-offset:-2px; cursor:pointer; background:rgba(212,165,116,.15);}
   .tile.active{outline:3px solid var(--gold); outline-offset:-2px;}
+  /* One-shot feedback flashes — fired by tileFx(r,c,kind) and applied for a single render. */
+  .tile.fx-dmg{animation:fx-dmg 520ms ease-out;}
+  .tile.fx-heal{animation:fx-heal 520ms ease-out;}
+  @keyframes fx-dmg{
+    0%  {box-shadow:inset 0 0 0 6px var(--atk), 0 0 16px 4px var(--atk);}
+    60% {box-shadow:inset 0 0 0 3px var(--atk), 0 0 6px 1px var(--atk);}
+    100%{box-shadow:none;}
+  }
+  @keyframes fx-heal{
+    0%  {box-shadow:inset 0 0 0 6px var(--heal), 0 0 14px 3px var(--heal);}
+    60% {box-shadow:inset 0 0 0 3px var(--heal), 0 0 5px 1px var(--heal);}
+    100%{box-shadow:none;}
+  }
 
   .unit{width:88%; height:88%; border-radius:8px; display:flex; flex-direction:column;
     align-items:center; justify-content:center; position:relative; color:#fff; font-weight:700;}
@@ -1012,6 +1025,11 @@ function finishDeploy(){
 */
 const POOL_SIZE = 5;
 let upcoming = [];              // [{id, round}] — visible queue, front = next to act
+// One-shot board flashes (damage / heal). Each entry is consumed by the next render(): the
+// matching tile gets a brief CSS animation, then the entry clears. Lets you see WHERE an
+// effect landed without slowing the game down.
+let fxQueue = [];               // [{r, c, kind: "dmg" | "heal"}]
+function tileFx(r, c, kind){ if(r!=null && c!=null && r>=0 && c>=0) fxQueue.push({r, c, kind}); }
 let initDeck = {A:[], B:[]};   // face-down decks for the round currently being drawn from
 let fillRound = 0;             // round number whose deck is in initDeck
 let fillSide = "A";           // side that adds the next card to the pool
@@ -1104,7 +1122,15 @@ function promptOrAi(){
   } else {
     busy=true; render();
     say(`Enemy <b>${u.name}</b> is acting…`);
-    setTimeout(()=>{ if(over) return; aiAct(u); busy=false; render(); endActiveTurn(); }, 500);
+    setTimeout(async ()=>{
+      if(over) return;
+      await aiAct(u);
+      if(over) return;
+      busy=false; render();
+      // brief gap before the next unit takes over, so the player can read the last result
+      await aiWait(250);
+      endActiveTurn();
+    }, 450);
   }
 }
 
@@ -1176,7 +1202,7 @@ function killCheck(defender){
     for(const u of units){
       if(u.cls==="warlock" && u.owner===enemySide && u.hp>0 && u.deployed){
         const before=u.hp; u.hp=Math.min(u.maxHp, u.hp+2);
-        if(u.hp>before) say(`${u.name} drains soul — +${u.hp-before} HP.`);
+        if(u.hp>before){ tileFx(u.r, u.c, "heal"); say(`${u.name} drains soul — +${u.hp-before} HP.`); }
       }
     }
     if(defender.hero){
@@ -1189,7 +1215,9 @@ function applyDamage(defender,raw,attackerSide){
   // Necromancer — Death Touch: +1 dmg if defender is orthogonally adjacent to a Necromancer
   // on the attacker's side. The only persistent passive in the new pool.
   if(attackerSide && adjacentTo(defender,"necromancer",attackerSide)) raw += 1;
-  return applyDamageRaw(defender,raw);
+  const res = applyDamageRaw(defender,raw);
+  if(res.taken>0) tileFx(defender.r, defender.c, "dmg");
+  return res;
 }
 function applyDamageRaw(defender,raw){
   let dmg=raw;
@@ -1220,12 +1248,14 @@ function attack(attacker,defender){
   // Berserker — Bloodthirst: heal 1 HP on any damaging attack.
   if(attacker.cls==="berserker" && taken>0 && attacker.hp>0){
     const before=attacker.hp; attacker.hp=Math.min(attacker.maxHp, attacker.hp+1);
-    if(attacker.hp>before) say(`${attacker.name} drinks deep — +1 HP.`);
+    if(attacker.hp>before){ tileFx(attacker.r, attacker.c, "heal"); say(`${attacker.name} drinks deep — +1 HP.`); }
   }
   killCheck(defender);
 }
 function healAct(mage,ally){
+  const before=ally.hp;
   ally.hp=Math.min(ally.maxHp,ally.hp+3); mage.hasActed=true;
+  if(ally.hp>before) tileFx(ally.r, ally.c, "heal");
   say(`${mage.name} mended ${ally.name} (+3).`);
 }
 function summon(o,cls,r,c){ const u=newUnit(o,cls,r,c,o==="A"?"N":"S"); place(u); return u; }
@@ -1371,13 +1401,13 @@ function healAfterEffect(side){
     }});
     if(best){
       const before=best.hp; best.hp=Math.min(best.maxHp, best.hp+1);
-      if(best.hp>before) say(`Guardian: ${pal.name} restores +1 HP on ${best.name}.`);
+      if(best.hp>before){ tileFx(best.r, best.c, "heal"); say(`Guardian: ${pal.name} restores +1 HP on ${best.name}.`); }
     }
   }
   const dr = ownerUnitFor(side, "druid");
   if(dr){
     const before=dr.hp; dr.hp=Math.min(dr.maxHp, dr.hp+1);
-    if(dr.hp>before) say(`Symbiosis: ${dr.name} +1 HP.`);
+    if(dr.hp>before){ tileFx(dr.r, dr.c, "heal"); say(`Symbiosis: ${dr.name} +1 HP.`); }
   }
 }
 function weakestAdjacentEnemy(u){
@@ -1416,7 +1446,7 @@ function fireOwnerBonus(card, ownerSide){
   } else if(b.kind==="ownerHeal"){
     const before=ou.hp; ou.hp=Math.min(ou.maxHp, ou.hp+(b.amount||1));
     const restored=ou.hp-before;
-    if(restored>0) say(`${ownerLabel} assists — +${restored} HP.`);
+    if(restored>0){ tileFx(ou.r, ou.c, "heal"); say(`${ownerLabel} assists — +${restored} HP.`); }
   } else if(b.kind==="ownerStrike"){
     const e = weakestAdjacentEnemy(ou); if(!e) return;
     const res = applyDamage(e, b.amount||1, ownerSide);
@@ -1424,7 +1454,7 @@ function fireOwnerBonus(card, ownerSide){
     // Berserker — Bloodthirst: any damaging strike by Berserker heals him 1 HP.
     if(ou.cls==="berserker" && res.taken>0 && ou.hp>0){
       const bef=ou.hp; ou.hp=Math.min(ou.maxHp, ou.hp+1);
-      if(ou.hp>bef) say(`${ou.name} drinks deep — +1 HP.`);
+      if(ou.hp>bef){ tileFx(ou.r, ou.c, "heal"); say(`${ou.name} drinks deep — +1 HP.`); }
     }
     killCheck(e);
   } else if(b.kind==="ownerDrain"){
@@ -1432,6 +1462,7 @@ function fireOwnerBonus(card, ownerSide){
     const res = applyDamage(e, b.amount||1, ownerSide);
     const before=ou.hp; ou.hp=Math.min(ou.maxHp, ou.hp+(b.amount||1));
     const restored=ou.hp-before;
+    if(restored>0) tileFx(ou.r, ou.c, "heal");
     say(`${ownerLabel} assists — drains ${res.taken} from ${e.name}${restored?` (+${restored} HP)`:""}.`);
     killCheck(e);
   }
@@ -1464,7 +1495,7 @@ function playCard(owner,handIdx,target){
     const u=board[target.r][target.c].unit;
     const {taken}=applyDamage(u,card.dmg,owner);
     let restored=0;
-    if(caster){ const before=caster.hp; caster.hp=Math.min(caster.maxHp,caster.hp+card.heal); restored=caster.hp-before; }
+    if(caster){ const before=caster.hp; caster.hp=Math.min(caster.maxHp,caster.hp+card.heal); restored=caster.hp-before; if(restored>0) tileFx(caster.r,caster.c,"heal"); }
     say(`${card.name}: ${u.name} takes ${taken}; ${caster?caster.name:"caster"} drains ${restored} HP.`);
     killCheck(u);
   } else if(card.kind==="dmg-push"){
@@ -1531,12 +1562,13 @@ function playCard(owner,handIdx,target){
   } else if(card.kind==="heal"){
     const u=board[target.r][target.c].unit;
     const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount);
+    if(u.hp>before) tileFx(u.r, u.c, "heal");
     say(`${card.name}: ${u.name} +${u.hp-before} HP.`);
     healAfterEffect(owner);
   } else if(card.kind==="heal-all"){
     let total=0;
     eachUnit(u=>{
-      if(u.owner===owner){ const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount); total+=u.hp-before; }
+      if(u.owner===owner){ const before=u.hp; u.hp=Math.min(u.maxHp,u.hp+card.amount); const gained=u.hp-before; total+=gained; if(gained>0) tileFx(u.r,u.c,"heal"); }
     });
     say(`${who} cast ${card.name} — all allies +${card.amount} HP (${total} restored).`);
     healAfterEffect(owner);
@@ -1546,7 +1578,7 @@ function playCard(owner,handIdx,target){
   if(caster && caster.cls==="berserker" && caster.hp>0
      && (card.kind==="dmg"||card.kind==="dmg-adj"||card.kind==="dmg-self-heal"||card.kind==="dmg-push"||card.kind==="dmg-pull")){
     const before=caster.hp; caster.hp=Math.min(caster.maxHp, caster.hp+1);
-    if(caster.hp>before) say(`${caster.name} drinks deep — +1 HP.`);
+    if(caster.hp>before){ tileFx(caster.r, caster.c, "heal"); say(`${caster.name} drinks deep — +1 HP.`); }
   }
   // Owner-assist bonus (skip for sigils — they have no owner).
   fireOwnerBonus(card, owner);
@@ -1677,26 +1709,43 @@ function anyDamagedAlly(o){ let any=false; eachUnit(u=>{if(u.owner===o&&u.hp<u.m
 function anyEnemy(o){ let any=false; eachUnit(u=>{if(u.owner!==o)any=true;}); return any; }
 
 /* ---------- AI (single-unit activation) ---------- */
-function aiAct(u){
-  // 1) consider playing a card with this turn
+// Brief pause helper — used to space out AI sub-actions so the player can register each step.
+const aiWait = ms => new Promise(r=>setTimeout(r, ms));
+async function aiAct(u){
+  // 1) card? Resolve, render, hold a beat so the result registers.
   const cardPlay=aiPickCardForUnit(u);
   const normalScore=aiNormalActionScore(u);
   if(cardPlay && cardPlay.score > normalScore){
     playCard("B",cardPlay.handIdx,cardPlay.target);
+    render();
+    await aiWait(650);
     return;
   }
-  // 2) warden first-heal as adj action (free relative to move/atk slot)
-  if(u.heal){ const h=healablyAdjacent(u); if(h.length){ h.sort((a,b)=>(a.hp-(a.hero?99:0))-(b.hp-(b.hero?99:0))); healAct(u,h[0]); } }
+  // 2) Warden free heal — adjacent action; happens before move/attack.
+  if(u.heal){
+    const h=healablyAdjacent(u);
+    if(h.length){
+      h.sort((a,b)=>(a.hp-(a.hero?99:0))-(b.hp-(b.hero?99:0)));
+      healAct(u,h[0]); render(); await aiWait(450);
+    }
+  }
   // 3) attack-or-approach
   if(!u.hasActed){
     let tgt=pickTarget(u,enemiesInRange(u));
     if(!tgt && !u.hasMoved){
-      const goal=nearestHeroOrUnit(u); if(goal){ const step=bestStep(u,goal); if(step) moveUnit(u,step.r,step.c); }
+      const goal=nearestHeroOrUnit(u);
+      if(goal){ const step=bestStep(u,goal); if(step){ moveUnit(u,step.r,step.c); render(); await aiWait(380); } }
       tgt=pickTarget(u,enemiesInRange(u));
     }
-    if(tgt) attack(u,tgt);
-    else if(!u.hasMoved){ const goal=nearestHeroOrUnit(u); if(goal){ const step=bestStep(u,goal); if(step) moveUnit(u,step.r,step.c); } }
-  } else if(!u.hasMoved){ const goal=nearestHeroOrUnit(u); if(goal){ const step=bestStep(u,goal); if(step) moveUnit(u,step.r,step.c); } }
+    if(tgt){ attack(u,tgt); render(); await aiWait(500); }
+    else if(!u.hasMoved){
+      const goal=nearestHeroOrUnit(u);
+      if(goal){ const step=bestStep(u,goal); if(step){ moveUnit(u,step.r,step.c); render(); await aiWait(380); } }
+    }
+  } else if(!u.hasMoved){
+    const goal=nearestHeroOrUnit(u);
+    if(goal){ const step=bestStep(u,goal); if(step){ moveUnit(u,step.r,step.c); render(); await aiWait(380); } }
+  }
 }
 function aiNormalActionScore(u){
   // rough value of the unit's own move/attack this turn
@@ -2012,6 +2061,11 @@ function renderInit(){
 function render(){
   computeHl();
   const bd=document.getElementById("board"); bd.innerHTML="";
+  // Consume any pending tile flashes (damage / heal) — applied as a one-shot CSS animation
+  // on the matching tile so the player can see WHERE an effect landed.
+  const fxByTile = new Map();
+  for(const fx of fxQueue) fxByTile.set(fx.r+","+fx.c, fx.kind);
+  fxQueue = [];
   for(let r=0;r<R;r++)for(let c=0;c<C;c++){
     const cell=board[r][c]; const t=document.createElement("div");
     t.className="tile"+(cell.terrain?" terrain":"");
@@ -2020,6 +2074,8 @@ function render(){
     if(cell._hl==="heal")t.classList.add("hl-heal");
     if(cell._hl==="spell")t.classList.add("hl-spell");
     if(cell._hl==="step")t.classList.add("hl-step");
+    const fxKind = fxByTile.get(r+","+c);
+    if(fxKind) t.classList.add("fx-"+fxKind);
     const u=cell.unit;
     if(u&&u.id===activeId)t.classList.add("active");
     if(u){
