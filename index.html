@@ -259,6 +259,16 @@
   #over{position:fixed; inset:0; background:rgba(8,9,12,.85); display:none; align-items:center; justify-content:center; z-index:9;}
   #over .box{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; text-align:center; max-width:300px;}
   #over h2{margin:0 0 6px;} #over p{color:var(--dim); font-size:13px; margin:0 0 16px;}
+  /* Hotseat pass-phone overlay — blanks the screen between human side switches. */
+  #pass{position:fixed; inset:0; background:#0c0d11; display:none; flex-direction:column;
+    align-items:center; justify-content:center; z-index:25; padding:24px; text-align:center;}
+  #pass.show{display:flex;}
+  #pass .pmark{font-size:48px; margin-bottom:8px; color:var(--gold);}
+  #pass h2{margin:0 0 6px; color:var(--ink); letter-spacing:1px;}
+  #pass p{color:var(--dim); font-size:13px; margin:0 0 22px;}
+  #pass .pbtn{background:var(--gold); color:#0c0d11; border:none; border-radius:10px;
+    padding:14px 28px; font-size:14px; font-weight:800; letter-spacing:1.5px; cursor:pointer;}
+  #pass.B .pmark{color:var(--pb);} #pass.B .pbtn{background:var(--pb); color:#fff;}
 </style>
 </head>
 <body>
@@ -394,6 +404,7 @@
   <div class="tag">tactical drafting · grid combat · card opportunity-cost</div>
   <button class="tbtn" onclick="enterCampaign()">CAMPAIGN</button>
   <button class="tbtn ghost" onclick="enterSkirmish()">SKIRMISH</button>
+  <button class="tbtn ghost" onclick="enterHotseat()">HOTSEAT (LOCAL 2P)</button>
   <div class="tprog" id="titleProgress">—</div>
   <button class="treset" onclick="if(confirm('Reset campaign progress?'))resetProgress()">reset progress</button>
 </div></div>
@@ -426,6 +437,12 @@
 </div></div>
 
 <div id="over"><div class="box"><h2 id="overT"></h2><p id="overP"></p><button class="btn" id="overBtn">Continue</button></div></div>
+<div id="pass">
+  <div class="pmark" id="passMark">▶</div>
+  <h2 id="passTitle">PASS THE PHONE</h2>
+  <p id="passSub">Hand the phone to the next player.</p>
+  <button class="pbtn" id="passBtn">I'M READY</button>
+</div>
 
 <script>
 "use strict";
@@ -486,7 +503,27 @@ const MISSIONS=[
     title:"The Pale Hand",
     intro:"A necromancer commands the shadows of the dead. End their reign over the graveyard."}
 ];
-let mode="title"; // "title" | "campaign-menu" | "skirmish" | "campaign-play"
+let mode="title"; // "title" | "campaign-menu" | "skirmish" | "campaign-play" | "hotseat"
+// Pass-phone gating for hotseat. When the next active unit belongs to a different human side
+// than the unit that just finished, we pause behind a #pass overlay until the current player
+// taps "I'M READY". Single-player matches never enter this state.
+let pendingHandoff=false;
+let lastActedSide=null;
+function activeSide(){ const u=activeUnit(); return u?u.owner:null; }
+// Whose unit is currently being actively controlled by a human.
+function humanSide(){
+  const u=activeUnit();
+  return (u && players[u.owner] && players[u.owner].human) ? u.owner : null;
+}
+// Whose hand + buttons + highlights are shown on screen. In single-player this is always
+// the human (A); in hotseat it tracks whoever is currently up.
+function hudSide(){
+  const h=humanSide(); if(h) return h;
+  if(players && players.A && players.A.human) return "A";
+  if(players && players.B && players.B.human) return "B";
+  return "A";
+}
+function isHotseat(){ return !!(players && players.A && players.A.human && players.B && players.B.human); }
 let campaign={
   unlocked:new Set(STARTERS),
   completed:new Set(),
@@ -536,6 +573,12 @@ function enterCampaign(){
 function enterSkirmish(){
   document.getElementById("title").classList.remove("open");
   mode="skirmish";
+  newGame(null);
+}
+function enterHotseat(){
+  // Local 2-player on one phone. Fixed starter teams, no draft, no AI.
+  document.getElementById("title").classList.remove("open");
+  mode="hotseat";
   newGame(null);
 }
 function exitToTitle(){ showTitle(); }
@@ -829,10 +872,12 @@ function newGame(missionId){
   uid=0; sel=null; busy=false; over=false; units=[]; acted=new Set(); activeId=null; roundNum=0;
   lastMove=null; pendingOwnerMove=null;
   upcoming=[]; initDeck={A:[],B:[]}; fillRound=0; fillSide="A"; lastStarter=null;
+  pendingHandoff=false; lastActedSide=null;
+  document.getElementById("pass").classList.remove("show","B");
   heroes={A:[],B:[]};
   players={
     A:{deck:[],hand:[],human:true},
-    B:{deck:[],hand:[],human:false}
+    B:{deck:[],hand:[],human: mode==="hotseat"}
   };
   document.getElementById("over").style.display="none";
   draft={A:[],B:[]}; pickIdx=0; unplaced=null;
@@ -840,6 +885,12 @@ function newGame(missionId){
     // Campaign mode: skip draft entirely. Teams come from the intro picker and the mission's AI pool.
     draft.A=campaign.teamSelection.slice();
     draft.B=computeMissionAITeam(campaign.currentMission, draft.A);
+    pickIdx=DRAFT_SEQUENCE.length;
+    finishDraft();
+  } else if(mode==="hotseat"){
+    // Hotseat: skip draft. Both sides field the starter roster — fixed teams keep setup fast.
+    draft.A=STARTERS.slice();
+    draft.B=STARTERS.slice();
     pickIdx=DRAFT_SEQUENCE.length;
     finishDraft();
   } else {
@@ -1098,15 +1149,40 @@ function endActiveTurn(){
     u.bonusMoveTurn=0;
     const p=players[u.owner];
     if(p.deck.length) p.hand.push(p.deck.pop());
+    lastActedSide = u.owner;
   }
   // The rolling pool dictates order; advance() refills it after consuming this turn.
   activeId=null; sel=null; lastMove=null;
   if(over) return;
-  advance(); render(); promptOrAi();
+  advance();
+  // Hotseat: if the next active unit belongs to a different human side, gate behind the
+  // pass-phone overlay so the previous player can hand the device over without leaking
+  // the next player's hand.
+  const nextU = activeUnit();
+  if(nextU && isHotseat() && lastActedSide && nextU.owner !== lastActedSide && players[nextU.owner].human){
+    pendingHandoff = true;
+    busy = true;
+    render();
+    showPassOverlay(nextU.owner);
+    return;
+  }
+  render(); promptOrAi();
+}
+function showPassOverlay(toSide){
+  const el=document.getElementById("pass");
+  el.classList.remove("A","B");
+  el.classList.add(toSide);
+  el.classList.add("show");
+  document.getElementById("passMark").textContent = toSide==="A" ? "◀" : "▶";
+  document.getElementById("passTitle").textContent = `PASS THE PHONE TO ${toSide==="A"?"PLAYER 1":"PLAYER 2"}`;
+  document.getElementById("passSub").textContent = "The next player taps when ready.";
+}
+function hidePassOverlay(){
+  document.getElementById("pass").classList.remove("show","A","B");
 }
 function promptOrAi(){
   const u=activeUnit(); if(!u){ render(); return; }
-  if(u.owner==="A"){
+  if(players[u.owner].human){
     // The turn bar shows whose turn it is + counters; keep the status line clear for action feedback.
     say("");
     render();
@@ -1412,7 +1488,7 @@ function endOwnerStep(){
   pendingOwnerMove = null;
   render();
   const u = activeUnit();
-  if(u && u.owner==="A") maybeAutoEnd(u);
+  if(u && players[u.owner].human) maybeAutoEnd(u);
 }
 // Paladin Guardian + Druid Symbiosis — extra heals after a heal-kind card resolves.
 function healAfterEffect(side){
@@ -1452,8 +1528,8 @@ function fireOwnerBonus(card, ownerSide){
   const b=card.bonus, ownerLabel=`${ou.sym} ${ou.name}`;
   if(b.kind==="ownerStep"){
     const steps = b.amount||1;
-    if(ownerSide==="A"){
-      // Interactive: player picks each step on the board.
+    if(players[ownerSide].human){
+      // Interactive: the controlling human picks each step on the board.
       if(ownerStepFreeTiles(ou).length===0) return; // surrounded → silent skip
       pendingOwnerMove = {ownerId: ou.id, stepsLeft: steps};
       say(`${ownerLabel} moves ${steps} step${steps>1?"s":""} — tap a green tile (or SKIP).`);
@@ -1495,7 +1571,8 @@ function fireOwnerBonus(card, ownerSide){
 function playCard(owner,handIdx,target){
   const p=players[owner]; const key=p.hand[handIdx]; const card=CARDS[key];
   p.hand.splice(handIdx,1);
-  const who=owner==="A"?"You":"Enemy";
+  // In single-player, A is "You" / B is "Enemy". In hotseat, label by player number.
+  const who = isHotseat() ? (owner==="A"?"P1":"P2") : (owner==="A"?"You":"Enemy");
   const caster=activeUnit();
   // Damage cards route through attack() so they use the caster's atk/range/arc bonuses,
   // pounceReady, Berserker Bloodthirst, terrain, etc. The card's `dmg` value is a flat
@@ -1627,16 +1704,16 @@ function canPlayCardNow(){
   // True if the active unit could play *some* card right now. Sigils don't require the
   // action, but once the unit has spent BOTH move and action it's truly done — sigils block
   // too so the turn can auto-end cleanly.
-  if(pendingOwnerMove) return false;
+  if(pendingOwnerMove || pendingHandoff) return false;
   const u=activeUnit();
-  if(!u || u.owner!=="A" || !u.deployed) return false;
+  if(!u || !players[u.owner].human || !u.deployed) return false;
   if(u.hasMoved && u.hasActed) return false;
   return true;
 }
 function canPlayCard(card){
-  if(pendingOwnerMove) return false;
+  if(pendingOwnerMove || pendingHandoff) return false;
   const u=activeUnit();
-  if(!u || u.owner!=="A" || !u.deployed) return false;
+  if(!u || !players[u.owner].human || !u.deployed) return false;
   // Once the unit has used BOTH move and action, even sigils are off — there's nothing left
   // to combo with, so the turn ends.
   if(u.hasMoved && u.hasActed) return false;
@@ -1645,8 +1722,8 @@ function canPlayCard(card){
   // Hero cards consume the action slot.
   if(u.hasActed) return false;
   // Any unit may cast any hero card — the card's owner "assists" the caster.
-  // The owner must still be alive to provide the assist.
-  return heroes.A.some(h=>h.cls===card.hero && h.hp>0 && h.deployed);
+  // The owner must still be alive (and on the caster's side) to provide the assist.
+  return heroes[u.owner].some(h=>h.cls===card.hero && h.hp>0 && h.deployed);
 }
 function cardCastRange(u){
   // Ranger — Spotter: +1 range on damage / push / pull cards while a Ranger lives on caster's side.
@@ -1679,7 +1756,7 @@ function onTile(r,c){
     if(cell._hl==="step") commitOwnerStep(r,c);
     return;
   }
-  const u=activeUnit(); if(!u||u.owner!=="A") return;
+  const u=activeUnit(); if(!u || !players[u.owner].human || pendingHandoff) return;
   const cell=board[r][c];
   if(sel&&sel.t==="card"){
     if(cell._hl){
@@ -1702,14 +1779,14 @@ function onTile(r,c){
 function anyAlly(o){ let any=false; eachUnit(u=>{if(u.owner===o)any=true;}); return any; }
 function onCard(i){
   if(busy||over) return;
-  const key=players.A.hand[i]; const card=CARDS[key];
   const u=activeUnit();
-  if(!u || u.owner!=="A"){ say("Wait for one of your units' turns to play cards."); render(); return; }
+  if(!u || !players[u.owner].human){ say("Wait for one of your units' turns to play cards."); render(); return; }
+  const key=players[u.owner].hand[i]; const card=CARDS[key];
   if(u.hasMoved && u.hasActed){ say(`${u.name} has used both move and action — turn complete.`); render(); return; }
   // Hero cards need the action; sigils are free.
   if(u.hasActed && card.hero!=="sigil"){ say(`${u.name} already used their action this turn — only sigils remain.`); render(); return; }
   if(card.hero !== "sigil"){
-    const ownerAlive = heroes.A.some(h=>h.cls===card.hero && h.hp>0 && h.deployed);
+    const ownerAlive = heroes[u.owner].some(h=>h.cls===card.hero && h.hp>0 && h.deployed);
     if(!ownerAlive){
       const h=CLASSES[card.hero];
       say(`${card.name}: ${h.sym} ${h.name} has fallen and cannot assist.`);
@@ -1724,14 +1801,14 @@ function onCard(i){
   if(k==="push-adj"){
     let hasAdj=false;
     for(const key in VEC){ const [dr,dc]=VEC[key]; const nr=u.r+dr, nc=u.c+dc;
-      if(inB(nr,nc) && board[nr][nc].unit && board[nr][nc].unit.owner!=="A"){ hasAdj=true; break; } }
+      if(inB(nr,nc) && board[nr][nc].unit && board[nr][nc].unit.owner!==u.owner){ hasAdj=true; break; } }
     if(!hasAdj){ say(`No enemy adjacent to ${u.name}.`); return; }
   }
   if(k==="dash"){
     if(dashTilesFor(u, card.dash||1).length===0){ say(`No empty tile in range to dash to.`); return; }
   }
   if(k==="swap"){
-    let hasAlly=false; eachUnit(au=>{ if(au.owner==="A" && au.id!==u.id) hasAlly=true; });
+    let hasAlly=false; eachUnit(au=>{ if(au.owner===u.owner && au.id!==u.id) hasAlly=true; });
     if(!hasAlly){ say(`No other ally to swap with.`); return; }
   }
   if(k==="dash-attack"){
@@ -2052,14 +2129,14 @@ function computeHl(){
     if(ou){ for(const t of ownerStepFreeTiles(ou)) board[t.r][t.c]._hl="step"; }
     return;
   }
-  const u=activeUnit(); if(!u||u.owner!=="A") return;
+  const u=activeUnit(); if(!u || !players[u.owner].human || pendingHandoff) return;
   if(sel&&sel.t==="card"){
-    const key=players.A.hand[sel.i]; const card=CARDS[key];
+    const key=players[u.owner].hand[sel.i]; const card=CARDS[key];
     const k=card.kind;
     if(k==="heal"){
-      eachUnit(au=>{ if(au.owner==="A"&&au.hp<au.maxHp) board[au.r][au.c]._hl="heal"; });
+      eachUnit(au=>{ if(au.owner===u.owner && au.hp<au.maxHp) board[au.r][au.c]._hl="heal"; });
     } else if(k==="heal-all"){
-      eachUnit(au=>{ if(au.owner==="A") board[au.r][au.c]._hl="heal"; });
+      eachUnit(au=>{ if(au.owner===u.owner) board[au.r][au.c]._hl="heal"; });
     } else if(k==="dmg"||k==="dmg-adj"||k==="dmg-self-heal"||k==="dmg-push"||k==="dmg-pull"||k==="push"||k==="pull"){
       for(const e of cardEnemyTargets(u)) board[e.r][e.c]._hl="spell";
     } else if(k==="push-adj"){
@@ -2070,7 +2147,7 @@ function computeHl(){
     } else if(k==="dash-attack"){
       for(const e of dashAttackTargets(u, card)) board[e.r][e.c]._hl="spell";
     } else if(k==="swap"){
-      eachUnit(au=>{ if(au.owner==="A" && au.id!==u.id) board[au.r][au.c]._hl="heal"; });
+      eachUnit(au=>{ if(au.owner===u.owner && au.id!==u.id) board[au.r][au.c]._hl="heal"; });
     }
     return;
   }
@@ -2168,14 +2245,20 @@ function render(){
   if(!playing){ document.getElementById("turnbar").classList.remove("show"); return; }
   renderTurnbar();
   renderInit();
-  document.getElementById("deckInfo").textContent=`Hand ${players.A.hand.length} · Deck ${players.A.deck.length}`;
+  // Whose hand to display: in single-player always A; in hotseat, whichever human is up.
+  // pendingHandoff blanks the hand so a passing player can't see the next player's cards.
+  const view = hudSide();
+  const showHand = !pendingHandoff;
+  document.getElementById("deckInfo").textContent = showHand
+    ? `Hand ${players[view].hand.length} · Deck ${players[view].deck.length}`
+    : `— hidden —`;
   const h=document.getElementById("hand"); h.innerHTML="";
   const cardable=canPlayCardNow();
-  const heroAlive = cls => heroes.A.some(h=>h.cls===cls && h.hp>0 && h.deployed);
+  const heroAlive = cls => heroes[view].some(h=>h.cls===cls && h.hp>0 && h.deployed);
   // For damage-card lines, substitute the active player unit's name so cards read like
   // "[Knight] attacks for +2 damage" rather than the generic "Caster" placeholder.
-  const liveCaster = (function(){ const u=activeUnit(); return (u && u.owner==="A") ? u : null; })();
-  players.A.hand.forEach((key,i)=>{ const card=CARDS[key]; const el=document.createElement("div");
+  const liveCaster = (function(){ const u=activeUnit(); return (u && players[u.owner].human) ? u : null; })();
+  if(showHand) players[view].hand.forEach((key,i)=>{ const card=CARDS[key]; const el=document.createElement("div");
     const playable = cardable && canPlayCard(card) && !busy && !over;
     const sourceDead = card.hero!=="sigil" && !heroAlive(card.hero);
     const cant = !playable;
@@ -2197,15 +2280,19 @@ function render(){
   if(pendingOwnerMove){
     ebtn.disabled = over || busy;
     ebtn.textContent = "SKIP";
+  } else if(pendingHandoff){
+    ebtn.disabled = true;
+    ebtn.textContent = "—";
   } else {
-    ebtn.disabled = over || busy || !u || u.owner!=="A";
-    ebtn.textContent = (u && u.owner==="A") ? "END TURN" : "ENEMY…";
+    const myTurn = !!(u && players[u.owner].human);
+    ebtn.disabled = over || busy || !myTurn;
+    ebtn.textContent = myTurn ? "END TURN" : "ENEMY…";
   }
   const ubtn=document.getElementById("undoBtn");
-  ubtn.disabled = over || busy || !!pendingOwnerMove || !canUndoMove();
+  ubtn.disabled = over || busy || !!pendingOwnerMove || pendingHandoff || !canUndoMove();
   const cd=document.getElementById("cardDetail");
-  if(!over && u && u.owner==="A" && sel && sel.t==="card"){
-    const card=CARDS[players.A.hand[sel.i]];
+  if(!over && u && players[u.owner].human && !pendingHandoff && sel && sel.t==="card"){
+    const card=CARDS[players[u.owner].hand[sel.i]];
     let hint="";
     const k=card.kind;
     if(k==="heal") hint="tap a wounded ally";
@@ -2239,16 +2326,23 @@ function render(){
 function cancelCard(){ if(sel && sel.t==="card"){ sel=null; render(); } }
 
 document.getElementById("endBtn").onclick=()=>{
-  if(over||busy) return;
+  if(over||busy||pendingHandoff) return;
   if(pendingOwnerMove){ endOwnerStep(); return; }
-  const u=activeUnit(); if(u&&u.owner==="A") endActiveTurn();
+  const u=activeUnit(); if(u && players[u.owner].human) endActiveTurn();
 };
 document.getElementById("undoBtn").onclick=()=>undoMove();
+document.getElementById("passBtn").onclick=()=>{
+  if(!pendingHandoff) return;
+  pendingHandoff=false; busy=false;
+  hidePassOverlay();
+  render(); promptOrAi();
+};
 function canUndoMove(){
-  if(!lastMove) return false;
+  if(!lastMove || pendingHandoff) return false;
   const u=activeUnit();
-  // Undo is only allowed while the same unit is active and hasn't taken an action since moving.
-  return !!(u && u.owner==="A" && u.id===lastMove.unitId && !u.hasActed);
+  // Undo is only allowed while the same unit is active, controlled by a human, and hasn't
+  // taken an action since moving.
+  return !!(u && players[u.owner].human && u.id===lastMove.unitId && !u.hasActed);
 }
 function undoMove(){
   if(!canUndoMove()) return;
