@@ -281,6 +281,38 @@
     align-items:center; justify-content:center; z-index:25; padding:24px; text-align:center;}
   #pass.show{display:flex;}
   #pass .pmark{font-size:48px; margin-bottom:8px; color:var(--gold);}
+
+  /* Card zoom — tap a hand card to see the full TCG-style card: frame + hero art +
+     name + effect text. Acts as the "preview before play" step. */
+  #cardZoom{position:fixed; inset:0; background:rgba(8,9,12,.92); display:none;
+    align-items:center; justify-content:center; z-index:20; padding:24px;}
+  #cardZoom.show{display:flex;}
+  #cardZoom .cz-card{position:relative; width:min(82vw,360px); aspect-ratio:2/3;
+    filter:drop-shadow(0 8px 18px rgba(0,0,0,.55));}
+  /* Art window position is calibrated to the card-frame.png layout. If the frame's
+     window dimensions shift, tweak these % values. */
+  #cardZoom .cz-art{position:absolute; top:6%; left:8%; right:8%; height:46%;
+    object-fit:cover; object-position:50% 18%; z-index:1;}
+  #cardZoom .cz-frame{position:absolute; inset:0; width:100%; height:100%; z-index:2;
+    pointer-events:none;}
+  #cardZoom .cz-name{position:absolute; top:54%; left:14%; right:14%; height:6%;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-size:clamp(13px,3.6vw,17px); font-weight:800; color:#3a2410;
+    letter-spacing:.5px; z-index:3;}
+  #cardZoom .cz-sub{position:absolute; top:60%; left:14%; right:14%; text-align:center;
+    font-size:10px; font-weight:700; color:#6b4a28; letter-spacing:1.5px; z-index:3;}
+  #cardZoom .cz-text{position:absolute; top:65%; left:14%; right:14%; bottom:8%;
+    font-size:clamp(11px,2.9vw,13px); color:#2a1f12; line-height:1.35; z-index:3;
+    overflow:hidden; text-align:center; padding:4px;}
+  #cardZoom .cz-text .assist{display:block; margin-top:6px; font-size:10.5px;
+    color:#4a3320; font-style:italic;}
+  #cardZoom .cz-actions{position:absolute; left:0; right:0; bottom:-58px;
+    display:flex; gap:10px; justify-content:center; z-index:5;}
+  #cardZoom .cz-btn{border:none; border-radius:8px; padding:11px 22px; font-size:13px;
+    font-weight:800; letter-spacing:1.5px; cursor:pointer;}
+  #cardZoom .cz-play{background:var(--gold); color:#1a1407;}
+  #cardZoom .cz-play:disabled{background:#5a4a28; color:#888; cursor:not-allowed;}
+  #cardZoom .cz-close{background:#2c303a; color:var(--ink); border:1px solid var(--line);}
   #pass h2{margin:0 0 6px; color:var(--ink); letter-spacing:1px;}
   #pass p{color:var(--dim); font-size:13px; margin:0 0 22px;}
   #pass .pbtn{background:var(--gold); color:#0c0d11; border:none; border-radius:10px;
@@ -459,6 +491,20 @@
   <h2 id="passTitle">PASS THE PHONE</h2>
   <p id="passSub">Hand the phone to the next player.</p>
   <button class="pbtn" id="passBtn">I'M READY</button>
+</div>
+
+<div id="cardZoom" onclick="closeCardZoom(event)">
+  <div class="cz-card" onclick="event.stopPropagation()">
+    <img class="cz-art" id="czArt" src="" alt="">
+    <img class="cz-frame" src="assets/ui/card-frame.png" alt="">
+    <div class="cz-name" id="czName">—</div>
+    <div class="cz-sub" id="czSub">—</div>
+    <div class="cz-text" id="czText">—</div>
+    <div class="cz-actions">
+      <button class="cz-btn cz-play" id="czPlay">PLAY</button>
+      <button class="cz-btn cz-close" onclick="closeCardZoom()">CLOSE</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2330,7 +2376,7 @@ function render(){
         `<span class="ceff">${cardMainText(card, liveCaster)}</span>`+
         (assistHTML ? `<span class="cassist">${assistHTML}</span>` : "") +
       `</span>`;
-    el.onclick=()=>onCard(i); h.appendChild(el); });
+    el.onclick=()=>openCardZoom(key,i); h.appendChild(el); });
   const ebtn=document.getElementById("endBtn"); const u=activeUnit();
   if(pendingOwnerMove){
     ebtn.disabled = over || busy;
@@ -2383,6 +2429,39 @@ function render(){
   }
 }
 function cancelCard(){ if(sel && sel.t==="card"){ sel=null; render(); } }
+
+/* ---------- card zoom (full-card preview before play) ---------- */
+const TIER_LABEL = {C:"COMMON", E:"EPIC", L:"LEGENDARY", G:"SIGIL"};
+function openCardZoom(cardKey, idx){
+  const card = CARDS[cardKey]; if(!card) return;
+  const z = document.getElementById("cardZoom");
+  // Sigils have no class owner — fall back to the logo mark for the art window.
+  const artSrc = card.hero === "sigil" ? "assets/ui/logo-mark.png" : `assets/heroes/${card.hero}.png`;
+  document.getElementById("czArt").src = artSrc;
+  document.getElementById("czName").textContent = card.name;
+  const heroName = card.hero === "sigil" ? "Sigil" : (CLASSES[card.hero]?.name || "");
+  document.getElementById("czSub").textContent = `${heroName} · ${TIER_LABEL[card.tier]||""}`;
+  // Effect text + assist line, same content the inline detail panel uses.
+  const main = cardMainText(card, null);
+  const assist = cardAssistHTML(card);
+  document.getElementById("czText").innerHTML = main + (assist ? `<span class="assist">${assist}</span>` : "");
+  // Disable PLAY when the card can't actually be played right now (not your turn, wrong
+  // phase, already spent action, etc.). The close button always works.
+  const playBtn = document.getElementById("czPlay");
+  playBtn.disabled = !canPlayCard(card);
+  playBtn.dataset.idx = idx;
+  z.classList.add("show");
+}
+function closeCardZoom(e){
+  // Tapping the backdrop closes; tapping inside the card itself doesn't (stopPropagation in HTML).
+  if(e && e.currentTarget !== e.target && !e.target.classList.contains("cz-close")) return;
+  document.getElementById("cardZoom").classList.remove("show");
+}
+document.getElementById("czPlay").onclick=()=>{
+  const idx = parseInt(document.getElementById("czPlay").dataset.idx, 10);
+  document.getElementById("cardZoom").classList.remove("show");
+  if(!isNaN(idx)) onCard(idx);
+};
 
 document.getElementById("endBtn").onclick=()=>{
   if(over||busy||pendingHandoff) return;
