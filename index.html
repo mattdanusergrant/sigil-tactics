@@ -501,7 +501,6 @@
     <div class="cz-sub" id="czSub">—</div>
     <div class="cz-text" id="czText">—</div>
     <div class="cz-actions">
-      <button class="cz-btn cz-play" id="czPlay">PLAY</button>
       <button class="cz-btn cz-close" onclick="closeCardZoom()">CLOSE</button>
     </div>
   </div>
@@ -2290,6 +2289,9 @@ function renderInit(){
       const isSpent = acted.has(u.id);
       c.className="ichip "+side+(isActive?" active":"")+(isSpent?" spent":"");
       c.innerHTML=`${u.sym}`;
+      c.style.cursor="pointer";
+      c.title=`${u.name} — tap to view card`;
+      c.onclick=()=>openHeroZoom(u.cls);
       el.appendChild(c);
     }
   };
@@ -2376,7 +2378,7 @@ function render(){
         `<span class="ceff">${cardMainText(card, liveCaster)}</span>`+
         (assistHTML ? `<span class="cassist">${assistHTML}</span>` : "") +
       `</span>`;
-    el.onclick=()=>openCardZoom(key,i); h.appendChild(el); });
+    el.onclick=()=>onCard(i); h.appendChild(el); });
   const ebtn=document.getElementById("endBtn"); const u=activeUnit();
   if(pendingOwnerMove){
     ebtn.disabled = over || busy;
@@ -2430,38 +2432,29 @@ function render(){
 }
 function cancelCard(){ if(sel && sel.t==="card"){ sel=null; render(); } }
 
-/* ---------- card zoom (full-card preview before play) ---------- */
-const TIER_LABEL = {C:"COMMON", E:"EPIC", L:"LEGENDARY", G:"SIGIL"};
-function openCardZoom(cardKey, idx){
-  const card = CARDS[cardKey]; if(!card) return;
-  const z = document.getElementById("cardZoom");
-  // Sigils have no class owner — fall back to the logo mark for the art window.
-  const artSrc = card.hero === "sigil" ? "assets/ui/logo-mark.png" : `assets/heroes/${card.hero}.png`;
-  document.getElementById("czArt").src = artSrc;
-  document.getElementById("czName").textContent = card.name;
-  const heroName = card.hero === "sigil" ? "Sigil" : (CLASSES[card.hero]?.name || "");
-  document.getElementById("czSub").textContent = `${heroName} · ${TIER_LABEL[card.tier]||""}`;
-  // Effect text + assist line, same content the inline detail panel uses.
-  const main = cardMainText(card, null);
-  const assist = cardAssistHTML(card);
-  document.getElementById("czText").innerHTML = main + (assist ? `<span class="assist">${assist}</span>` : "");
-  // Disable PLAY when the card can't actually be played right now (not your turn, wrong
-  // phase, already spent action, etc.). The close button always works.
-  const playBtn = document.getElementById("czPlay");
-  playBtn.disabled = !canPlayCard(card);
-  playBtn.dataset.idx = idx;
-  z.classList.add("show");
+/* ---------- hero zoom (full hero card: art + name + stats + passive) ----------
+   Triggered by tapping a hero's chip in the round-status bar above the board.
+*/
+function openHeroZoom(cls){
+  const d = CLASSES[cls]; if(!d) return;
+  document.getElementById("czArt").src = `assets/heroes/${cls}.png`;
+  document.getElementById("czName").textContent = d.name;
+  document.getElementById("czSub").textContent = "HERO";
+  const stats =
+    `<div style="font-weight:800;color:#3a2410;margin-bottom:6px;letter-spacing:.5px;">`+
+      `HP ${d.hp} · ATK ${d.atk} · MV ${d.move} · RNG ${d.range} · INIT ${d.init}`+
+    `</div>`;
+  const passive = d.passive && d.passive !== "—"
+    ? `<div style="text-align:left;">${d.passive}</div>`
+    : `<div style="font-style:italic;color:#6b4a28;">No passive ability.</div>`;
+  document.getElementById("czText").innerHTML = stats + passive;
+  document.getElementById("cardZoom").classList.add("show");
 }
 function closeCardZoom(e){
   // Tapping the backdrop closes; tapping inside the card itself doesn't (stopPropagation in HTML).
   if(e && e.currentTarget !== e.target && !e.target.classList.contains("cz-close")) return;
   document.getElementById("cardZoom").classList.remove("show");
 }
-document.getElementById("czPlay").onclick=()=>{
-  const idx = parseInt(document.getElementById("czPlay").dataset.idx, 10);
-  document.getElementById("cardZoom").classList.remove("show");
-  if(!isNaN(idx)) onCard(idx);
-};
 
 document.getElementById("endBtn").onclick=()=>{
   if(over||busy||pendingHandoff) return;
